@@ -1,2 +1,2 @@
 # mr_sdk
-An Solutions Developme APIs, CLIs for the mediumroast.io 
+An Solutions Developmet including APIs, Examples and CLIs for the mediumroast.io 
