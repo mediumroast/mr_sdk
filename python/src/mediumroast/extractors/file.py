@@ -78,6 +78,10 @@ class Extract:
     def get_data (self):
         """Using the attributes set when the object was constructed get the data from the file.
 
+        Current driver support:
+            Minio: When creating open shares in Minio if the the output sent to STDOUT is captured in a file
+                this utility will read the file format, extract the relevant data and return a list as prescribed below.
+
         Returns:
             list: A list of dicts which can be further processed
         """
