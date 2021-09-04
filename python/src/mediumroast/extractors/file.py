@@ -32,6 +32,8 @@ class Extract:
 
     ### Internal helper methods
 
+    # TODO remove hashIt in favor of helers.utils
+
     def _hashIt (self, string_to_hash, algorithm='sha256'):
         """Internal method to produce a hash of an input string, the default algorithm is SHA256."""
         h = hashlib.new (algorithm)

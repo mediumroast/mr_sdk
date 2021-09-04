@@ -13,7 +13,10 @@ file_name='../sample_data/minio_share_list.txt'
 src_obj=mr_file(filename=file_name)
 src_data=src_obj.get_data()
 
-# TODO Transform the output into a string and hash it, we can then compare the hash across runs to verify correctness
+# TODO Transform the output into a string and hash it, we can then compare the hash across runs to verify correctness <-- Useful for testing
+
+# TODO Create some README.md files to cover key thoughts around testing for the system
+#   Starts with system setup of minio, running sample test scripts to ETL data, etc.
 
 # Transform the extracted data into a proper JSON structure 
 
