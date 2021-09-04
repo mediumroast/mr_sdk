@@ -2,11 +2,13 @@ __version__ = '1.0'
 __author__  = "Michael Hay, John Goodman"
 __date__    = '2021-August-30'
 __copyright__ = "Copyright 2021 mediumroast.io. All rights reserved."
+import sys
+sys.path.append('../')
 
-
-import re, hashlib, os
 from urllib.parse import urlparse
 from urllib.parse import unquote
+from mediumroast.helpers import utilities
+import re, os
 
 
 class Extract:
@@ -30,22 +32,18 @@ class Extract:
         self.file_resource=filename
         self.source_flavor=source_type
 
+        # This imports the local utilies from mr_sdk for Python
+        self.util=utilities
+
     ### Internal helper methods
 
-    # TODO remove hashIt in favor of helers.utils
-
-    def _hashIt (self, string_to_hash, algorithm='sha256'):
-        """Internal method to produce a hash of an input string, the default algorithm is SHA256."""
-        h = hashlib.new (algorithm)
-        h.update (string_to_hash.encode('utf-8'))
-        return h.hexdigest ()
-
+    # NOTE Unsure if this is a generic function required and therefore should be pushed to helpers
     def _getIndex (self, resource):
         """Internal method to pull out the file name from the path and return the file name plus its hash."""
         path = urlparse (resource).path
         file_name = (os.path.basename (path)).strip ()
         file_name = file_name.split ('.')[0]
-        return file_name, self._hashIt (file_name)
+        return file_name, self.util.hash_it(file_name)
 
     ### Drivers for various file types
 
@@ -68,7 +66,7 @@ class Extract:
                     (file_name, file_hash) = self._getIndex (share)
                     if thumb_regex.match (file_name): # Detect if this is a thumbnail
                         file_name = file_name.replace ('thumb_', '')
-                        file_hash = self._hashIt (file_name)
+                        file_hash = self.util.hash_it (file_name)
                         entry_dict[file_hash].append (share) # Append the thumbnail
                     else:
                         entry_dict[file_hash].append (share) # Append the interaction resource
@@ -76,7 +74,6 @@ class Extract:
         return list (entry_dict.values ()) # unwind the dict into a list and return
 
     
-
     def get_data (self):
         """Using the attributes set when the object was constructed get the data from the file.
 

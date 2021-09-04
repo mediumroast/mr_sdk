@@ -1,6 +1,11 @@
+__version__ = '1.0'
+__author__  = "Michael Hay"
+__date__    = '2021-August-30'
+__copyright__ = "Copyright 2021 mediumroast.io. All rights reserved."
 
-import hashlib
+
 from geopy.geocoders import ArcGIS
+import hashlib, time
 
 class utilities:
 
@@ -55,12 +60,21 @@ class utilities:
 
 
     def get_date_time (self):
-        pass
+        """Get the time presently and return in two formats
+
+        """
+        the_time_is=time.localtime()
+        time_concat=the_time_is.tm_year + the_time_is.tm_mon + the_time_is.tm_mday + the_time_is.tm_hour + the_time_is.tm_min
+        time_formal=time.asctime(the_time_is)
+        return time_concat, time_formal
 
 
     def make_note (self, obj_type, creator='Mediumroast SDK load utility.'):
-        (now, u_time)=self.get_date_time()
-        return {"1":{now: "This is an example note created for the '" + obj_type + "' object on " + u_time + " by a " + creator}}
+        """Create a sample note for an object or a child object
+
+        """
+        (time_stamp, time_string)=self.get_date_time()
+        return {"1":{time_stamp: "This is an example note created for the '" + obj_type + "' object on " + time_string + " by a " + creator}}
 
     
 """

@@ -1,38 +1,38 @@
-def importData (self, urlList='../tmp/share_list.txt', directory=None, uri="file://"):
-        """
-        Read either a file or directory to extract key metadata from the file name
+__version__ = '1.0'
+__author__  = "Michael Hay, John Goodman"
+__date__    = '2021-August-30'
+__copyright__ = "Copyright 2021 mediumroast.io. All rights reserved."
 
-        TODOS:
-            1. the URI and URL Combo need to be updated to reflect the ability of the system to access interaction data
-        """
-        items = []
-        url = ""
-        if urlList and not directory: # Pick up the list of shares and URLs when stored in Minio/S3
-            entry_dict = {}
-            url_regex = re.compile ('^URL:')
-            share_regex = re.compile ('^Share:')
-            thumb_regex = re.compile ('^thumb_')
-            with open (urlList, 'r') as f:
-                for file in f.readlines ():
-                    if url_regex.match (file):
-                        url = file.strip ('URL: ')
-                        (file_name, file_hash) = self.getIndex (url) # Clean up the file namd and hash it
-                        if thumb_regex.match (file_name): continue # Skip thumb_
-                        entry_dict[file_hash] = file_name.split ('-') # Separate out the metadata
-                    elif share_regex.match (file):
-                        share = unquote (file.strip ('Share:')).strip ()
-                        (file_name, file_hash) = self.getIndex (share)
-                        if thumb_regex.match (file_name): # Detect if this is a thumbnail
-                            file_name = file_name.replace ('thumb_', '')
-                            file_hash = self.hashIt (file_name)
-                            entry_dict[file_hash].append (share) # Append the thumbnail
-                        else:
-                            entry_dict[file_hash].append (share) # Append the interaction resource
-                f.close ()
-            return list (entry_dict.values ()) # unwind the dict into a list and return
-        else: # Fall back to gathering data from the file system
-            files = os.listdir (directory)
-            url = uri + directory
+class Extract:
+    """Perform raw data extract from a directory containing a listing of file names with included metadata
+
+    Args:
+        directory_name (str): The fully qualified path name 
+            (default is '../../sample_data/sample_dir')
+
+    Returns:
+        list: A list of dicts which can be further processed
+
+    Methods:
+        get_data()
+            Using the attributes set when the object was constructed get the data from the directory.
+    """
+
+    def __init__ (self, dirname='../../sample_data/sample_dir'):
+        self.directory=dirname
+
+    ### Internal helper methods
+
+    # TODO this is likely broken and the format is potentially incorrect therefore it needs to be fixed and tested
+
+    def get_data (self, base_uri="file://"):
+            """Read a directory to extract key metadata from the file name
+            """
+            items = []
+            url = ""
+            # Fall back to gathering data from the file system
+            files = os.listdir (self.directory)
+            url = base_uri + self.directory
             for file in files:
                 raw_file = file
                 file = file.split('.')[0] # remove the .extension
