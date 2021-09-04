@@ -78,10 +78,7 @@ class utilities:
 
     
 """
-    def lookupStudy (self, study_name):
-        my_study = study_name
-        if self.config['studyNames'].get (study_name): my_study = self.config['studyNames'][study_name]
-        return my_study
+
 
     def lookupInteraction (self, study_name, date):
         my_study = self.lookupStudy (study_name)
