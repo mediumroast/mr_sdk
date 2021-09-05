@@ -233,7 +233,7 @@ class Transform:
 
             if tmp_objects.get (object[self.RAW_COMPANY_NAME]) == None:
                 long_lat = self.util.locate (object[self.CITY] + ',' + object[self.STATE_PROVINCE] + ',' + object[self.COUNTRY])
-                tmp_objects[self.RAW_COMPANY_NAME] = {
+                tmp_objects[object[self.RAW_COMPANY_NAME]] = {
                     "companyName": company_obj['name'],
                     "industry": company_obj['industry'],
                     "role": company_obj['role'],
@@ -260,6 +260,8 @@ class Transform:
                 tmp_objects[object[self.RAW_COMPANY_NAME]]["linkedStudies"][study_name]=study_id
                 tmp_objects[object[self.RAW_COMPANY_NAME]]["linkedInteractions"][interaction_name]=interaction_id
 
+            if self.debug: print(tmp_objects[object[self.RAW_COMPANY_NAME]])
+
         for company in tmp_objects.keys ():
             if file_output:
                 # Generally the model to create a GUID is to hash the name and the description for all objects.
@@ -267,6 +269,7 @@ class Transform:
                 tmp_objects[company]['GUID'] = self.util.hash_it(str(company) + str(tmp_objects[company]['simpleDesc']))
             tmp_objects[company]['totalInteractions'] = self.util.total_item(tmp_objects[company]['linkedInteractions'])
             tmp_objects[company]['totalStudies'] = self.util.total_item(tmp_objects[company]['linkedStudies'])
+            if (self.debug): print (tmp_objects[company])
             final_objects['companies'].append (tmp_objects[company])
 
         final_objects['totalCompanies'] = self.util.total_item(final_objects['companies'])
