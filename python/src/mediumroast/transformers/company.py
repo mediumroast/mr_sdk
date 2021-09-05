@@ -7,7 +7,8 @@ import sys
 sys.path.append('../')
 
 from mediumroast.helpers import utilities
-from .study import Transform as studies
+from mediumroast.helpers import studies
+from mediumroast.helpers import interactions
 import configparser as conf
 
 class Transform:
@@ -23,11 +24,17 @@ class Transform:
         get_industry()
             Lookup a company industry from the configuration file and return it.
 
-        create_object()
+        get_name()
+            Lookup a company from the configuration file and return it.
+
+        make_id()
+            Create a unique company identifier if needed.
+
+        create_objects()
             Using the attributes set when the object was constructed get the data from the file.
     """
 
-    def __init__ (self, rewrite_config='./company.ini', debug=False):
+    def __init__ (self, rewrite_config_dir="../src/mediumroast/transformers/", debug=False):
         self.RAW_COMPANY_NAME=7
         self.RAW_STUDY_NAME=6
         self.RAW_DATE=0
@@ -35,14 +42,19 @@ class Transform:
         self.COUNTRY=2
         self.STATE_PROVINCE=3
         self.CITY=4
+        self.RULES={
+            'dir': rewrite_config_dir,
+            'company': 'company.ini',
+            'study': 'study.ini',
+            'interaction': 'interaction.ini'
+        }
         
         # TODO wrap a try catch loop around the config file read
-        self.CONF=rewrite_config
         self.rules=conf.ConfigParser()
-        self.rules.read(self.CONF)
+        self.rules.read(self.RULES['dir'] + self.RULES['company'])
 
         # This imports the local utilies from mr_sdk for Python
-        self.util=utilities
+        self.util=utilities()
 
         # Set debug to true or false
         self.debug=debug
@@ -52,29 +64,29 @@ class Transform:
         """Internal method to rewrite or augment key aspects of a company object as per definitions in the configuration file."""
         
         # Add the items which are either rewritten or not present in the file_name metadata.
-        industry=self.rules.industries[company_name] if self.rules.industries[company_name] else self.rules.DEFAULT.industry
-        role=self.rules.roles[company_name] if self.rules.roles[company_name] else self.rules.DEFAULT.role
-        description=self.rules.descriptions[company_name] if self.rules.descriptions[company_name] else self.rules.DEFAULT.description
-        url=self.rules.urls[company_name] if self.rules.urls[company_name] else self.rules.DEFAULT.url
-        cik=self.rules.ciks[company_name] if self.rules.ciks[company_name] else self.rules.DEFAULT.cik
-        stockSymbol=self.rules.stockSymbols[company_name] if self.rules.stockSymbols[company_name] else self.rules.DEFAULT.stockSymbol
-        recent10kURL=self.rules.recent10kURLs[company_name] if self.rules.recent10kURLs[company_name] else self.rules.DEFAULT.recent10kURL
-        recent10qURL=self.rules.recent10qURLs[company_name] if self.rules.recent10qURLs[company_name] else self.rules.DEFAULT.recent10qURL
-        phone=self.rules.phones[company_name] if self.rules.phones[company_name] else self.rules.DEFAULT.phone
-        streetAddress=self.rules.streetAddresses[company_name] if self.rules.streetAddresses[company_name] else self.rules.DEFAULT.streetAddress
-        zipPostal=self.rules.zips[company_name] if self.rules.zips[company_name] else self.rules.DEFAULT.zipPostal
+        industry=self.rules.get('industries', company_name) if self.rules.has_option('industries', company_name) else self.rules.get('DEFAULT', 'industry')
+        role=self.rules.get('roles', company_name) if self.rules.has_option('roles', company_name) else self.rules.get('DEFAULT', 'role')
+        description=self.rules.get('descriptions', company_name) if self.rules.has_option('descriptions', company_name) else self.rules.get('DEFAULT', 'description')
+        url=self.rules.get('urls', company_name) if self.rules.has_option('urls', company_name) else self.rules.get('DEFAULT', 'url')
+        cik=self.rules.get('ciks', company_name) if self.rules.has_option('ciks', company_name) else self.rules.get('DEFAULT', 'cik')
+        stockSymbol=self.rules.get('stockSymbols', company_name) if self.rules.has_option('stockSymbols', company_name) else self.rules.get('DEFAULT', 'stockSymbol')
+        recent10kURL=self.rules.get('recent10kURLs', company_name) if self.rules.has_option('recent10kURLs', company_name) else self.rules.get('DEFAULT', 'recent10kURL')
+        recent10qURL=self.rules.get('recent10qURLs', company_name) if self.rules.has_option('recent10qURLs', company_name) else self.rules.get('DEFAULT', 'recent10qURL')
+        phone=self.rules.get('phones', company_name) if self.rules.has_option('phones', company_name) else self.rules.get('DEFAULT', 'phone')
+        streetAddress=self.rules.get('streetAddresss', company_name) if self.rules.has_option('streetAddresss', company_name) else self.rules.get('DEFAULT', 'streetAddress')
+        zipPostal=self.rules.get('zipPostals', company_name) if self.rules.has_option('zipPostals', company_name) else self.rules.get('DEFAULT', 'zipPostal')
         
         # Should we want to have inputs totally worked through the configuration file we can set up the rewrite logic to look for
         # an extended_rewrite.  This will then create all of the fields which are normally pulled in through the file_name metadata,
         # in addition to the ones not included with the file metadata.
         if extended_rewrite:
-            stateProvince=self.rules.stateProvinces[company_name] if self.rules.stateProvinces[company_name] else self.rules.DEFAULT.stateProvince
-            city=self.rules.cities[company_name] if self.rules.cities[company_name] else self.rules.DEFAULT.city
-            country=self.rules.countries[company_name] if self.rules.countries[company_name] else self.rules.DEFAULT.country
-            region=self.rules.regions[company_name] if self.rules.regions[company_name] else self.rules.DEFAULT.region
-            latitude=self.rules.lattitudes[company_name] if self.rules.lattitudes[company_name] else self.rules.DEFAULT.lattitude
-            longitude=self.rules.longitudes[company_name] if self.rules.longitudes[company_name] else self.rules.DEFAULT.longitude
-            country=self.rules.countries[company_name] if self.rules.countries[company_name] else self.rules.DEFAULT.country
+            stateProvince=self.rules.get('stateProvinces', company_name) if self.rules.has_option('stateProvinces', company_name) else self.rules.get('DEFAULT', 'stateProvince')
+            city=self.rules.get('cities', company_name) if self.rules.has_option('cities', company_name) else self.rules.get('DEFAULT', 'city')
+            country=self.rules.get('countries', company_name) if self.rules.has_option('countries', company_name) else self.rules.get('DEFAULT', 'country')
+            region=self.rules.get('regions', company_name) if self.rules.has_option('regions', company_name) else self.rules.get('DEFAULT', 'region')
+            latitude=self.rules.get('latitudes', company_name) if self.rules.has_option('latitudes', company_name) else self.rules.get('DEFAULT', 'latitude')
+            longitude=self.rules.get('longitudes', company_name) if self.rules.has_option('longitudes', company_name) else self.rules.get('DEFAULT', 'longitude')
+            country=self.rules.get('countries', company_name) if self.rules.has_option('countries', company_name) else self.rules.get('DEFAULT', 'country')
 
             return {'name': company_name, 
                     'role': role,
@@ -108,7 +120,7 @@ class Transform:
                     'streetAddress': streetAddress,
                     'zipPostal': zipPostal}
 
-
+    
     def get_name (self, company_name):
         """Lookup a company's name from the configuration file and return it.
 
@@ -210,53 +222,54 @@ class Transform:
             company_obj=self._transform_company(object[self.RAW_COMPANY_NAME])
 
             # Capture the right study_name and then fetch the study's ID
-            study_name = studies.get_name (object[self.RAW_STUDY_NAME]) # TODO Create this function inside the study module 
-            study_id = studies.make_id (study_name) # TODO Create this function inside the study module
+            study_xform=studies(rewrite_config_dir=self.RULES['dir'])
+            study_name = study_xform.get_name (object[self.RAW_STUDY_NAME])
+            study_id = study_xform.make_id (study_name) 
             
             # Capture the right study_name and then fetch the study's ID
-            interaction_name=interactions.get_name(object[self.RAW_STUDY_NAME], object[self.RAW_DATE])
-            interaction_id = interactions.make_id (object[self.RAW_DATE], company_obj.name, self.RAW_STUDY_NAME)
+            interaction_xform=interactions(rewrite_config_dir=self.RULES['dir'])
+            interaction_name=interaction_xform.get_name(object[self.RAW_DATE], study_name)
+            interaction_id=interaction_xform.make_id (object[self.RAW_DATE], company_obj['name'], study_name)
 
             if tmp_objects.get (object[self.RAW_COMPANY_NAME]) == None:
                 long_lat = self.util.locate (object[self.CITY] + ',' + object[self.STATE_PROVINCE] + ',' + object[self.COUNTRY])
                 tmp_objects[self.RAW_COMPANY_NAME] = {
-                    "companyName": company_obj.name,
-                    "industry": company_obj.industry,
-                    "role": company_obj.role,
-                    "url": company_obj.url,
-                    "streetAddress": company_obj.streetAddress,
+                    "companyName": company_obj['name'],
+                    "industry": company_obj['industry'],
+                    "role": company_obj['role'],
+                    "url": company_obj['url'],
+                    "streetAddress": company_obj['streetAddress'],
                     "city": object[self.CITY],
                     "stateProvince": object[self.STATE_PROVINCE],
                     "country": object[self.COUNTRY],
                     "region": object[self.REGION],
-                    "phone": company_obj.phone,
-                    "simpleDesc": company_obj.description,
-                    "cik": company_obj.cik,
-                    "stockSymbol": company_obj.stockSymbol,
-                    "Recent10kURL": company_obj.recent10kURL,
-                    "Recent10qURL": company_obj.recent10qURL,
-                    "zipPostal": company_obj.zipPostal,
+                    "phone": company_obj['phone'],
+                    "simpleDesc": company_obj['description'],
+                    "cik": company_obj['cik'],
+                    "stockSymbol": company_obj['stockSymbol'],
+                    "Recent10kURL": company_obj['recent10kURL'],
+                    "Recent10qURL": company_obj['recent10qURL'],
+                    "zipPostal": company_obj['zipPostal'],
                     "linkedStudies": {study_name: study_id},
                     "linkedInteractions": {interaction_name: interaction_id},
                     "longitude": long_lat[0],
                     "latitude": long_lat[1],
-                    "notes": self.util.make_note(obj_type='Company Object: [' + company_obj.name + ']')
+                    "notes": self.util.make_note(obj_type='Company Object: [' + company_obj['name'] + ']')
                 }
             else:
-                tmp_objects[object[self.RAW_COMPANY_NAME]]["linkedStudies"][study_name] = study_id
-                tmp_objects[object[self.RAW_COMPANY_NAME]]["linkedInteractions"][interaction_name] = interaction_id
+                tmp_objects[object[self.RAW_COMPANY_NAME]]["linkedStudies"][study_name]=study_id
+                tmp_objects[object[self.RAW_COMPANY_NAME]]["linkedInteractions"][interaction_name]=interaction_id
 
         for company in tmp_objects.keys ():
             if file_output:
                 # Generally the model to create a GUID is to hash the name and the description for all objects.
                 # We will only use this option when we're outputing to a file.
-                tmp_objects[company]['GUID'] = self.util.hash_it(company + tmp_objects[company].simpleDesc)
-            tmp_objects[company]['totalInteractions'] = self.util.total_item(tmp_objects[company].linkedInteractions)
-            tmp_objects[company]['linkedStudies'] = companies.coalesce(tmp_objects[company].linkedStudies)
-            tmp_objects[company]['totalStudies'] = self.util.total_item(tmp_objects[company].linkedStudies)
-            final_objects.companies.append (tmp_objects[company])
+                tmp_objects[company]['GUID'] = self.util.hash_it(str(company) + str(tmp_objects[company]['simpleDesc']))
+            tmp_objects[company]['totalInteractions'] = self.util.total_item(tmp_objects[company]['linkedInteractions'])
+            tmp_objects[company]['totalStudies'] = self.util.total_item(tmp_objects[company]['linkedStudies'])
+            final_objects['companies'].append (tmp_objects[company])
 
-        final_objects.totalCompanies = self.util.total_item(final_objects.companies)
+        final_objects['totalCompanies'] = self.util.total_item(final_objects['companies'])
 
         return final_objects
 

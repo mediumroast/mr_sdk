@@ -33,7 +33,7 @@ class Extract:
         self.source_flavor=source_type
 
         # This imports the local utilies from mr_sdk for Python
-        self.util=utilities
+        self.util=utilities()
 
     ### Internal helper methods
 
