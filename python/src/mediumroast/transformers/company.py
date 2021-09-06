@@ -120,7 +120,7 @@ class Transform:
                     'streetAddress': streetAddress,
                     'zipPostal': zipPostal}
 
-    
+    # TODO Delete this method as it is deprecated
     def get_name (self, company_name):
         """Lookup a company's name from the configuration file and return it.
 
@@ -138,7 +138,7 @@ class Transform:
         """
         return company_name
 
-
+    # TODO Delete this method as it is deprecated
     def get_description (self, company_name):
         """Lookup a company description from the configuration file and return it.
 
@@ -156,7 +156,7 @@ class Transform:
         else: 
             return self.rules.DEFAULT.description
 
-
+    # TODO Delete this method as it is deprecated
     def get_industry (self, company_name):
         """Lookup a company industry from the configuration file and return it.
 
@@ -174,7 +174,7 @@ class Transform:
         else: 
             return self.rules.DEFAULT.industry
 
-
+    # TODO Delete this method as it is deprecated
     def make_id (self, company_name, file_output=True):
         """Create an identifier for the company 
 
@@ -260,8 +260,6 @@ class Transform:
                 tmp_objects[object[self.RAW_COMPANY_NAME]]["linkedStudies"][study_name]=study_id
                 tmp_objects[object[self.RAW_COMPANY_NAME]]["linkedInteractions"][interaction_name]=interaction_id
 
-            if self.debug: print(tmp_objects[object[self.RAW_COMPANY_NAME]])
-
         for company in tmp_objects.keys ():
             if file_output:
                 # Generally the model to create a GUID is to hash the name and the description for all objects.
@@ -270,7 +268,7 @@ class Transform:
             tmp_objects[company]['totalInteractions'] = self.util.total_item(tmp_objects[company]['linkedInteractions'])
             tmp_objects[company]['totalStudies'] = self.util.total_item(tmp_objects[company]['linkedStudies'])
             if (self.debug): print (tmp_objects[company])
-            final_objects['companies'].append (tmp_objects[company])
+            final_objects['companies'].append(tmp_objects[company])
 
         final_objects['totalCompanies'] = self.util.total_item(final_objects['companies'])
 

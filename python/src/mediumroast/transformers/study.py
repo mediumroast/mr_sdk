@@ -3,7 +3,8 @@ __author__  = "Michael Hay"
 __date__    = '2021-August-31'
 __copyright__ = "Copyright 2021 mediumroast.io. All rights reserved."
 
-import sys
+from os import sep
+import sys, re
 sys.path.append('../')
 
 from mediumroast.helpers import utilities
@@ -47,127 +48,95 @@ class Transform:
         # Set debug to true or false
         self.debug=debug
 
-    # TODO rewrite this to follow the load_studies utility
-
     def _transform_study (self, study_name, extended_rewrite=False):
         """Internal method to rewrite or augment key aspects of a study object as per definitions in the configuration file."""
         
         # Add the items which are either rewritten or not present in the file_name metadata.
-        industry=self.rules.industries[study_name] if self.rules.industries[study_name] else self.rules.DEFAULT.industry
-        role=self.rules.roles[study_name] if self.rules.roles[study_name] else self.rules.DEFAULT.role
-        description=self.rules.descriptions[study_name] if self.rules.descriptions[study_name] else self.rules.DEFAULT.description
-        url=self.rules.urls[study_name] if self.rules.urls[study_name] else self.rules.DEFAULT.url
-        cik=self.rules.ciks[study_name] if self.rules.ciks[study_name] else self.rules.DEFAULT.cik
-        stockSymbol=self.rules.stockSymbols[study_name] if self.rules.stockSymbols[study_name] else self.rules.DEFAULT.stockSymbol
-        recent10kURL=self.rules.recent10kURLs[study_name] if self.rules.recent10kURLs[study_name] else self.rules.DEFAULT.recent10kURL
-        recent10qURL=self.rules.recent10qURLs[study_name] if self.rules.recent10qURLs[study_name] else self.rules.DEFAULT.recent10qURL
-        phone=self.rules.phones[study_name] if self.rules.phones[study_name] else self.rules.DEFAULT.phone
-        streetAddress=self.rules.streetAddresses[study_name] if self.rules.streetAddresses[study_name] else self.rules.DEFAULT.streetAddress
-        zipPostal=self.rules.zips[study_name] if self.rules.zips[study_name] else self.rules.DEFAULT.zipPostal
-        
-        # Should we want to have inputs totally worked through the configuration file we can set up the rewrite logic to look for
-        # an extended_rewrite.  This will then create all of the fields which are normally pulled in through the file_name metadata,
-        # in addition to the ones not included with the file metadata.
-        if extended_rewrite:
-            stateProvince=self.rules.stateProvinces[study_name] if self.rules.stateProvinces[study_name] else self.rules.DEFAULT.stateProvince
-            city=self.rules.cities[study_name] if self.rules.cities[study_name] else self.rules.DEFAULT.city
-            country=self.rules.countries[study_name] if self.rules.countries[study_name] else self.rules.DEFAULT.country
-            region=self.rules.regions[study_name] if self.rules.regions[study_name] else self.rules.DEFAULT.region
-            latitude=self.rules.lattitudes[study_name] if self.rules.lattitudes[study_name] else self.rules.DEFAULT.lattitude
-            longitude=self.rules.longitudes[study_name] if self.rules.longitudes[study_name] else self.rules.DEFAULT.longitude
-            country=self.rules.countries[study_name] if self.rules.countries[study_name] else self.rules.DEFAULT.country
+        name=self.rules.get('names', study_name) if self.rules.has_option('names', study_name) else study_name
+        groups=self.rules.get('groups', study_name) if self.rules.has_option('groups', study_name) else self.rules.get('DEFAULT', 'groups')
+        description=self.rules.get('descriptions', study_name) if self.rules.has_option('descriptions', study_name) else self.rules.get('DEFAULT', 'description')
+        security_scope=self.rules.get('security_scopes', study_name) if self.rules.has_option('security_scopes', study_name) else self.rules.get('DEFAULT', 'security_scope')
+        security_scope=True if security_scope == 'True' else False
+    
 
-            return {'name': study_name, 
-                    'role': role,
-                    'industry': industry, 
-                    'description': description, 
-                    'url': url, 
-                    'country': country, 
-                    'cik': cik, 
-                    'stockSymbol': stockSymbol, 
-                    'recent10kURL': recent10kURL, 
-                    'recent10qURL': recent10qURL,
-                    'latitude': latitude, 
-                    'longitude': longitude, 
-                    'stateProvince': stateProvince, 
-                    'city': city, 
-                    'region': region, 
-                    'phone': phone, 
-                    'streetAddress': streetAddress,
-                    'zipPostal': zipPostal}
-        else:      
-            return {'name': study_name, 
-                    'role': role,
-                    'industry': industry, 
-                    'description': description, 
-                    'url': url, 
-                    'cik': cik, 
-                    'stockSymbol': stockSymbol, 
-                    'recent10kURL': recent10kURL, 
-                    'recent10qURL': recent10qURL,
-                    'phone': phone, 
-                    'streetAddress': streetAddress,
-                    'zipPostal': zipPostal}
+        return {'name': name, 
+                'groups': groups,
+                'public': security_scope, 
+                'description': description}
 
 
-    def get_name (self, study_name):
-        """Lookup a study's name from the configuration file and return it.
+    def _reformat_name(self, study_name, separator='_'):
+        """Internal method to reformat the study name by replacing spaces with the separator."""
+        return study_name.replace(' ', separator)
 
-        As appropriate return the proper name of the company in question.  This is a helper function
-        to be used as needed during the transformation process.
+    # Transform either default or study specific keythemes into the proper data structure
+    def _get_keythemes(self, study_name):
+        """Internal method to rewrite or augment key aspects of a study object as per definitions in the configuration file."""
+        pass
 
-        Args:
-            study_name (str): The study name which aligns to the name within the configuration file.
+    # Transform either default or study specific keytheme quotes into the proper data structure
+    def _quotes_helper(self, section, separator='<->', sub_separator='|'):
+        """Helper method for _get_keytheme_quotes to obtain, parse, format and return the quotes"""
+        quotes={}
+        many_quotes=re.compile(separator) # For the case when there are more than 1 quote per theme
+        for idx in list(self.rules[section]):
+            if many_quotes.search(self.rules[section][idx]): # More than 1 quote
+                for set in self.rules[section][idx].split(separator):
+                    (quote, name)=set.split(sub_separator)
+                    quotes[idx][name]=quote
+            else: # Only 1 quote
+                (quote, name)=set.split(sub_separator)
+                quotes[idx][name]=quote
+        return quotes
 
-        Returns:
-            string: A reformatted name of the study OR the argument passed in if nothing exists in the configuration file
+    def _get_keytheme_quotes (self, study_name, default='DEFAULT_KeyTheme_Quotes'):
+        """Internal method to obtain either the default set of keytheme quotes or the study specific set of quotes."""
+        section=self._reformat_name(study_name) + '_KeyTheme_Quotes'
+        quotes=self._quotes_helper(section) if self.rules.has_section(section) else self._quotes_helper(default)
+        return quotes
 
-        """
-        if self.rules.descriptions.get (study_name): 
-            return self.rules.descriptions[study_name]
-        else: 
-            return study_name
+    # Transform either default or study specific keytheme frequencies into the proper data structure
+    def _frequencies_helper(self, section, separator=',', sub_separator='|'):
+        """Helper method for _get_keytheme_frequencies to obtain, parse, format and return the frequencies."""
+        frequencies={}
+        for idx in list(self.rules[section]):
+            for set in self.rules[section][idx].split(separator):
+                (name, frequency)=set.split(sub_separator)
+                frequencies[idx][name]=frequency
+        return frequencies
+
+    def _get_keytheme_frequencies(self, study_name, default='DEFAULT_KeyTheme_Frequencies'):
+        """Internal method to obtain either the default set of keytheme frequencies or the study specific set of frequencies."""
+        section=self._reformat_name(study_name) + '_KeyTheme_Frequencies'
+        frequencies=self._frequencies_helper(section) if self.rules.has_section(section) else self._frequencies_helper(default)
+        return frequencies
+
+    
+    def _questions_helper(self, section, separator='|'):
+        """Helper method for _get_keyquestions to obtain, parse, format and return the questions."""
+        questions={}
+        for idx in list(self.rules[section]):
+            question=self.rules[section][idx].split(separator)
+            state=True if question[1] == 'True' else False
+            questions[idx]={
+                "question": question[0],
+                "notes": question[2],
+                "included": state
+            }
+        return questions
+
+    def _get_keyquestions(self, study_name, default='DEFAULT_Questions'):
+        """Internal method to obtain either the default set of questions or the study specific set of questions."""
+        section=self._reformat_name(study_name) + '_Questions'
+        questions=self._questions_helper(section) if self.rules.has_section(section) else self._questions_helper(default)
+        return questions
 
 
-    def get_description (self, study_name):
-        """Lookup a study description from the configuration file and return it.
-
-        As appropriate return a long form description of the study in question.  This is a helper function
-        to be used as needed during the transformation process.
-
-        Args:
-            study_name (str): The study name which aligns to the name within the configuration file.
-
-        Returns:
-            string: A textual description from the configuration file OR if none is present the default.
-        """
-        if self.rules.descriptions.get (study_name): 
-            return self.rules.descriptions[study_name]
-        else: 
-            return self.rules.DEFAULT.description
+    def _get_document (self, study_name):
+        """Internal method to rewrite or augment key aspects of a study object as per definitions in the configuration file."""
+        pass
 
 
-    def make_id (self, study_name, file_output=True):
-        """Create an identifier for the study 
-
-        Create a identifier for the study_name which is either 'NULL_GUID' or a GUID generated by hashing
-        the study name with the study description.  The latter is only done when the output is to a JSON
-        file.  In the implementation with the backend we should revisit this logic to see if it is enven necessary
-        or perhaps the backend handles all of this.
-
-        Args:
-            study_name (str): The study name which aligns to the name within the configuration file.
-            file_output (bool): A switch for determining if we're storing the output in a file or not
-
-        Returns:
-            string: A textual representation of the study's ID
-        """
-        description=self.get_description(study_name)
-        id='NULL_GUID' # This should never happen, but leaving here in case something is odd in the configuration file
-        if file_output: id=self.util.hash_it(study_name + description) 
-        return id
- 
-    # TODO Correct to follow load_studies
     def create_objects (self, raw_objects, file_output=True):
         """Create study objects from a raw list of input data.
 
@@ -179,7 +148,7 @@ class Transform:
             raw_objects (list): Raw objects generated from a one of the extractor methods.
 
         Returns:
-            dict: An object containing a list of all company objects and the total number of company objects processed
+            dict: An object containing a list of all study objects and the total number of study objects processed
         """
         final_objects={
             'totalStudies': 0,
@@ -191,50 +160,49 @@ class Transform:
         for object in raw_objects:
 
             # Perform basic transformation of company data based upon data in the configuration file
-            company_obj=self._transform_company(object[self.RAW_study_name])
+            study_obj=self._transform_study(object[self.RAW_study_name])
 
             # Capture the right company_name and then fetch the study's ID
-            company_name = companies.get_name (object[self.RAW_COMPANY_NAME]) # TODO Create this function inside the study module 
-            study_id = companies.make_id (company_name) # TODO Create this function inside the study module
+            company_name = companies.get_name (object[self.RAW_COMPANY_NAME])
+            company_id = companies.make_id (company_name)
             
             # Capture the right study_name and then fetch the study's ID
             interaction_name=interactions.get_name(object[self.RAW_STUDY_NAME], object[self.RAW_DATE])
-            interaction_id=interactions.make_id (object[self.RAW_DATE], company_obj.name, self.RAW_STUDY_NAME)
+            interaction_id=interactions.make_id (object[self.RAW_DATE], company_name, self.RAW_STUDY_NAME)
 
             if tmp_objects.get (object[self.RAW_study_name]) == None:
                 tmp_objects[self.RAW_STUDY_NAME] = {
-                    "companyName": company_obj.name,
-                    "industry": company_obj.industry,
-                    "role": company_obj.role,
-                    "url": company_obj.url,
-                    "streetAddress": company_obj.streetAddress,
-                    "city": object[self.CITY],
-                    "stateProvince": object[self.STATE_PROVINCE],
-                    "country": object[self.COUNTRY],
-                    "region": object[self.REGION],
-                    "phone": company_obj.phone,
-                    "simpleDesc": company_obj.description,
-                    "cik": company_obj.cik,
-                    "stockSymbol": company_obj.stockSymbol,
-                    "Recent10kURL": company_obj.recent10kURL,
-                    "Recent10qURL": company_obj.recent10qURL,
-                    "zipPostal": company_obj.zipPostal,
-                    "linkedCompanies": {company_name: study_id},
+                    "studyName": study_obj['name'],
+                    "description": study_obj['description'],
+                    "linkedCompanies": {company_name: company_id},
+                    "totalCompanies": 0,
                     "linkedInteractions": {interaction_name: interaction_id},
-                    "notes": self.util.make_note(obj_type='Company Object: [' + company_obj.name + ']')
+                    "totalInteractions": 0,
+                    "keyThemes": self._get_keythemes(study_obj['name']),
+                    "keyThemeQuotes": self._get_keytheme_quotes(study_obj['name']),
+                    "keyThemeFrequencies": self._get_keytheme_frequencies(study_obj['name']),
+                    "totalKeyThemes": 0,
+                    "keyQuestions": self._get_keyquestions(study_obj['name']),
+                    "totalKeyQuestions": 0,
+                    "document": self._get_document(study_obj['name']),
+                    "public": study_obj['public'],
+                    "groups": study_obj['groups']
                 }
             else:
-                tmp_objects[object[self.RAW_STUDY_NAME]]["linkedCompanies"][company_name] = study_id
-                tmp_objects[object[self.RAW_STUDY_NAME]]["linkedInteractions"][interaction_name] = interaction_id
+                tmp_objects[object[self.RAW_STUDY_NAME]]["linkedCompanies"][company_name]=company_id
+                tmp_objects[object[self.RAW_STUDY_NAME]]["linkedInteractions"][interaction_name]=interaction_id
 
         for study in tmp_objects.keys ():
             if file_output:
                 # Generally the model to create a GUID is to hash the name and the description for all objects.
                 # We will only use this option when we're outputing to a file.
-                tmp_objects[study]['GUID'] = self.util.hash_it(study + tmp_objects[study].simpleDesc)
-            tmp_objects[study]['totalInteractions'] = self.util.total_item(tmp_objects[study].linkedInteractions)
-            tmp_objects[study]['totalCompanies'] = self.util.total_item(tmp_objects[study].linkedCompanies)
-            final_objects.studies.append (tmp_objects[study])
+                tmp_objects[study]['GUID'] = self.util.hash_it(study + tmp_objects[study]['description'])
+            tmp_objects[study]['totalInteractions'] = self.util.total_item(tmp_objects[study]['linkedInteractions'])
+            tmp_objects[study]['totalCompanies'] = self.util.total_item(tmp_objects[study]['linkedCompanies'])
+            tmp_objects[study]['totalKeyThemes'] = self.util.total_item(tmp_objects[study]['keyThemes'])
+            tmp_objects[study]['totalKeyQuestions'] = self.util.total_item(tmp_objects[study]['keyQuestions'])
+            if (self.debug): print (tmp_objects[study])
+            final_objects['companies'].append(tmp_objects[company])
 
         final_objects.totalStudies = self.util.total_item(final_objects.studies)
 
