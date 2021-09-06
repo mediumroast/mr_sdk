@@ -65,14 +65,31 @@ class Transform:
                 'description': description}
 
 
+    # INTERNAL METHODS AND HELPER FUNCTIONS
+
     def _reformat_name(self, study_name, separator='_'):
         """Internal method to reformat the study name by replacing spaces with the separator."""
         return study_name.replace(' ', separator)
 
     # Transform either default or study specific keythemes into the proper data structure
-    def _get_keythemes(self, study_name):
-        """Internal method to rewrite or augment key aspects of a study object as per definitions in the configuration file."""
-        pass
+    def _themes_helper(self, section, separator='|'):
+        """Helper method for _get_keyquestions to obtain, parse, format and return the questions."""
+        themes={}
+        for idx in list(self.rules[section]):
+            theme=self.rules[section][idx].split(separator)
+            themes[idx]={
+                "name": theme[0],
+                "description": theme[1],
+                "frequency": theme[2]
+            }
+        return themes
+    
+    def _get_keythemes(self, study_name, default='DEFAULT_KeyThemes'):
+        """Internal method to obtain either the default set of keythemes or the study specific set of keythemes."""
+        section=self._reformat_name(study_name) + '_KeyThemes'
+        themes=self._themes_helper(section) if self.rules.has_section(section) else self._themes_helper(default)
+        return themes
+
 
     # Transform either default or study specific keytheme quotes into the proper data structure
     def _quotes_helper(self, section, separator='<->', sub_separator='|'):
@@ -95,6 +112,7 @@ class Transform:
         quotes=self._quotes_helper(section) if self.rules.has_section(section) else self._quotes_helper(default)
         return quotes
 
+
     # Transform either default or study specific keytheme frequencies into the proper data structure
     def _frequencies_helper(self, section, separator=',', sub_separator='|'):
         """Helper method for _get_keytheme_frequencies to obtain, parse, format and return the frequencies."""
@@ -112,6 +130,7 @@ class Transform:
         return frequencies
 
     
+    # Transform either default or study specific keyQuestions into the proper data structure
     def _questions_helper(self, section, separator='|'):
         """Helper method for _get_keyquestions to obtain, parse, format and return the questions."""
         questions={}
@@ -132,10 +151,32 @@ class Transform:
         return questions
 
 
-    def _get_document (self, study_name):
-        """Internal method to rewrite or augment key aspects of a study object as per definitions in the configuration file."""
-        pass
+    # Transform either default or study specific document elements into the proper data structure
+    def _document_helper(self, section, seperator='_'):
+        document={}
+        intro='Introduction'
+        opportunities=re.compile('^Opportunity_', re.IGNORECASE)
+        actions=re.compile('^Action_', re.IGNORECASE)
+        for idx in list(self.rules[section]):
+            if idx == intro: document[intro]=self.rules[section][idx]
+            elif opportunities.match(idx):
+                item_type=idx.split(seperator)[1]
+                if item_type == 'Text': document['Opportunity']['text']=self.rules[section][idx]
+                else: document['Opportunity'][item_type]=self.rules[section][idx]
+            elif actions.match(idx):
+                item_type=idx.split(seperator)[1]
+                if item_type == 'Text': document['Action']['text']=self.rules[section][idx]
+                else: document['Action'][item_type]=self.rules[section][idx]
+        return document
 
+    def _get_document (self, study_name, default='DEFAULT_PRFAQ'):
+        """Internal method to rewrite or augment key aspects of a study object as per definitions in the configuration file."""
+        section=self._reformat_name(study_name) + '_PRFAQ'
+        document=self._document_helper(section) if self.rules.has_section(section) else self._document_helper(default)
+        return document
+
+
+    # EXTERNAL METHODS AND HELPER FUNCTIONS
 
     def create_objects (self, raw_objects, file_output=True):
         """Create study objects from a raw list of input data.
