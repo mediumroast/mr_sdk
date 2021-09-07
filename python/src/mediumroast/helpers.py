@@ -5,6 +5,7 @@ __copyright__ = "Copyright 2021 mediumroast.io. All rights reserved."
 
 
 from geopy.geocoders import ArcGIS
+from summarizer import Summarizer
 import hashlib, time
 import configparser as conf
 
@@ -306,40 +307,12 @@ class interactions:
         id='NULL_GUID' # This should never happen, but leaving here in case something is odd in the configuration file
         if file_output: id=self.util.hash_it(interaction_name + description) 
         return id
-"""
 
+class abstracts:
 
-    def lookupInteraction (self, study_name, date):
-        my_study = self.lookupStudy (study_name)
-        return date + '-' + my_study
+    def __init__(self):
+        pass
 
- 
-    
-
-    def mkStudy (self, study_name):
-        my_study = self.lookupStudy (study_name)
-
-        if self.config['DEFAULT']['isFile'] == 'True':
-            my_desc = self.getStudyDesc (study_name)
-            #       NAME        GUID
-            return my_study, self.hashIt (my_study + my_desc)
-        else:
-            my_desc = "BLANK"
-            return my_study, my_desc
-
-    # TODO Pull out the automated interaction description creation into a separate function
-    def mkInteration (self, interaction_date, company_name, study_name):
-        my_study = self.lookupStudy (study_name)
-        my_interaction = self.lookupInteraction (study_name, interaction_date)
-        my_desc = str (self.config['DEFAULT']['interactionDescription'])
-        my_desc = my_desc.replace ("COMPANY", company_name)
-        my_desc = my_desc.replace ("STUDYNAME", my_study)
-        if self.config['DEFAULT']['isFile'] == 'True':
-            my_desc = self.getCompanyDesc (company_name)
-            #       NAME        GUID
-            return my_interaction, self.hashIt (my_interaction + my_desc)
-        else:
-            my_desc = "BLANK"
-            return my_interaction, my_desc
-
-"""
+    def make(self, text, sentences=5, ratio=0.2):
+        model=Summarizer()
+        return model(text, ratio=ratio)

@@ -62,6 +62,8 @@ def transform_companies(src_data):
 
 
 if __name__ == "__main__":
+    
+    # Extract the data from the source
     extracted_data=extract()
     
     # Transform the extracted data into a proper JSON structure suitable for Node.js json-server
