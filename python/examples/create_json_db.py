@@ -30,7 +30,7 @@ def extract (file_name='../sample_data/minio_share_list.txt'):
 def transform_studies (src_data):
     # Create study objects
     print ('Preparing to transform extracted data into [Study] objects...')
-    xformer=xform_studies(rewrite_config_dir='../src/mediumroast/transformers/', debug=True)
+    xformer=xform_studies(rewrite_config_dir='../src/mediumroast/transformers/', debug=False)
     tgt=xformer.create_objects(src_data)
     sent=tgt['totalStudies']
     recieved=len(tgt['studies'])
@@ -64,7 +64,7 @@ def transform_companies(src_data):
 if __name__ == "__main__":
     extracted_data=extract()
     
-    # Transform the extracted data into a proper JSON structure 
+    # Transform the extracted data into a proper JSON structure suitable for Node.js json-server
     transformed_data={
         "studies": [],
         "companies": [],
@@ -72,10 +72,10 @@ if __name__ == "__main__":
     }
 
     # Companies transformation
-    #transformed_companies=transform_companies(extracted_data)
+    transformed_data['companies']=transform_companies(extracted_data)['companies']
 
     # Studies transformation
-    transformed_studies=transform_studies(extracted_data)
+    transformed_data['studies']=transform_studies(extracted_data)['studies']
     
     # Serialize to the file specified on the command line or the default
-    printer.pprint (transformed_studies)
+    printer.pprint (transformed_data)

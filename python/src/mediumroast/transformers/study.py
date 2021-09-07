@@ -170,10 +170,11 @@ class Transform:
             opp: {},
             acts: {}
         }
+        introduction=re.compile('^Introduction', re.IGNORECASE)
         opportunities=re.compile('^Opportunity_', re.IGNORECASE)
         actions=re.compile('^Action_', re.IGNORECASE)
         for idx in list(self.rules[section]):
-            if idx == intro: 
+            if introduction.match(idx): 
                 document[intro]=self.rules[section][idx]
             elif opportunities.match(idx):
                 item_type=idx.split(seperator)[1]
