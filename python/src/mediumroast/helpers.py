@@ -119,10 +119,10 @@ class companies:
         Returns:
             string: A textual description from the configuration file OR if none is present the default.
         """
-        if self.rules.descriptions.get (company_name): 
-            return self.rules.descriptions[company_name]
+        if self.rules.has_option ('descriptions', company_name): 
+            return self.rules.get('descriptions', company_name)
         else: 
-            return self.rules.DEFAULT.description
+            return self.rules.get('DEFAULT', 'description')
 
 
     def get_industry (self, company_name):
@@ -262,7 +262,7 @@ class interactions:
             string: The generated name of the interaction which is the synthesis of the date string and study name
 
         """
-        return date + '-' + study_name
+        return str(date) + '-' + str(study_name)
 
 
     def get_description (self, company_name, study_name):
@@ -279,8 +279,8 @@ class interactions:
             string: A generated textual description generated from the company and study names.
         """
         description=self.rules.get('DEFAULT', 'description')
-        description=description.replace ("COMPANY", company_name)
-        description=description.replace ("STUDYNAME", study_name)
+        description=description.replace ("COMPANY", str(company_name))
+        description=description.replace ("STUDYNAME", str(study_name))
         return description
         
 

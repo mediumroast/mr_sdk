@@ -13,23 +13,17 @@ from mediumroast.helpers import interactions
 import configparser as conf
 
 class Transform:
-    """Perform transformation of input data into a proper company object.
+    """Perform transformation of input data into a proper study object.
 
     Returns:
-        list: A list of dicts which can be pass along to additional 
+        list: A list of dicts which can be pass along to additional utilities and programs
 
     Methods:
-        get_description()
-            Lookup a company description from the configuration file and return it.
-
-        get_industry()
-            Lookup a company industry from the configuration file and return it.
-
         create_objects()
             Using the attributes set when the object was constructed get the data from the file.
     """
 
-    def __init__ (self, rewrite_config='./study.ini', debug=False):
+    def __init__ (self, rewrite_config_dir='../src/mediumroast/transformers/', debug=True):
         self.RAW_COMPANY_NAME=7
         self.RAW_STUDY_NAME=6
         self.RAW_DATE=0
@@ -37,10 +31,16 @@ class Transform:
         self.COUNTRY=2
         self.STATE_PROVINCE=3
         self.CITY=4
+        self.RULES={
+            'dir': rewrite_config_dir,
+            'company': 'company.ini',
+            'study': 'study.ini',
+            'interaction': 'interaction.ini'
+        }
         
         # TODO wrap a try catch loop around the config file read
         self.rules=conf.ConfigParser()
-        self.rules.read(str(rewrite_config))
+        self.rules.read(self.RULES['dir'] + self.RULES['study'])
 
         # This imports the local utilies from mr_sdk for Python
         self.util=utilities()
@@ -73,9 +73,11 @@ class Transform:
 
     # Transform either default or study specific keythemes into the proper data structure
     def _themes_helper(self, section, separator='|'):
-        """Helper method for _get_keyquestions to obtain, parse, format and return the questions."""
+        """Helper method for _get_keythemes to obtain, parse, format and return the themes."""
         themes={}
+        to_skip=re.compile('^description|groups|security_scope', re.IGNORECASE)
         for idx in list(self.rules[section]):
+            if to_skip.match(idx): continue
             theme=self.rules[section][idx].split(separator)
             themes[idx]={
                 "name": theme[0],
@@ -96,14 +98,17 @@ class Transform:
         """Helper method for _get_keytheme_quotes to obtain, parse, format and return the quotes"""
         quotes={}
         many_quotes=re.compile(separator) # For the case when there are more than 1 quote per theme
+        to_skip=re.compile('^description|groups|security_scope', re.IGNORECASE)
         for idx in list(self.rules[section]):
+            if to_skip.match(idx): continue
             if many_quotes.search(self.rules[section][idx]): # More than 1 quote
+                quotes[idx]={}
                 for set in self.rules[section][idx].split(separator):
                     (quote, name)=set.split(sub_separator)
                     quotes[idx][name]=quote
             else: # Only 1 quote
-                (quote, name)=set.split(sub_separator)
-                quotes[idx][name]=quote
+                (quote, name)=self.rules[section][idx].split(sub_separator)
+                quotes[idx]={name: quote}
         return quotes
 
     def _get_keytheme_quotes (self, study_name, default='DEFAULT_KeyTheme_Quotes'):
@@ -117,10 +122,12 @@ class Transform:
     def _frequencies_helper(self, section, separator=',', sub_separator='|'):
         """Helper method for _get_keytheme_frequencies to obtain, parse, format and return the frequencies."""
         frequencies={}
+        to_skip=re.compile('^description|groups|security_scope', re.IGNORECASE)
         for idx in list(self.rules[section]):
+            if to_skip.match(idx): continue
             for set in self.rules[section][idx].split(separator):
                 (name, frequency)=set.split(sub_separator)
-                frequencies[idx][name]=frequency
+                frequencies[idx]={name: frequency}
         return frequencies
 
     def _get_keytheme_frequencies(self, study_name, default='DEFAULT_KeyTheme_Frequencies'):
@@ -134,7 +141,9 @@ class Transform:
     def _questions_helper(self, section, separator='|'):
         """Helper method for _get_keyquestions to obtain, parse, format and return the questions."""
         questions={}
+        to_skip=re.compile('^description|groups|security_scope', re.IGNORECASE)
         for idx in list(self.rules[section]):
+            if to_skip.match(idx): continue
             question=self.rules[section][idx].split(separator)
             state=True if question[1] == 'True' else False
             questions[idx]={
@@ -153,12 +162,19 @@ class Transform:
 
     # Transform either default or study specific document elements into the proper data structure
     def _document_helper(self, section, seperator='_'):
-        document={}
         intro='Introduction'
+        opp='Opportunity'
+        acts='Action'
+        document={
+            intro: '',
+            opp: {},
+            acts: {}
+        }
         opportunities=re.compile('^Opportunity_', re.IGNORECASE)
         actions=re.compile('^Action_', re.IGNORECASE)
         for idx in list(self.rules[section]):
-            if idx == intro: document[intro]=self.rules[section][idx]
+            if idx == intro: 
+                document[intro]=self.rules[section][idx]
             elif opportunities.match(idx):
                 item_type=idx.split(seperator)[1]
                 if item_type == 'Text': document['Opportunity']['text']=self.rules[section][idx]
@@ -201,18 +217,20 @@ class Transform:
         for object in raw_objects:
 
             # Perform basic transformation of company data based upon data in the configuration file
-            study_obj=self._transform_study(object[self.RAW_study_name])
+            study_obj=self._transform_study(object[self.RAW_STUDY_NAME])
 
             # Capture the right company_name and then fetch the study's ID
-            company_name = companies.get_name (object[self.RAW_COMPANY_NAME])
-            company_id = companies.make_id (company_name)
+            company_xform=companies(rewrite_config_dir=self.RULES['dir'])
+            company_name = company_xform.get_name(object[self.RAW_COMPANY_NAME])
+            company_id = company_xform.make_id(company_name)
             
             # Capture the right study_name and then fetch the study's ID
-            interaction_name=interactions.get_name(object[self.RAW_STUDY_NAME], object[self.RAW_DATE])
-            interaction_id=interactions.make_id (object[self.RAW_DATE], company_name, self.RAW_STUDY_NAME)
+            interaction_xform=interactions(rewrite_config_dir=self.RULES['dir'])
+            interaction_name=interaction_xform.get_name(object[self.RAW_STUDY_NAME], object[self.RAW_DATE])
+            interaction_id=interaction_xform.make_id(object[self.RAW_DATE], company_name, self.RAW_STUDY_NAME)
 
-            if tmp_objects.get (object[self.RAW_study_name]) == None:
-                tmp_objects[self.RAW_STUDY_NAME] = {
+            if tmp_objects.get (object[self.RAW_STUDY_NAME]) == None:
+                tmp_objects[object[self.RAW_STUDY_NAME]] = {
                     "studyName": study_obj['name'],
                     "description": study_obj['description'],
                     "linkedCompanies": {company_name: company_id},
@@ -243,9 +261,9 @@ class Transform:
             tmp_objects[study]['totalKeyThemes'] = self.util.total_item(tmp_objects[study]['keyThemes'])
             tmp_objects[study]['totalKeyQuestions'] = self.util.total_item(tmp_objects[study]['keyQuestions'])
             if (self.debug): print (tmp_objects[study])
-            final_objects['companies'].append(tmp_objects[company])
+            final_objects['studies'].append(tmp_objects[study])
 
-        final_objects.totalStudies = self.util.total_item(final_objects.studies)
+        final_objects['totalStudies'] = self.util.total_item(final_objects['studies'])
 
         return final_objects
 
