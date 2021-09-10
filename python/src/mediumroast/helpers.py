@@ -313,6 +313,8 @@ class abstracts:
     def __init__(self):
         pass
 
-    def make(self, text, sentences=5, ratio=0.2):
+    def make(self, text, sentences=3, ratio=0.1):
         model=Summarizer()
-        return model(text, ratio=ratio)
+        #res = model.calculate_optimal_k(text, k_max=10)
+        result = model(text, num_sentences=sentences)
+        return result
