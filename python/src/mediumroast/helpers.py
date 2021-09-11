@@ -6,7 +6,7 @@ __copyright__ = "Copyright 2021 mediumroast.io. All rights reserved."
 
 from geopy.geocoders import ArcGIS
 from summarizer import Summarizer
-from transformers import pipeline
+from transformers import pipeline, T5ForConditionalGeneration, T5Tokenizer
 import hashlib, time
 import configparser as conf
 
@@ -315,7 +315,31 @@ class summarization:
         self.RATIO=ratio
         self.SENTENCE_COUNT=sentence_count
 
-    def extractive(self, text):
+    def rm_enumerators(self, text, debug=False):
+        tokens=text.split('\n')
+        final=[]
+        skip_return=re.compile('^\n+')
+        skip_date=re.compile(r'\w+\.\s{1}\d{1,2}\,\s{1}\d{4}\s{1}\d{1,2}\:\d{2}\w{2}\s{1}\w{3}')
+        for token in tokens:
+            token=token.strip()
+            token=re.sub(r'^\S\.','', token)
+            if not token: continue
+            elif skip_return.search(token): continue
+            elif skip_date.search(token): continue
+            if debug: print('token>>> "' + token + '"')
+            final.append(token)
+        return final
+
+    def rm_questions (self, tokens, questions, debug=False):
+        final=[]
+        for token in tokens:
+            for question in questions:
+                token=re.sub(question, '', token)
+                if debug: print('token>>> "' + token + '"')
+            final.append(token)
+        return " ".join(final)
+
+    def extractive_bert(self, text):
         model=Summarizer()
         if self.SENTENCE_COUNT > 0:
             result=model(text, sentences=self.SENTENCE_COUNT)
@@ -324,6 +348,26 @@ class summarization:
         return result
 
     def extractive_hugging(self, tokens):
+        # NOTE: This is presently broken/not working
         summarizer=pipeline("summarization")
-        return summarizer(to_tokenize, min_length=75, max_length=500)
+        return summarizer(tokens, min_length=75, max_length=2000)
+
+    def extractive_t5(self, text):
+        # NOTE: While this works at the present stage it won't actually produce a good quality output.
+        # TODO After there is some light corpus level summarization done then retry T5 to see if it is better
+        # TODO Play with the model parameters to see if we get a longer and cleaner output
+        model = T5ForConditionalGeneration.from_pretrained("t5-base")
+        # initialize the model tokenizer
+        tokenizer = T5Tokenizer.from_pretrained("t5-base")
+        inputs = tokenizer.encode("summarize: " + text, return_tensors="pt", max_length=512, truncation=True)
+        # generate the summarization output
+        outputs = model.generate(
+            inputs, 
+            max_length=200, 
+            min_length=40, 
+            length_penalty=2.0, 
+            num_beams=4, 
+            early_stopping=True)
+        # just for debugging
+        return tokenizer.decode(outputs[0])
 

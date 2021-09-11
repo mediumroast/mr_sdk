@@ -49,13 +49,15 @@ if __name__=='__main__':
         interaction_text=extract_text(directory + fil)
         interactions=rm_enumerators(interaction_text)
         clean_text=" ".join(interactions)
-        abstract=extractor.extractive(clean_text)
-        print ('------------------------Example 1----------------------------')
+        abstract=extractor.extractive_bert(clean_text)
+        
+        print ('='*25 + ' ///BEGIN Summarization for:  [' + fil + '] /// ' + '='*25)
+        print ('-'*90 + ' <<<Example BERT>>> ' + '-'*90)
         print(abstract)
-        print ('------------------------Example 2----------------------------')
-        abstract=extractor.extractive_hugging(interaction_text)
+        print ('-'*90 + ' <<<Example T5>>> ' + '-'*90)
+        abstract=extractor.extractive_t5(clean_text)
         print(abstract)
-        print ('------------------------------------------------------------')
+        print ('='*100 + ' ///END/// ' + '='*100 + "\n\n")
 
 
 
