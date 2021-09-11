@@ -308,13 +308,16 @@ class interactions:
         if file_output: id=self.util.hash_it(interaction_name + description) 
         return id
 
-class abstracts:
+class summarization:
 
-    def __init__(self):
-        pass
+    def __init__(self, ratio=0.2, sentence_count=0):
+        self.RATIO=ratio
+        self.SENTENCE_COUNT=sentence_count
 
-    def make(self, text, sentences=4, ratio=0.1):
+    def extractive(self, text):
         model=Summarizer()
-        #res = model.calculate_optimal_k(text, k_max=10)
-        result = model(text, num_sentences=sentences)
+        if sentence_count:
+            result=model(text, sentences=self.SENTENCE_COUNT)
+        else:
+            result=model(text, ratio=self.RATIO)
         return result
