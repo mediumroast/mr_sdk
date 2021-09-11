@@ -6,6 +6,7 @@ __copyright__ = "Copyright 2021 mediumroast.io. All rights reserved."
 
 from geopy.geocoders import ArcGIS
 from summarizer import Summarizer
+from transformers import pipeline
 import hashlib, time
 import configparser as conf
 
@@ -316,8 +317,13 @@ class summarization:
 
     def extractive(self, text):
         model=Summarizer()
-        if sentence_count:
+        if self.SENTENCE_COUNT > 0:
             result=model(text, sentences=self.SENTENCE_COUNT)
         else:
             result=model(text, ratio=self.RATIO)
         return result
+
+    def extractive_hugging(self, tokens):
+        summarizer=pipeline("summarization")
+        return summarizer(to_tokenize, min_length=75, max_length=500)
+

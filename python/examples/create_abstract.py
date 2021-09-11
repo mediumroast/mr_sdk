@@ -1,11 +1,10 @@
-import sys, spacy, re
+import sys, spacy, re, os
 sys.path.append ('../src')
 
 from mediumroast.helpers import summarization
 from pdfminer.high_level import extract_text
 
-interaction_text=extract_text('../sample_data/201402241004-AMER-US-CA-SANTA CLARA-ICT-Customer Insights-HDS-Interview.pdf')
-question_text=extract_text('../sample_data/Interview - Questionnaire.pdf')
+
 
 def rm_enumerators(text, debug=False):
     tokens=text.split('\n')
@@ -36,11 +35,38 @@ def rm_questions (interactions, questions, debug=False):
 
 # TODO Stop words and phrases
 
-extractor=summarization()
+if __name__=='__main__':
+    extractor=summarization()
+    directory='../sample_data/'
+    files=[
+        '201912151800-AMER-US-CA-SAN DIEGO-ICT-Customer Insights-Aha-Online.pdf',
+        '201912172000-AMER-US-CA-SAN DIEGO-ICT-Customer Insights-Aha-Online.pdf',
+        '201402241004-AMER-US-CA-SANTA CLARA-ICT-Customer Insights-HDS-Interview.pdf',
+        '201402240930-AMER-US-CA-SANTA CLARA-ICT-Customer Insights-HDS-Interview.pdf'
+    ]
+    for fil in files:
+        #question_text=extract_text('../sample_data/Interview - Questionnaire.pdf')
+        interaction_text=extract_text(directory + fil)
+        interactions=rm_enumerators(interaction_text)
+        clean_text=" ".join(interactions)
+        abstract=extractor.extractive(clean_text)
+        print ('------------------------Example 1----------------------------')
+        print(abstract)
+        print ('------------------------Example 2----------------------------')
+        abstract=extractor.extractive_hugging(interaction_text)
+        print(abstract)
+        print ('------------------------------------------------------------')
 
-questions=rm_enumerators(question_text)
+
+
+
+
+
+
+"""questions=rm_enumerators(question_text)
 interactions=rm_enumerators(interaction_text)
 clean_text=rm_questions(interactions,questions)
-abstract=extractor.make(clean_text)
-print(abstract)
+abstract=extractor.extractive(clean_text)"""
+
+
 
