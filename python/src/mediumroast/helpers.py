@@ -334,6 +334,7 @@ class TextPreprocessing:
     """
     def __init__(self, debug=False):
         self.DEBUG=debug
+        self.SIZE=20
 
     def clean(self, text):
         """Splits into tokens based upon carriage returns plus cleans lines by removing enumerators, dates and white space.
@@ -402,7 +403,7 @@ class TextPreprocessing:
             final.append(token) # Add the token to the array
         return " ".join(final) # Return the resulting data as a string joined with a single space
 
-    def get_noise_intersections(self, list_of_token_sets, size=20):
+    def get_noise_intersections(self, list_of_token_sets, size=self.SIZE):
         """Discovers common noise between a supplied corpus of documents.
 
         When there isn't an available set of supplied noise for a corpus discover it by looking at all documents in the corpus and,

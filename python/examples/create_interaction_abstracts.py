@@ -4,6 +4,15 @@ sys.path.append ('../src')
 from mediumroast.helpers import Summarization
 from mediumroast.helpers import TextPreprocessing
 
+def create_abstracts(corpus, corpus_name, summarizer):
+    prefix='Document No. '
+    idx=1
+    for doc in corpus:
+        print ('-'*40 + '<<< Creating abstract for [' + prefix + idx + '] in corpus [' + corpus_name + '] >>>' + '-'*40)
+        abstract=summarizer.extract_bert(doc)
+        print(abstract + '\n\n')
+         
+
 
 if __name__ == '__main__':
     """Illustrate text mining and summarization using mediumroast.io modules
@@ -35,7 +44,8 @@ if __name__ == '__main__':
     # Base directory for all sample data
     SAMPLE_DIRECTORY='../sample_data/'
     
-
+    corpus_name='Customer Insights-->HDS'
+    print ('='*35 + ' /// Performing summarization for:  [' + corpus_name + '] /// ' + '='*35 + '\n')
     # This is the first corpus within the Customer Insights study
     HDS_QUESTIONNAIRE='Interview - Questionnaire.pdf'
     HDS_CORPUS=[
@@ -53,11 +63,22 @@ if __name__ == '__main__':
         '201403130801-AMER-US-CA-SANTA CLARA-ICT-Customer Insights-HDS-Interview.pdf',
         '201403140702-AMER-US-CA-SANTA CLARA-ICT-Customer Insights-HDS-Interview.pdf'
     ]
-    questionnaire=text_prep.get_documemt_pdf(SAMPLE_DIRECTORY, HDS_QUESTIONNAIRE)
-    hds_corpus_clean=text_prep.get_corpus_pdf(SAMPLE_DIRECTORY, HDS_CORPUS)
-    hds_corpus_without_noise=text_prep.rm_noise(hds_corpus_clean, questionnaire)
+    questionnaire=text_prep.get_documemt_pdf(SAMPLE_DIRECTORY, HDS_QUESTIONNAIRE) # Pull in and clean the questionnaire
+    hds_corpus_clean=text_prep.get_corpus_pdf(SAMPLE_DIRECTORY, HDS_CORPUS) # Pull in an clean the corpus
+    hds_corpus_without_noise=text_prep.rm_noise(hds_corpus_clean, questionnaire) # Subtract the questionnaire from the corpus
+    create_abstracts(hds_corpus_without_noise, corpus_name, summarizer) # Generate and print the abstracts
+    print ('='*95 + ' /// END /// ' + '='*95 + "\n\n")
 
+    corpus_name='Customer Insights-->AHA!'
+    print ('='*35 + ' /// Performing summarization for:  [' + corpus_name + '] /// ' + '='*35 + '\n')
     # This is the second corpus within the Customer Insights study
     AHA_CORPUS=[
-        ''
+        '201912151800-AMER-US-CA-SAN DIEGO-ICT-Customer Insights-Aha-Online.pdf',
+        '201912172000-AMER-US-CA-SAN DIEGO-ICT-Customer Insights-Aha-Online.pdf',
+        
     ]
+    aha_corpus_clean=text_prep.get_corpus_pdf(SAMPLE_DIRECTORY, AHA_CORPUS) # Pull in an clean the corpus
+    aha_corpus_noise=text_prep.get_noise_intersections(aha_corpus_clean) # Discover the noise
+    aha_corpus_without_noise=text_prep.rm_noise(aha_corpus_clean, aha_corpus_noise) # Subtract the questionnaire from the corpus
+    create_abstracts(aha_corpus_without_noise, corpus_name, summarizer) # Generate and print the abstracts
+    print ('='*95 + ' /// END /// ' + '='*95 + "\n\n")
