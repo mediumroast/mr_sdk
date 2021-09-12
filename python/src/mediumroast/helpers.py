@@ -310,8 +310,30 @@ class interactions:
 
 
 class TextPreprocessing:
-    def __init__(self):
-        self.DEBUG=False
+    """Various methods to extract, clean and compare text sufficiently for at least extractive summarization.
+
+    A series of methods/functions designed to extract, clean and analyze text for the purposes of extractive
+    summarization using one of many summarization techniques.  Extraction can be done either  for a single document
+    or for an entire corpus.  With some emphasis on the latter, there are additional functions that enable
+    the removal of noise from the source documents.  Note that the corpus is presently expected to all be based
+    upon the PDF format, and other formats (RTF, DOCX, OpenOffice, TXT, etc.) will, over time, be added on an
+    as needed basis.
+
+    Args:
+        debug (boolean): Defaults to False and if specified the methods will report out additional information
+
+    Methods:
+        clean()
+            Splits into tokens based upon carriage returns plus cleans lines by removing enumerators, dates and white space.
+        rm_noise()
+            Strips out the noise from a supplied list of sentence based tokens.
+        get_noise_intersections()
+            Discovers common noise between a supplied corpus of documents.
+        get_corpus_pdf()
+            Given a source directory and a list of file names extract text and return a list of lists containing extracted text.
+    """
+    def __init__(self, debug=False):
+        self.DEBUG=debug
 
     def clean(self, text):
         """Splits into tokens based upon carriage returns plus cleans lines by removing enumerators, dates and white space.
@@ -407,23 +429,54 @@ class TextPreprocessing:
         common=set.intersection(*ngram_list) # compute the intersection of the set 
         return list(sum(common, ())) # coerce the tuple of tuples into a flatted list and return the flattened list
 
-    def get_corpus(self, directory, filenames):
-        cleaned_corpus=[]
-        for doc in filenames:
-            if self.DEBUG: print('Extracting, cleaning and tokenizing document [' + doc + ']')
-            raw_text=extract_text(directory + doc)
-            cleaned_tokenized=self.rm_enumerators(raw_text)
-            cleaned_corpus.append(cleaned_tokenized)
-        return cleaned_corpus
+    def get_corpus_pdf(self, directory, filenames):
+        """Given a source directory and a list of file names extract text and return a list of lists containing extracted text.
+
+        Assuming the context is PDF the listing of content has the text extracted, cleaned and added to a list.  The list of lists
+        is then returned to the caller.  
+        
+        Args:
+            directory (string): the directory containing the files
+            filenames (list): a listing of PDF file names
+        
+        Returns:
+            list: a list of lists containing all extracted content from the corpus
+        """
+        final=[] # Target for results
+        for doc in filenames: # process each file
+            if self.DEBUG: print('Extracting, cleaning and tokenizing document [' + doc + ']') # print if DEBUG is set to True
+            raw_text=extract_text(directory + doc) # extract the PDF text
+            final=self.clean(raw_text) # clean the text
+            final.append(cleaned_tokenized) # add the document to the corpus
+        return final # return the corpus
+
+    def get_documemt_pdf(self, directory, filename):
+        """Given a source directory and a file name extract text and return a list containing extracted text.
+
+        Assuming the context is PDF the content has the text extracted, cleaned and added to a list.  
+        The list of tokenized sentences is then returned to the caller.  
+        
+        Args:
+            directory (string): the directory containing the files
+            filename (string): a PDF file name
+        
+        Returns:
+            list: a list containing all extracted content from the corpus
+        """
+        final=[] # Target for results
+        if self.DEBUG: print('Extracting, cleaning and tokenizing document [' + filename + ']') # print if DEBUG is set to True
+        final=extract_text(directory + filename) # extract the PDF text
+        final=self.clean(raw_text) # clean the text
+        return final # return the document
 
 
-class summarization:
+class Summarization:
 
     def __init__(self, ratio=0.2, sentence_count=0):
         self.RATIO=ratio
         self.SENTENCE_COUNT=sentence_count
 
-    # TODO this is depreated and should be removed
+    # TODO this is deprecated and should be removed
     def rm_enumerators(self, text, debug=False):
         final=[]
         tokens=text.split('\n') 
@@ -442,7 +495,7 @@ class summarization:
             final.append(token)
         return list(final)
 
-    # TODO this is depreated and should be removed
+    # TODO this is deprecated and should be removed
     def rm_questions (self, tokens, questions, debug=False):
         final=[]
         for token in tokens:
@@ -460,11 +513,6 @@ class summarization:
             result=model(text, ratio=self.RATIO)
         return result
 
-    # TODO this should be depreated and removed
-    def extractive_hugging(self, tokens):
-        # NOTE This is presently broken/not working
-        summarizer=pipeline("summarization")
-        return summarizer(tokens, min_length=75, max_length=2000)
 
     # TODO continue doing some testing to determine if this extractive model is useful
     def extractive_t5(self, text):
