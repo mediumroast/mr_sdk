@@ -7,7 +7,7 @@ __copyright__ = "Copyright 2021 mediumroast.io. All rights reserved."
 from geopy.geocoders import ArcGIS
 from summarizer import Summarizer
 from transformers import pipeline, T5ForConditionalGeneration, T5Tokenizer
-import hashlib, time
+import hashlib, time, re
 import configparser as conf
 
 class utilities:
@@ -319,16 +319,18 @@ class summarization:
         tokens=text.split('\n')
         final=[]
         skip_return=re.compile('^\n+')
-        skip_date=re.compile(r'\w+\.\s{1}\d{1,2}\,\s{1}\d{4}\s{1}\d{1,2}\:\d{2}\w{2}\s{1}\w{3}')
+        skip_date=re.compile(r'\w+\.?\s{1}\S{1,4}\,?\s{1}\d{4}\s{1}\d{1,2}\:\d{2}\s?\w{2}\s{1}\w{3}')
+        skip_day_and_time=re.compile(r'\w+\.?\s{1}\S{1,4}\,?\s{1}\d{1,2}\:\d{2}\s?\w{2}\s{1}\w{3}')
         for token in tokens:
             token=token.strip()
             token=re.sub(r'^\S\.','', token)
             if not token: continue
             elif skip_return.search(token): continue
             elif skip_date.search(token): continue
+            elif skip_day_and_time.search(token): continue
             if debug: print('token>>> "' + token + '"')
             final.append(token)
-        return final
+        return list(final)
 
     def rm_questions (self, tokens, questions, debug=False):
         final=[]
