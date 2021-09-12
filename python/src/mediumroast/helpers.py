@@ -403,7 +403,7 @@ class TextPreprocessing:
             final.append(token) # Add the token to the array
         return " ".join(final) # Return the resulting data as a string joined with a single space
 
-    def get_noise_intersections(self, list_of_token_sets, size=self.SIZE):
+    def get_noise_intersections(self, list_of_token_sets):
         """Discovers common noise between a supplied corpus of documents.
 
         When there isn't an available set of supplied noise for a corpus discover it by looking at all documents in the corpus and,
@@ -424,7 +424,7 @@ class TextPreprocessing:
         raw_ngrams=dict() # intermediate storage for the noise per doc
         idx=0 # an index for the raw_ngrams dict
         for lst in list_of_token_sets: # process each doc
-            raw_ngrams[idx]=set(nltk_ngrams(lst, max_len=size)) # detect the set of everygrams in each doc
+            raw_ngrams[idx]=set(nltk_ngrams(lst, max_len=self.SIZE)) # detect the set of everygrams in each doc
             idx+=1 # increment the index
         ngram_list=list(raw_ngrams.values()) # coerce the dict of raw_ngrams into a list 
         common=set.intersection(*ngram_list) # compute the intersection of the set 
@@ -447,11 +447,11 @@ class TextPreprocessing:
         for doc in filenames: # process each file
             if self.DEBUG: print('Extracting, cleaning and tokenizing document [' + doc + ']') # print if DEBUG is set to True
             raw_text=extract_text(directory + doc) # extract the PDF text
-            final=self.clean(raw_text) # clean the text
+            cleaned_tokenized=self.clean(raw_text) # clean the text
             final.append(cleaned_tokenized) # add the document to the corpus
         return final # return the corpus
 
-    def get_documemt_pdf(self, directory, filename):
+    def get_document_pdf(self, directory, filename):
         """Given a source directory and a file name extract text and return a list containing extracted text.
 
         Assuming the context is PDF the content has the text extracted, cleaned and added to a list.  
@@ -466,7 +466,7 @@ class TextPreprocessing:
         """
         final=[] # Target for results
         if self.DEBUG: print('Extracting, cleaning and tokenizing document [' + filename + ']') # print if DEBUG is set to True
-        final=extract_text(directory + filename) # extract the PDF text
+        raw_text=extract_text(directory + filename) # extract the PDF text
         final=self.clean(raw_text) # clean the text
         return final # return the document
 

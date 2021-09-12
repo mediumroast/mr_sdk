@@ -1,6 +1,8 @@
 import sys, spacy, re, os
 sys.path.append ('../src')
 
+# TODO this needs to be rewritten to experiment with a single interaction
+
 from mediumroast.helpers import summarization
 from pdfminer.high_level import extract_text
 
@@ -58,17 +60,6 @@ if __name__=='__main__':
         abstract=extractor.extractive_t5(clean_text)
         print(abstract)
         print ('='*100 + ' ///END/// ' + '='*100 + "\n\n")
-
-
-
-
-
-
-
-"""questions=rm_enumerators(question_text)
-interactions=rm_enumerators(interaction_text)
-clean_text=rm_questions(interactions,questions)
-abstract=extractor.extractive(clean_text)"""
 
 
 
