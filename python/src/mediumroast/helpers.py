@@ -7,18 +7,17 @@ __copyright__ = "Copyright 2021 mediumroast.io. All rights reserved."
 from geopy.geocoders import ArcGIS
 from summarizer import Summarizer
 from transformers import pipeline, T5ForConditionalGeneration, T5Tokenizer
-import hashlib, time, re
+from nltk.util import everygrams as nltk_ngrams
+from pdfminer.high_level import extract_text
+import hashlib, time, re, nltk
 import configparser as conf
+
 
 class utilities:
 
     def __init__ (self):
         self.locator = ArcGIS (timeout=2)
 
-        # TODO Parcel out the relevant functions into the right modules like interactions to interactions, etc.
-        # TODO rename functions as appropriate to be what makes sense like mkStudy could be associate_study
-        # TODO figure out a deterministic way to create GUIDs but only for the JSON file, example always hash name + desc
-        # TODO only leave true utility functions in this module like hashIt totalItem
         # TODO create a defaults config file for a few things
 
     def total_item (self, items):
@@ -309,29 +308,141 @@ class interactions:
         if file_output: id=self.util.hash_it(interaction_name + description) 
         return id
 
+
+class TextPreprocessing:
+    def __init__(self):
+        self.DEBUG=False
+
+    def clean(self, text):
+        """Splits into tokens based upon carriage returns plus cleans lines by removing enumerators, dates and white space.
+
+        Can be used multiple times and for text from various interaction types, questionnaires, and so on.  Potentially can be used
+        multiple times on the same text, but this is not yet tested.
+
+        Removed Enumerators:
+            Anything with not space and a period, examples: '1.', 'a.', ..., <-- code snippet token=re.sub(r'^\S\.','', token)
+
+        Removed Dates:
+            Dates of formats: 'Feb. 24, 2014 9:30AM PST', 'Mar 13, 2014 8:01 AM PDT' and 'Mar 10th, 10:41AM PDT'
+            Day and time of formats: 'Mar 11 1:06PM PDT' and 'Mar 11, 9:15AM PDT'
+        
+        Args:
+            text (str): the string of text meant for processing
+        
+        Returns:
+            list: the list of cleaned text split apart by carriage return 
+        """
+        final=[] # Target for results
+        tokens=text.split('\n') # Split base on carriage return
+        skip_return=re.compile('^\n+') # Detect if there is a return on a line by itself
+        # Detect date of formats: 'Feb. 24, 2014 9:30AM PST', 'Mar 13, 2014 8:01 AM PDT' and 'Mar 10th, 10:41AM PDT'
+        skip_date=re.compile(r'\w+\.?\s{1}\S{1,4}\,?\s{1}\d{4}\s{1}\d{1,2}\:\d{2}\s?\w{2}\s{1}\w{3}')
+        # Detect date of formats: 'Mar 11 1:06PM PDT' and 'Mar 11, 9:15AM PDT'
+        skip_day_and_time=re.compile(r'\w+\.?\s{1}\S{1,4}\,?\s{1}\d{1,2}\:\d{2}\s?\w{2}\s{1}\w{3}')
+        for token in tokens: # Process each token one at a time
+            token=token.strip() # Remove white space
+            token=re.sub(r'^\S\.','', token) # Remove the enumerators
+            if not token: continue # If there is nothing on the line skip it
+            elif skip_return.search(token): continue # If the line merely has a carriage return skip it
+            elif skip_date.search(token): continue # Should 'skip_date' be detected on the line skip it
+            elif skip_day_and_time.search(token): continue # Should 'skip_day_and_time' be found skip it
+            if self.DEBUG: print('token>>> "' + token + '"') # Print out the token if the class debug settig is on
+            final.append(token) # Add the cleaned text to the final array
+        return list(final) # Ensure there is a list upon return
+
+    def rm_noise(self, tokens, noises):
+        """Strips out the noise from a supplied list of sentence based tokens.
+
+        Whether the noise is supplied by the user or discovered by the system from a corpus, the intentions 
+        of this method are the same: remove it from a supplied set of tokenized sentences.  The thinking is
+        that if the noise for a corpus can be removed then the result will be better used for additional
+        analysis.  Note, that a precondition is a corpus of documents that are alike in some form.  Example
+        the documents could be a part of a single mediumroast.io study that includes a questionnaire.  Another
+        example, the corpus could be one iteration of a study with the noise discovered by the sister method
+        'get_noise_intersections'.  In both of these examples there are sets of examples -- yes this is a 
+        redundant point -- this means that if the corpus contains a single of perhaps very few documents the
+        power of this method might be low.  Additionally, the primary purpose of the noise removal is as a step
+        before extractive text summarization.  This means that using it for things like nGram, 4Gram, 3Gram, ...
+        keyword extraction hasn't yet been tested.  As this is updated we will change out this explanation.
+        
+        Args:
+            tokens (list): a list of lines of text that have been cleaned
+            noises (list): a list of lines of text representing the noises to be stripped away
+        
+        Returns:
+            string: the list of cleaned text split apart by carriage return 
+        """
+        final=[] # Target for results
+        for token in tokens: # Process each token one at a time
+            for noise in noises: # For each token check to see if any one of the noises exist and remove it 
+                token=re.sub(noise, '', token) # Remove the noise if detected
+                if self.DEBUG: print('token>>> "' + token + '"') # Print out the resulting token if DEBUG is True
+            final.append(token) # Add the token to the array
+        return " ".join(final) # Return the resulting data as a string joined with a single space
+
+    def get_noise_intersections(self, list_of_token_sets, size=20):
+        """Discovers common noise between a supplied corpus of documents.
+
+        When there isn't an available set of supplied noise for a corpus discover it by looking at all documents in the corpus and,
+        finding the noise for each document in the corpus and then looking for the intersection of all documents in the corpus to
+        'discover' the noise.  Later steps like 'rm_noise' can then use this discovery to strip out the noise from each document
+        in the corpus such that each document is devoid of noise, clean and ready for summarization.  This method makes use of 
+        'nltk.utils.everygrams' and was derived from the ideas from Tony Hurst (https://blog.ouseful.info/author/psychemedia/) via this blog post:
+        https://blog.ouseful.info/2015/12/13/finding-common-phrases-or-sentences-across-different-documents/.  A thank you for
+        the inspiration.
+        
+        Args:
+            list_of_token_sets (list): a list of lists, where each sublist represents an individual document in the corpus. It is
+                required that the sublist is cleaned and tokenized coarsely by sentences/phrases (a.k.a. split by carriage return)
+        
+        Returns:
+            list: a flat list of everygrams that are common among the corpuse this is also know as the corpus' noise
+        """
+        raw_ngrams=dict() # intermediate storage for the noise per doc
+        idx=0 # an index for the raw_ngrams dict
+        for lst in list_of_token_sets: # process each doc
+            raw_ngrams[idx]=set(nltk_ngrams(lst, max_len=size)) # detect the set of everygrams in each doc
+            idx+=1 # increment the index
+        ngram_list=list(raw_ngrams.values()) # coerce the dict of raw_ngrams into a list 
+        common=set.intersection(*ngram_list) # compute the intersection of the set 
+        return list(sum(common, ())) # coerce the tuple of tuples into a flatted list and return the flattened list
+
+    def get_corpus(self, directory, filenames):
+        cleaned_corpus=[]
+        for doc in filenames:
+            if self.DEBUG: print('Extracting, cleaning and tokenizing document [' + doc + ']')
+            raw_text=extract_text(directory + doc)
+            cleaned_tokenized=self.rm_enumerators(raw_text)
+            cleaned_corpus.append(cleaned_tokenized)
+        return cleaned_corpus
+
+
 class summarization:
 
     def __init__(self, ratio=0.2, sentence_count=0):
         self.RATIO=ratio
         self.SENTENCE_COUNT=sentence_count
 
+    # TODO this is depreated and should be removed
     def rm_enumerators(self, text, debug=False):
-        tokens=text.split('\n')
         final=[]
-        skip_return=re.compile('^\n+')
+        tokens=text.split('\n') 
+        skip_return=re.compile('^\n+') 
         skip_date=re.compile(r'\w+\.?\s{1}\S{1,4}\,?\s{1}\d{4}\s{1}\d{1,2}\:\d{2}\s?\w{2}\s{1}\w{3}')
+        # Detects this date format 
         skip_day_and_time=re.compile(r'\w+\.?\s{1}\S{1,4}\,?\s{1}\d{1,2}\:\d{2}\s?\w{2}\s{1}\w{3}')
         for token in tokens:
-            token=token.strip()
+            token=token.strip() # Remove white space
             token=re.sub(r'^\S\.','', token)
             if not token: continue
             elif skip_return.search(token): continue
             elif skip_date.search(token): continue
             elif skip_day_and_time.search(token): continue
-            if debug: print('token>>> "' + token + '"')
+            if self.DEBUG: print('token>>> "' + token + '"')
             final.append(token)
         return list(final)
 
+    # TODO this is depreated and should be removed
     def rm_questions (self, tokens, questions, debug=False):
         final=[]
         for token in tokens:
@@ -349,13 +460,15 @@ class summarization:
             result=model(text, ratio=self.RATIO)
         return result
 
+    # TODO this should be depreated and removed
     def extractive_hugging(self, tokens):
-        # NOTE: This is presently broken/not working
+        # NOTE This is presently broken/not working
         summarizer=pipeline("summarization")
         return summarizer(tokens, min_length=75, max_length=2000)
 
+    # TODO continue doing some testing to determine if this extractive model is useful
     def extractive_t5(self, text):
-        # NOTE: While this works at the present stage it won't actually produce a good quality output.
+        # NOTE While this works at the present stage it won't actually produce a good quality output.
         # TODO After there is some light corpus level summarization done then retry T5 to see if it is better
         # TODO Play with the model parameters to see if we get a longer and cleaner output
         model = T5ForConditionalGeneration.from_pretrained("t5-base")

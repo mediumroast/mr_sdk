@@ -51,13 +51,13 @@ def get_ngram_intersections(list_of_token_sets, start=19, stop=20):
         idx+=1
     foo=list(raw_ngrams.values()) 
     common=set.intersection(*foo)
-    return list(sum(common, ())) # TODO flatten out into a general list
+    return list(sum(common, ()))
 
 
 if __name__ == '__main__':
     SAMPLE_DIRECTORY='../sample_data/'
     QUESTIONNAIRE='Interview - Questionnaire.pdf'
-    CORPUS=[
+    HDS_CORPUS=[
         '201402241004-AMER-US-CA-SANTA CLARA-ICT-Customer Insights-HDS-Interview.pdf',
         '201402240930-AMER-US-CA-SANTA CLARA-ICT-Customer Insights-HDS-Interview.pdf',
         '201402250831-AMER-US-CA-SANTA CLARA-ICT-Customer Insights-HDS-Interview.pdf',
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     question_tokens=text_processor.rm_enumerators(question_text)
 
     # The Corpus
-    cleaned_corpus=get_corpus(SAMPLE_DIRECTORY, CORPUS)
+    cleaned_corpus=get_corpus(SAMPLE_DIRECTORY, HDS_CORPUS)
 
     # Extracted question <-- We've discovered these from the corpus
     extracted_questions=get_ngram_intersections(cleaned_corpus)
