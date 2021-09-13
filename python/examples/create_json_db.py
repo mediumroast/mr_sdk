@@ -1,22 +1,31 @@
 import sys, pprint
 sys.path.append ('../src')
 
-from mediumroast.extractors.file import Extract as mr_extract
+from mediumroast.extractors.file import Extract as mr_extract_file
+from mediumroast.extractors.s3bucket import Extract as mr_extract_s3
 from mediumroast.transformers.company import Transform as xform_companies 
 from mediumroast.transformers.study import Transform as xform_studies
 
-# Establish a print function for better visibility
-printer=pprint.PrettyPrinter()
+
 
 # TODO define options to specify the file_name from the command line
 
-def extract (file_name='../sample_data/minio_share_list.txt'):
+def extract_from_file (file_name='../sample_data/minio_share_list.txt'):
     # Capture the source data from the file specified in file_name  
     print ('Extracting data from source file [' + file_name + ']...')
     src_obj=mr_extract(filename=file_name)
     src_data=src_obj.get_data()
     no_items=len(src_data)
     print ('Extracted [' + str(no_items) + '] total items from source file [' + file_name +']...')
+    return src_data
+
+def extract_from_s3 (bucket_name='interactions'):
+    # Capture the source data from the file specified in file_name  
+    print ('Extracting data from source bucket [' + bucket_name + ']...')
+    src_obj=mr_extract_s3(bucket=bucket_name)
+    src_data=src_obj.get_data()
+    no_items=len(src_data)
+    print ('Extracted [' + str(no_items) + '] total items from source bucket [' + bucket_name +']...')
     return src_data
 
 
@@ -62,9 +71,13 @@ def transform_companies(src_data):
 
 
 if __name__ == "__main__":
+    # Establish a print function for better visibility
+    printer=pprint.PrettyPrinter()
     
     # Extract the data from the source
-    extracted_data=extract()
+    #extracted_data=extract_from_file()
+    extracted_data=extract_from_s3()
+
     
     # Transform the extracted data into a proper JSON structure suitable for Node.js json-server
     transformed_data={

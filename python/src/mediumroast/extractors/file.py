@@ -49,8 +49,8 @@ class Extract:
 
     def _minio (self):
         """Internal 'driver' method to extract data from the Minio formated input file."""
-        entry_dict = {}
-        url = ""
+        entry_dict={}
+        url=""
         url_regex = re.compile ('^URL:')
         share_regex = re.compile ('^Share:')
         thumb_regex = re.compile ('^thumb_')
