@@ -74,6 +74,8 @@ if __name__ == "__main__":
     # Establish a print function for better visibility
     printer=pprint.PrettyPrinter()
     
+    # TODO create a cli option to choose whether or not to read from a file or an S3 bucket
+    # TODO the S3 bucket info should be available via an ini file or similar
     # Extract the data from the source
     #extracted_data=extract_from_file()
     extracted_data=extract_from_s3()
@@ -91,6 +93,19 @@ if __name__ == "__main__":
 
     # Studies transformation
     transformed_data['studies']=transform_studies(extracted_data)['studies']
+    # TODO Add the corpus information to the study object
+    # NOTE we can consider the corpus object to look like the key themes that is linked by a number.
+    #   This would suggest we have corpusNames or iterationNames={1: foo, 2: bar}, 
+    #   keyQuestions={1: {1: q1, 2: q2}}, linkedInteractions={1:{name: guid, name: guid}}
+    # NOTE the new keyQuestions could have a None entry...
+
+    # Interactions transformation
+    # Ph1 done without the abstracts
+    # Ph2 
+    # 1. read the corpus intelligence from each study
+    # 2. generate the relevant abstracts
+    # 3. add the abstracts into the relevant interaction
+    # 4. proceed to the next study
     
     # Serialize to the file specified on the command line or the default
     printer.pprint (transformed_data)

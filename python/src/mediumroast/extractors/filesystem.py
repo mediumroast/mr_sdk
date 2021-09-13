@@ -24,6 +24,7 @@ class Extract:
     ### Internal helper methods
 
     # TODO this is likely broken and the format is potentially incorrect therefore it needs to be fixed and tested
+    # NOTE Follow the s3bucket module as it includes intelligence on handling thumbnails
 
     def get_data (self, base_uri="file://"):
             """Read a directory to extract key metadata from the file name
