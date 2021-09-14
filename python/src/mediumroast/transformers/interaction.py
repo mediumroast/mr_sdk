@@ -3,7 +3,7 @@ __author__  = "Michael Hay"
 __date__    = '2021-September-12'
 __copyright__ = "Copyright 2021 mediumroast.io. All rights reserved."
 
-import sys
+import sys, random
 sys.path.append('../')
 
 from mediumroast.helpers import utilities
@@ -29,6 +29,7 @@ class Transform:
     """
 
     def __init__ (self, rewrite_config='./interaction.ini', debug=False):
+        # TODO consume the additional defaults for URL, etc.
         self.RAW_COMPANY_NAME=7
         self.RAW_STUDY_NAME=6
         self.RAW_DATE=0
@@ -49,67 +50,44 @@ class Transform:
 
     # TODO rewrite this to follow the load_studies utility
 
-    def _transform_interaction (self, study_name, extended_rewrite=False):
-        """Internal method to rewrite or augment key aspects of a study object as per definitions in the configuration file."""
+    def _transform_interaction (self, interaction_name):
+        """Internal method to rewrite or augment key aspects of an interaction object as per definitions in the configuration file."""
         
         # Add the items which are either rewritten or not present in the file_name metadata.
-        industry=self.rules.industries[study_name] if self.rules.industries[study_name] else self.rules.DEFAULT.industry
-        role=self.rules.roles[study_name] if self.rules.roles[study_name] else self.rules.DEFAULT.role
-        description=self.rules.descriptions[study_name] if self.rules.descriptions[study_name] else self.rules.DEFAULT.description
-        url=self.rules.urls[study_name] if self.rules.urls[study_name] else self.rules.DEFAULT.url
-        cik=self.rules.ciks[study_name] if self.rules.ciks[study_name] else self.rules.DEFAULT.cik
-        stockSymbol=self.rules.stockSymbols[study_name] if self.rules.stockSymbols[study_name] else self.rules.DEFAULT.stockSymbol
-        recent10kURL=self.rules.recent10kURLs[study_name] if self.rules.recent10kURLs[study_name] else self.rules.DEFAULT.recent10kURL
-        recent10qURL=self.rules.recent10qURLs[study_name] if self.rules.recent10qURLs[study_name] else self.rules.DEFAULT.recent10qURL
-        phone=self.rules.phones[study_name] if self.rules.phones[study_name] else self.rules.DEFAULT.phone
-        streetAddress=self.rules.streetAddresses[study_name] if self.rules.streetAddresses[study_name] else self.rules.DEFAULT.streetAddress
-        zipPostal=self.rules.zips[study_name] if self.rules.zips[study_name] else self.rules.DEFAULT.zipPostal
-        
-        # Should we want to have inputs totally worked through the configuration file we can set up the rewrite logic to look for
-        # an extended_rewrite.  This will then create all of the fields which are normally pulled in through the file_name metadata,
-        # in addition to the ones not included with the file metadata.
-        if extended_rewrite:
-            stateProvince=self.rules.stateProvinces[study_name] if self.rules.stateProvinces[study_name] else self.rules.DEFAULT.stateProvince
-            city=self.rules.cities[study_name] if self.rules.cities[study_name] else self.rules.DEFAULT.city
-            country=self.rules.countries[study_name] if self.rules.countries[study_name] else self.rules.DEFAULT.country
-            region=self.rules.regions[study_name] if self.rules.regions[study_name] else self.rules.DEFAULT.region
-            latitude=self.rules.lattitudes[study_name] if self.rules.lattitudes[study_name] else self.rules.DEFAULT.lattitude
-            longitude=self.rules.longitudes[study_name] if self.rules.longitudes[study_name] else self.rules.DEFAULT.longitude
-            country=self.rules.countries[study_name] if self.rules.countries[study_name] else self.rules.DEFAULT.country
+        groups=self.rules.get('groups', interaction_name) if self.rules.has_option('groups', interaction_name) else self.rules.get('DEFAULT', 'groups')
+        abstract=self.rules.get('abstracts', interaction_name) if self.rules.has_option('abstracts', interaction_name) else self.rules.get('DEFAULT', 'abstract')
+        status=self.rules.get('statuses', interaction_name) if self.rules.has_option('statuses', interaction_name) else self.rules.get('DEFAULT', 'status')
+        interaction_type=self.rules.get('types', interaction_name) if self.rules.has_option('types', interaction_name) else self.rules.get('DEFAULT', 'type')
+        contact_address=self.rules.get('contact_addresses', interaction_name) if self.rules.has_option('contact_addresses', interaction_name) else self.rules.get('DEFAULT', 'contact_address')
+        contact_zipPostal=self.rules.get('contact_zipPostals', interaction_name) if self.rules.has_option('contact_zipPostals', interaction_name) else self.rules.get('DEFAULT', 'contact_zipPostal')
+        contact_phone=self.rules.get('contact_phones', interaction_name) if self.rules.has_option('contact_phones', interaction_name) else self.rules.get('DEFAULT', 'contact_phone')
+        contact_linkedin=self.rules.get('contact_linkedins', interaction_name) if self.rules.has_option('contact_linkedins', interaction_name) else self.rules.get('DEFAULT', 'contact_linkedin')
+        contact_email=self.rules.get('contact_emails', interaction_name) if self.rules.has_option('contact_emails', interaction_name) else self.rules.get('DEFAULT', 'contact_email')
+        contact_twitter=self.rules.get('contact_twitters', interaction_name) if self.rules.has_option('contact_twitters', interaction_name) else self.rules.get('DEFAULT', 'contact_twitter')
+        contact_name=self.rules.get('contact_names', interaction_name) if self.rules.has_option('contact_names', interaction_name) else self.rules.get('DEFAULT', 'contact_name')
+        security_scope=self.rules.get('security_scopes', interaction_name) if self.rules.has_option('security_scopes', interaction_name) else self.rules.get('DEFAULT', 'security_scope')
+        security_scope=True if security_scope == 'True' else False
 
-            return {'name': study_name, 
-                    'role': role,
-                    'industry': industry, 
-                    'description': description, 
-                    'url': url, 
-                    'country': country, 
-                    'cik': cik, 
-                    'stockSymbol': stockSymbol, 
-                    'recent10kURL': recent10kURL, 
-                    'recent10qURL': recent10qURL,
-                    'latitude': latitude, 
-                    'longitude': longitude, 
-                    'stateProvince': stateProvince, 
-                    'city': city, 
-                    'region': region, 
-                    'phone': phone, 
-                    'streetAddress': streetAddress,
-                    'zipPostal': zipPostal}
-        else:      
-            return {'name': study_name, 
-                    'role': role,
-                    'industry': industry, 
-                    'description': description, 
-                    'url': url, 
-                    'cik': cik, 
-                    'stockSymbol': stockSymbol, 
-                    'recent10kURL': recent10kURL, 
-                    'recent10qURL': recent10qURL,
-                    'phone': phone, 
-                    'streetAddress': streetAddress,
-                    'zipPostal': zipPostal}
-
-
+        return {'groups': groups,
+                'abstract': abstract,
+                'status': status,
+                'type': interaction_type,
+                'contactAddress': contact_address,
+                'contactZipPostal': contact_zipPostal,
+                'contactPhone': contact_phone,
+                'contactLinkedIn': contact_linkedin,
+                'contactEmail': contact_email,
+                'contactTwitter': contact_twitter,
+                'contactName': contact_name,
+                'public': security_scope}
+    
+    
+    def _get_status(self, range=4):
+        """An internal method to compute a random status to drive UX functionality
+        """
+        idx=random.randrange(0, range)
+        statuses=['Completed', 'Scheduled', 'Canceled', 'Planned', 'Unknown']
+        return statuses[idx]
 
  
     # TODO Correct to follow load_interactions
@@ -135,54 +113,45 @@ class Transform:
 
         for object in raw_objects:
 
-            # Perform basic transformation of company data based upon data in the configuration file
-            company_obj=self._transform_interaction(object[self.RAW_study_name])
-
-            # Capture the right company_name and then fetch the study's ID
-            company_name = companies.get_name (object[self.RAW_COMPANY_NAME]) # TODO Create this function inside the study module 
-            company_id = companies.make_id (company_name) # TODO Create this function inside the study module
-            
             # Capture the right study_name and then fetch the study's ID
             study_name = studies.get_name (object[self.RAW_STUDY_NAME]) 
             study_id = studies.make_id (study_name) 
+            
+            # Perform basic transformation of company data based upon data in the configuration file
+            interaction_name=interactions.get_name(self.RAW_DATE, study_name)
+            interaction_obj=self._transform_interaction(interaction_name)
 
+            # Capture the right company_name and then fetch the study's ID
+            company_name = companies.get_name (object[self.RAW_COMPANY_NAME]) # 
+            company_id = companies.make_id (company_name) 
+            
+            # TODO the date needs to be fixed potentially with the helper functions included
+            # TODO this is only partially implemented and needs to be looked at again
             if tmp_objects.get (object[self.RAW_study_name]) == None:
                 long_lat = self.util.locate (object[self.CITY] + ',' + object[self.STATE_PROVINCE] + ',' + object[self.COUNTRY])
-                tmp_objects[self.RAW_STUDY_NAME] = {
-                    "companyName": company_obj.name,
-                    "industry": company_obj.industry,
-                    "role": company_obj.role,
-                    "url": company_obj.url,
-                    "streetAddress": company_obj.streetAddress,
-                    "city": object[self.CITY],
-                    "stateProvince": object[self.STATE_PROVINCE],
-                    "country": object[self.COUNTRY],
-                    "region": object[self.REGION],
-                    "phone": company_obj.phone,
-                    "simpleDesc": company_obj.description,
-                    "cik": company_obj.cik,
-                    "stockSymbol": company_obj.stockSymbol,
-                    "Recent10kURL": company_obj.recent10kURL,
-                    "Recent10qURL": company_obj.recent10qURL,
-                    "zipPostal": company_obj.zipPostal,
+                tmp_objects[interaction_name] = {
+                    "interactionName": interaction_name,
+                    "simpleDesc": interactions.get_description(company_name, study_name),
+                    "contactZipPostal": interaction_obj['contactZipPostal'],
                     "linkedStudies": {study_name: study_id},
                     "linkedCompanies": {company_name: company_id},
                     "longitude": long_lat[0],
                     "latitude": long_lat[1],
-                    "notes": self.util.make_note(obj_type='Company Object: [' + company_obj.name + ']')
+                    "notes": self.util.make_note(obj_type='Interaction Object: [' + interaction_name + ']')
                 }
             else:
-                tmp_objects[object[self.RAW_STUDY_NAME]]["linkedStudies"][study_name] = study_id
-                tmp_objects[object[self.RAW_STUDY_NAME]]["linkedCompanies"][company_name] = company_id
+                tmp_objects[object[self.RAW_STUDY_NAME]]["linkedStudies"][study_name]=study_id
+                tmp_objects[object[self.RAW_STUDY_NAME]]["linkedCompanies"][company_name]=company_id
 
-        for study in tmp_objects.keys ():
+        # TODO Look at the study.py module for the right approach here
+        for interaction in tmp_objects.keys ():
             if file_output:
                 # Generally the model to create a GUID is to hash the name and the description for all objects.
                 # We will only use this option when we're outputing to a file.
-                tmp_objects[study]['GUID'] = self.util.hash_it(study + tmp_objects[study].simpleDesc)
-            tmp_objects[study]['totalStudies'] = self.util.total_item(tmp_objects[study].linkedStudies)
-            tmp_objects[study]['totalCompanies'] = self.util.total_item(tmp_objects[study].linkedCompanies)
-            final_objects.studies.append (tmp_objects[study])
+                tmp_objects[interaction]['GUID'] = self.util.hash_it(study + tmp_objects[interaction].simpleDesc) # TODO Revisit this
+            tmp_objects[interaction]['totalStudies'] = self.util.total_item(tmp_objects[interaction].linkedStudies)
+            tmp_objects[interaction]['totalCompanies'] = self.util.total_item(tmp_objects[interaction].linkedCompanies)
+            final_objects.studies.append (tmp_objects[interaction])
 
         final_objects.totalStudies = self.util.total_item(final_objects.studies)
 

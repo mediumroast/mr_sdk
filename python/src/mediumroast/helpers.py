@@ -40,7 +40,6 @@ class utilities:
 
     def save (self, file_name, string_data):
         """ Save string content to a file
-
         """
         my_file = open (file_name, 'w')
         my_file.write (string_data)
@@ -48,16 +47,16 @@ class utilities:
         return True
 
 
-    def correct_date (self, date_time):
+    def correct_date (self, date_time, default_time='0000'):
         """Ensure that the date and time are correct
 
         """
-        my_time=self.config['DEFAULT']['interviewTime']
+        my_time=default_time
         my_date=date_time
         if len (date_time) > 8:
             my_time=my_date[8:]
             my_date=my_date[0:8]
-        return (my_date, my_time)
+        return my_date, my_time
 
 
     def get_date_time (self):

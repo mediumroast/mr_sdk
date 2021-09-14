@@ -3,7 +3,7 @@ __author__  = "Michael Hay"
 __date__    = '2021-August-31'
 __copyright__ = "Copyright 2021 mediumroast.io. All rights reserved."
 
-from os import sep
+from os import sep # TODO validate if we need sep from os if not remove this line
 import sys, re
 sys.path.append('../')
 
