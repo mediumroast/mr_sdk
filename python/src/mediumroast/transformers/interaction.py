@@ -8,6 +8,7 @@ sys.path.append('../')
 
 from mediumroast.helpers import utilities
 from mediumroast.helpers import companies
+from mediumroast.helpers import interactions
 from mediumroast.helpers import studies
 import configparser as conf
 
@@ -28,7 +29,7 @@ class Transform:
             Using the attributes set when the object was constructed get the data from the file.
     """
 
-    def __init__ (self, rewrite_config='./interaction.ini', debug=False):
+    def __init__ (self, rewrite_config_dir='../src/mediumroast/transformers/', debug=False):
         # TODO consume the additional defaults for URL, etc.
         self.RAW_COMPANY_NAME=7
         self.RAW_STUDY_NAME=6
@@ -37,10 +38,19 @@ class Transform:
         self.COUNTRY=2
         self.STATE_PROVINCE=3
         self.CITY=4
+        self.URL=9
+        self.THUMBNAIL=10
+        self.DATETIME=0
+        self.RULES={
+            'dir': rewrite_config_dir,
+            'company': 'company.ini',
+            'study': 'study.ini',
+            'interaction': 'interaction.ini'
+        }
         
         # TODO wrap a try catch loop around the config file read
         self.rules=conf.ConfigParser()
-        self.rules.read(str(rewrite_config))
+        self.rules.read(self.RULES['dir'] + self.RULES['interaction'])
 
         # This imports the local utilies from mr_sdk for Python
         self.util=utilities()
@@ -71,7 +81,7 @@ class Transform:
         return {'groups': groups,
                 'abstract': abstract,
                 'status': status,
-                'type': interaction_type,
+                'interactionType': interaction_type,
                 'contactAddress': contact_address,
                 'contactZipPostal': contact_zipPostal,
                 'contactPhone': contact_phone,
@@ -90,7 +100,6 @@ class Transform:
         return statuses[idx]
 
  
-    # TODO Correct to follow load_interactions
     def create_objects (self, raw_objects, file_output=True):
         """Create study objects from a raw list of input data.
 
@@ -114,46 +123,64 @@ class Transform:
         for object in raw_objects:
 
             # Capture the right study_name and then fetch the study's ID
-            study_name = studies.get_name (object[self.RAW_STUDY_NAME]) 
-            study_id = studies.make_id (study_name) 
+            study_xform=studies(rewrite_config_dir=self.RULES['dir'])
+            study_name=study_xform.get_name (object[self.RAW_STUDY_NAME]) 
+            study_id=study_xform.make_id (study_name) 
             
             # Perform basic transformation of company data based upon data in the configuration file
-            interaction_name=interactions.get_name(self.RAW_DATE, study_name)
+            interaction_xform=interactions(rewrite_config_dir=self.RULES['dir'])
+            interaction_name=interaction_xform.get_name(object[self.RAW_DATE], study_name)
             interaction_obj=self._transform_interaction(interaction_name)
+            interaction_date, interaction_time=self.util.correct_date(object[self.DATETIME])
 
             # Capture the right company_name and then fetch the study's ID
-            company_name = companies.get_name (object[self.RAW_COMPANY_NAME]) # 
-            company_id = companies.make_id (company_name) 
+            company_xform=companies(rewrite_config_dir=self.RULES['dir'])
+            company_name=company_xform.get_name (object[self.RAW_COMPANY_NAME])
+            company_id=company_xform.make_id (company_name) 
             
             # TODO the date needs to be fixed potentially with the helper functions included
             # TODO this is only partially implemented and needs to be looked at again
-            if tmp_objects.get (object[self.RAW_study_name]) == None:
+            if tmp_objects.get (interaction_name) == None:
                 long_lat = self.util.locate (object[self.CITY] + ',' + object[self.STATE_PROVINCE] + ',' + object[self.COUNTRY])
                 tmp_objects[interaction_name] = {
                     "interactionName": interaction_name,
-                    "simpleDesc": interactions.get_description(company_name, study_name),
+                    "time": interaction_time,
+                    "date": interaction_date,
+                    "simpleDesc": interaction_xform.get_description(company_name, study_name),
+                    "contactAddress": interaction_obj['contactAddress'],
                     "contactZipPostal": interaction_obj['contactZipPostal'],
+                    "contactPhone": interaction_obj['contactPhone'],
+                    "contactLinkedIn": interaction_obj['contactLinkedIn'],
+                    "contactEmail": interaction_obj['contactEmail'],
+                    "contactTwitter": interaction_obj['contactTwitter'],
+                    "contactName": interaction_obj['contactName'],
+                    "public": interaction_obj['public'],
+                    "abstract": interaction_obj['abstract'],
+                    "interactionType": interaction_obj['interactionType'],
+                    "status": self._get_status(),
                     "linkedStudies": {study_name: study_id},
                     "linkedCompanies": {company_name: company_id},
                     "longitude": long_lat[0],
                     "latitude": long_lat[1],
+                    "url": self.URL,
+                    "thumbnail": self.THUMBNAIL,
                     "notes": self.util.make_note(obj_type='Interaction Object: [' + interaction_name + ']')
                 }
             else:
-                tmp_objects[object[self.RAW_STUDY_NAME]]["linkedStudies"][study_name]=study_id
-                tmp_objects[object[self.RAW_STUDY_NAME]]["linkedCompanies"][company_name]=company_id
+                tmp_objects[interaction_name]["linkedStudies"][study_name]=study_id
+                tmp_objects[interaction_name]["linkedCompanies"][company_name]=company_id
 
         # TODO Look at the study.py module for the right approach here
         for interaction in tmp_objects.keys ():
             if file_output:
                 # Generally the model to create a GUID is to hash the name and the description for all objects.
                 # We will only use this option when we're outputing to a file.
-                tmp_objects[interaction]['GUID'] = self.util.hash_it(study + tmp_objects[interaction].simpleDesc) # TODO Revisit this
-            tmp_objects[interaction]['totalStudies'] = self.util.total_item(tmp_objects[interaction].linkedStudies)
-            tmp_objects[interaction]['totalCompanies'] = self.util.total_item(tmp_objects[interaction].linkedCompanies)
-            final_objects.studies.append (tmp_objects[interaction])
+                tmp_objects[interaction]['GUID']=self.util.hash_it(interaction + tmp_objects[interaction]['simpleDesc'])
+            tmp_objects[interaction]['totalStudies']=self.util.total_item(tmp_objects[interaction]['linkedStudies'])
+            tmp_objects[interaction]['totalCompanies']=self.util.total_item(tmp_objects[interaction]['linkedCompanies'])
+            final_objects['interactions'].append (tmp_objects[interaction])
 
-        final_objects.totalStudies = self.util.total_item(final_objects.studies)
+        final_objects['totalInteractions'] = self.util.total_item(final_objects['interactions'])
 
         return final_objects
 
