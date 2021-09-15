@@ -38,12 +38,13 @@ class utilities:
         l = self.locator.geocode (place)
         return [l.longitude, l.latitude]
 
+    # TODO beef this up with proper error handling including try and except and returning the success or failure
     def save (self, file_name, string_data):
         """ Save string content to a file
         """
-        my_file = open (file_name, 'w')
-        my_file.write (string_data)
-        my_file.close ()
+        my_file=open(file_name, 'w')
+        my_file.write(string_data)
+        my_file.close()
         return True
 
 

@@ -1,4 +1,4 @@
-import sys, pprint
+import sys, pprint, argparse
 sys.path.append ('../src')
 
 from mediumroast.extractors.file import Extract as mr_extract_file
@@ -6,6 +6,7 @@ from mediumroast.extractors.s3bucket import Extract as mr_extract_s3
 from mediumroast.transformers.company import Transform as xform_companies 
 from mediumroast.transformers.study import Transform as xform_studies
 from mediumroast.transformers.interaction import Transform as xform_interactions
+from mediumroast.loaders.json import Store as load_it
 
 
 
@@ -84,17 +85,36 @@ def transform_interactions(src_data, obj_type='Interaction'):
         print ('Failed transformation, sent [' + str(sent) + '] and recived [' + str(recieved) + '] transformations don\'t match, exiting...')
         sys.exit(-1)
 
+def parse_cli_args(program_name='create_json_db', desc='A mediumroast.io example utility that exercises ETLs to create a JSON file for usage in the Node.js json-server.'):
+    parser=argparse.ArgumentParser(prog=program_name, description=desc)
+    parser.add_argument ('--src_location', help="Can be one of s3, filesystem or file, but defaults to s3", type=str, dest='src_location', default='s3')
+    parser.add_argument ('--src_container', help="The path to the source data to be used for ETL", type=str, dest='src_container')
+    parser.add_argument ('--src_file', help="The name of the file to use for input of the source data", type=str, dest='src_file')
+    parser.add_argument ('--s3_url', help="Using either IP or hostname the network address and port for the S3 compatible object store", type=str, dest='s3_url')
+    parser.add_argument ('--s3_access_key', help="S3 access key or user name", type=str, dest='s3_access_key')
+    parser.add_argument ('--s3_secret_key', help="S3 secret key", type=str, dest='s3_secret_key')
+    parser.add_argument ('--output_json', help="The full path to the JSON output file", type=str, dest='output_json' rdefault='/tmp/mr_db.json')
+    cli_args = parser.parse_args ()
+
+    if cli_args.src_location == 's3': return cli_args if cli_args.s3_url and s3_access_key and s3_secret_key and src_container else raise argparse.ArgumentError('No S3 URL, bucket, access or secret key specified')
+    elif cli_args.src_location == 'file': return cli_args if cli_args.src_container and cli_args.src_file else raise argparse.ArgumentError('No directory or file name specified.')
+    elif cli_args.src_location == 'filesystem': return cli_args if cli_args.src_container else raise argparse.ArgumentError('No directory specified')
 
 
 if __name__ == "__main__":
-    # Establish a print function for better visibility
+    # Establish a print function for better visibility, parse cli args, and setup
     printer=pprint.PrettyPrinter()
+    my_args=parse_cli_args()
+    loader=load_it(filename=cli_args.output)
     
-    # TODO create a cli option to choose whether or not to read from a file or an S3 bucket --src_file=[filename]
-    # TODO the S3 bucket info and Filesystem info should largely follow the same options --src_location=[s3|filesystem|file] --src_container=[/path/to/src] 
     # Extract the data from the source
-    #extracted_data=extract_from_file()
-    extracted_data=extract_from_s3()
+    if my_args.src_location == 'file':
+        extracted_data=extract_from_file()
+    elif my_args.src_locartion == 's3':
+        extracted_data=extract_from_s3()
+    else:
+        print('Invalid or unsupported location type specified, please try either file or s3')
+        sys.exit(-1)
 
     
     # Transform the extracted data into a proper JSON structure suitable for Node.js json-server
@@ -128,4 +148,4 @@ if __name__ == "__main__":
     # 4. proceed to the next study
     
     # Serialize to the file specified on the command line or the default
-    printer.pprint (transformed_data)
+    status, result=loader(transformed_data)
