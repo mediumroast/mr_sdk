@@ -42,10 +42,15 @@ class utilities:
     def save (self, file_name, string_data):
         """ Save string content to a file
         """
-        my_file=open(file_name, 'w')
-        my_file.write(string_data)
-        my_file.close()
-        return True
+        with open(file_name, 'w') as my_file:
+            try:
+                my_file.write(string_data)
+            except IOError as err:
+                return False, err
+            except:
+                return False, 'Something went wrong, check the file output.'
+            finally:
+                return True, 'Successfully wrote the data to [' + file_name +']'
 
 
     def correct_date (self, date_time, default_time='0000'):

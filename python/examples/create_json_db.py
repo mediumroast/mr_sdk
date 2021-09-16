@@ -1,3 +1,5 @@
+#!/bin/env python3
+
 import sys, pprint, argparse
 sys.path.append ('../src')
 
@@ -93,24 +95,21 @@ def parse_cli_args(program_name='create_json_db', desc='A mediumroast.io example
     parser.add_argument ('--s3_url', help="Using either IP or hostname the network address and port for the S3 compatible object store", type=str, dest='s3_url')
     parser.add_argument ('--s3_access_key', help="S3 access key or user name", type=str, dest='s3_access_key')
     parser.add_argument ('--s3_secret_key', help="S3 secret key", type=str, dest='s3_secret_key')
-    parser.add_argument ('--output_json', help="The full path to the JSON output file", type=str, dest='output_json' rdefault='/tmp/mr_db.json')
+    parser.add_argument ('--output_json', help="The full path to the JSON output file", type=str, dest='output_json', default='/tmp/mr_db.json')
     cli_args = parser.parse_args ()
-
-    if cli_args.src_location == 's3': return cli_args if cli_args.s3_url and s3_access_key and s3_secret_key and src_container else raise argparse.ArgumentError('No S3 URL, bucket, access or secret key specified')
-    elif cli_args.src_location == 'file': return cli_args if cli_args.src_container and cli_args.src_file else raise argparse.ArgumentError('No directory or file name specified.')
-    elif cli_args.src_location == 'filesystem': return cli_args if cli_args.src_container else raise argparse.ArgumentError('No directory specified')
+    return cli_args
 
 
 if __name__ == "__main__":
     # Establish a print function for better visibility, parse cli args, and setup
     printer=pprint.PrettyPrinter()
     my_args=parse_cli_args()
-    loader=load_it(filename=cli_args.output)
+    loader=load_it(filename=my_args.output_json)
     
     # Extract the data from the source
     if my_args.src_location == 'file':
         extracted_data=extract_from_file()
-    elif my_args.src_locartion == 's3':
+    elif my_args.src_location == 's3':
         extracted_data=extract_from_s3()
     else:
         print('Invalid or unsupported location type specified, please try either file or s3')
@@ -148,4 +147,9 @@ if __name__ == "__main__":
     # 4. proceed to the next study
     
     # Serialize to the file specified on the command line or the default
-    status, result=loader(transformed_data)
+    status, result=loader.persist(transformed_data)
+    if status:
+        print(result)
+    else:
+        print('Creation of the JSON DB failed with: ' + result)
+        sys.exit(-1)

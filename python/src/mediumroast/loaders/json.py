@@ -26,12 +26,11 @@ class Store:
 
     def __init__ (self, filename='/tmp/mr_db.json', debug=False, indent=4):
         self.FILE=filename
-        self.DIRECTORY=directory
         self.INDENT=indent
 
         # This imports the local utilies from mr_sdk for Python
         self.util=utilities()
 
     def persist(self, objs):
-        success, result = self.util.save(self.DIRECTORY + self.FILE, json.dumps(objs, indent=self.INDENT))
+        success, result = self.util.save(self.FILE, json.dumps(objs, indent=self.INDENT))
         return success, result
