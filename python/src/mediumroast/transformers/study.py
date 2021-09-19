@@ -193,6 +193,42 @@ class Transform:
         return document
 
 
+    def _get_iterations(self, interactions, interaction_xform):
+        """Internal method to create the iterations structure"""
+        itr_state="unprocessed_unprocessed"
+        int_state="unsummarized"
+        final_iterations={}
+        for interaction in interactions:
+            itr_study_id, itr_company_id=interaction_xform.get_iteration_id(interaction) # Provide the interaction name
+            if final_iterations.get(itr_study_id) == None:
+                final_iterations[itr_study_id]={
+                    "state": itr_state,
+                    "totalInteractions": 0,
+                    "interactions": {
+                        interaction: {
+                            "guid": interactions[interaction],
+                            "state": int_state
+                        }
+                    }
+                }
+            else:
+                final_iterations[itr_study_id]["interactions"][interaction]={"guid": interactions[interaction], "state": int_state}
+        
+        interactions_sum=0
+        iterations_sum=0
+        for iteration in final_iterations:
+            total_interactions=self.util.total_item(final_iterations[iteration]["interactions"])
+            final_iterations[iteration]["totalInteractions"]=total_interactions
+            interactions_sum+=total_interactions
+            iterations_sum+=1
+
+        final_iterations["state"]=itr_state 
+        final_iterations["totalInteractions"]=interactions_sum
+        final_iterations["totalIterations"]=iterations_sum
+
+        return final_iterations
+
+
     # EXTERNAL METHODS AND HELPER FUNCTIONS
 
     def create_objects (self, raw_objects, file_output=True):
@@ -211,8 +247,13 @@ class Transform:
         final_objects={
             'totalStudies': 0,
             'studies': []
-        }  
+        }
 
+        # Construct objects
+        interaction_xform=interactions(rewrite_config_dir=self.RULES['dir'])  
+        company_xform=companies(rewrite_config_dir=self.RULES['dir'])
+
+        # Temp storage for objects
         tmp_objects={}
 
         for object in raw_objects:
@@ -221,14 +262,12 @@ class Transform:
             study_obj=self._transform_study(object[self.RAW_STUDY_NAME])
 
             # Capture the right company_name and then fetch the study's ID
-            company_xform=companies(rewrite_config_dir=self.RULES['dir'])
             company_name = company_xform.get_name(object[self.RAW_COMPANY_NAME])
             company_id = company_xform.make_id(company_name)
             
             # Capture the right study_name and then fetch the study's ID
-            interaction_xform=interactions(rewrite_config_dir=self.RULES['dir'])
-            interaction_name=interaction_xform.get_name(object[self.RAW_STUDY_NAME], object[self.RAW_DATE])
-            interaction_id=interaction_xform.make_id(object[self.RAW_DATE], company_name, self.RAW_STUDY_NAME)
+            interaction_name=interaction_xform.get_name(object[self.RAW_DATE], study_obj['name'])
+            interaction_id=interaction_xform.make_id(object[self.RAW_DATE], company_name, study_obj['name'])
 
             if tmp_objects.get (object[self.RAW_STUDY_NAME]) == None:
                 tmp_objects[object[self.RAW_STUDY_NAME]] = {
@@ -243,6 +282,15 @@ class Transform:
                     "keyThemeFrequencies": self._get_keytheme_frequencies(study_obj['name']),
                     "totalKeyThemes": 0,
                     "keyQuestions": self._get_keyquestions(study_obj['name']),
+                    "questions": { # NOTE this is something that will need to change in the long term, it is ok for now. Essentially need iterations.
+                        "totalIterations": 0,
+                        "totalQuestions": 0,
+                        "default": {
+                            "totalQuestions": 0,
+                            "questions": self._get_keyquestions(study_obj['name'])
+                        }
+                    },
+                    "iterations": {},
                     "totalKeyQuestions": 0,
                     "document": self._get_document(study_obj['name']),
                     "public": study_obj['public'],
@@ -257,10 +305,17 @@ class Transform:
                 # Generally the model to create a GUID is to hash the name and the description for all objects.
                 # We will only use this option when we're outputing to a file.
                 tmp_objects[study]['GUID'] = self.util.hash_it(study + tmp_objects[study]['description'])
-            tmp_objects[study]['totalInteractions'] = self.util.total_item(tmp_objects[study]['linkedInteractions'])
+            
+            interactions_total=self.util.total_item(tmp_objects[study]['linkedInteractions'])
+            questions_total=self.util.total_item(tmp_objects[study]['keyQuestions'])
+            tmp_objects[study]['totalInteractions']=interactions_total
             tmp_objects[study]['totalCompanies'] = self.util.total_item(tmp_objects[study]['linkedCompanies'])
             tmp_objects[study]['totalKeyThemes'] = self.util.total_item(tmp_objects[study]['keyThemes'])
-            tmp_objects[study]['totalKeyQuestions'] = self.util.total_item(tmp_objects[study]['keyQuestions'])
+            tmp_objects[study]['totalKeyQuestions']=questions_total
+            tmp_objects[study]['questions']['totalQuestions']=questions_total # NOTE this is a hack
+            tmp_objects[study]['questions']['totalIterations']=self.util.total_item(tmp_objects[study]['questions']) - 2 # NOTE this is a hack
+            tmp_objects[study]['questions']['default']['totalQuestions']=questions_total  # NOTE this is a hack
+            tmp_objects[study]['iterations']=self.util.get_iterations(tmp_objects[study]['linkedInteractions'], interaction_xform, "study")
             if (self.debug): print (tmp_objects[study])
             final_objects['studies'].append(tmp_objects[study])
 

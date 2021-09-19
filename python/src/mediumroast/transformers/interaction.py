@@ -146,6 +146,7 @@ class Transform:
                     "interactionName": interaction_name,
                     "time": interaction_time,
                     "date": interaction_date,
+                    "state": "unsummarized",
                     "simpleDesc": interaction_xform.get_description(company_name, study_name),
                     "contactAddress": interaction_obj['contactAddress'],
                     "contactZipPostal": interaction_obj['contactZipPostal'],

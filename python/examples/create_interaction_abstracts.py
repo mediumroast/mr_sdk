@@ -1,3 +1,5 @@
+# TODO this utility should be moved to caffeine and remove from this repo
+
 import sys, os, pprint
 sys.path.append ('../src')
 # Local mediumroast.io module imports
