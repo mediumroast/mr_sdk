@@ -3,7 +3,9 @@ __author__  = "Michael Hay"
 __date__    = '2021-August-30'
 __copyright__ = "Copyright 2021 mediumroast.io. All rights reserved."
 
-from .json_server import Interactions as json_interactions
+from .json_server import Interactions as json_interactions 
+from .json_server import Studies as json_studies
+# TODO import other objects
 from .json_server import Auth as json_authenticator
 
 class Auth:
@@ -26,24 +28,43 @@ class Auth:
 class Studies:
     def __init__(self, credential):
         self.CRED=credential
+        self.studies=json_studies(credential)
     
     def get_all(self):
-        pass
+        if self.CRED['server_type'] == 'json':
+            return True, self.studies.get_all()
+        else:
+            raise NotImplementedError
 
     def get_guid_by_name(self, name):
-        pass
+        if self.CRED['server_type'] == 'json':
+            return True, self.studies.get_guid_by_name(name)
+        else:
+            raise NotImplementedError
 
     def get_name_by_guid(self, guid):
-        pass
+        if self.CRED['server_type'] == 'json':
+            return True, self.studies.get_name_by_guid(guid)
+        else:
+            raise NotImplementedError
     
-    def get_by_name(self, study_name):
-        pass
+    def get_by_name(self, name):
+        if self.CRED['server_type'] == 'json':
+            return True, self.studies.get_by_name(name)
+        else:
+            raise NotImplementedError
 
     def get_by_guid(self, guid):
-        pass
+        if self.CRED['server_type'] == 'json':
+            return True, self.studies.get_by_guid(guid)
+        else:
+            raise NotImplementedError
 
-    def get_corpuses(self, guid):
-        pass
+    def get_iterations(self, guid):
+        if self.CRED['server_type'] == 'json':
+            return True, self.studies.get_iterations()
+        else:
+            raise NotImplementedError
 
     def get_corpuses_unsummarized(self, guid):
         pass

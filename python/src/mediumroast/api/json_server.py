@@ -54,8 +54,8 @@ class Auth:
 
 class Studies:
     def __init__(self, credential):
-        self.URL=rest_server_url
-        self.SERVER_TYPE=server_type
+        self.CRED=credential
+        self.calls=rest_scaffold(credential)
     
     def get_all(self):
         my_url='/studies'
@@ -78,7 +78,7 @@ class Studies:
             'studyName': my_obj['studyName']
         }
     
-    def get_by_name(self, study_name):
+    def get_by_name(self, name):
         my_url='/studies?studyName=' + name
         my_obj=self.calls.get_obj(my_url)[0]
         return my_obj
@@ -88,8 +88,17 @@ class Studies:
         my_obj=self.calls.get_obj(my_url)[0]
         return my_obj
 
-    def get_corpuses(self, guid):
-        pass
+    def get_iterations(self, guid):
+        my_url='/studies'
+        my_objs=self.calls.get_obj(my_url)
+        filtered_objs=[]
+        for my_obj in my_objs:
+            filtered_objs.append(
+                {"studyName": my_obj['studyName'],
+                "GUID": my_obj['GUID'],
+                "iterations": my_obj['iterations']}
+            )
+        return filtered_objs
 
     def get_corpuses_unsummarized(self, guid):
         pass
@@ -99,8 +108,8 @@ class Studies:
 
 class Companies:
     def __init__(self, credential):
-        self.URL=rest_server_url
-        self.SERVER_TYPE=server_type
+        self.CRED=credential
+        self.calls=rest_scaffold(credential)
     
     def get_all(self):
         my_url='/companies'
