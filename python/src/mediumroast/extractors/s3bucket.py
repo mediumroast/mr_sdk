@@ -22,7 +22,7 @@ class Extract:
         # This imports the local utilies from mr_sdk for Python
         self.util=utilities()
         self.BUCKET=bucket
-        self.BASE_URL='s3://'
+        self.BASE_URL=url.replace('http', 's3')
         self.DEBUG=debug
 
     def _get_index (self, resource):
@@ -42,12 +42,12 @@ class Extract:
             if thumb_regex.match(obj_name):
                 obj_name=obj_name.replace ('thumb_', '')
                 obj_hash=self.util.hash_it(obj_name)
-                entry_dict[obj_hash].append(self.BASE_URL + self.BUCKET + '/' + obj.key)
+                entry_dict[obj_hash].append(self.BASE_URL + '/' + self.BUCKET + '/' + obj.key)
             else:
                 if thumb_regex.match(obj.key): continue
                 
                 entry_dict[obj_hash]=obj_name.split ('-')
-                entry_dict[obj_hash].append(self.BASE_URL + self.BUCKET + '/' + obj.key)
+                entry_dict[obj_hash].append(self.BASE_URL + '/' + self.BUCKET + '/' + obj.key)
         return list(entry_dict.values ()) # unwind the dict into a list and return
 
 

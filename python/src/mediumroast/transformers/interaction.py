@@ -163,8 +163,8 @@ class Transform:
                     "linkedCompanies": {company_name: company_id},
                     "longitude": long_lat[0],
                     "latitude": long_lat[1],
-                    "url": self.URL,
-                    "thumbnail": self.THUMBNAIL,
+                    "url": object[self.URL],
+                    "thumbnail": object[self.THUMBNAIL],
                     "notes": self.util.make_note(obj_type='Interaction Object: [' + interaction_name + ']')
                 }
             else:
