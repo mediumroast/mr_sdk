@@ -30,12 +30,6 @@ class Studies:
     def get_all(self):
         pass
 
-    def get_all_corpuses_unsummarized(self):
-        pass
-
-    def get_all_corpuses_unthemed(self):
-        pass
-
     def get_guid_by_name(self, name):
         pass
 
@@ -62,12 +56,6 @@ class Companies:
         self.CRED=credential
     
     def get_all(self):
-        pass
-
-    def get_all_corpuses_unsummarized(self):
-        pass
-
-    def get_all_corpuses_unthemed(self):
         pass
 
     def get_guid_by_name(self, name):

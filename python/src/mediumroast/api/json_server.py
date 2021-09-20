@@ -21,6 +21,13 @@ class rest_scaffold:
         resp_obj=requests.put(url, json=obj)
         return resp_obj.json()
 
+    # TODO implement put and patch objects
+    # TODO implement interaction.set_abstract
+    # TODO implement interaction.set_state
+    # TODO implement study.corpus.set_state <-- should be done for parent/children
+    # TODO implement company.corpus.set_state <-- should be done for parent/children
+    # TODO change all corpuses to iterations
+
 
 
 class Auth:
@@ -51,25 +58,35 @@ class Studies:
         self.SERVER_TYPE=server_type
     
     def get_all(self):
-        pass
+        my_url='/studies'
+        return self.calls.get_obj(my_url)
 
-    def get_all_corpuses_unsummarized(self):
-        pass
-
-    def get_all_corpuses_unthemed(self):
-        pass
 
     def get_guid_by_name(self, name):
-        pass
+        my_url='/studies?studyName=' + name
+        my_obj=self.calls.get_obj(my_url)[0]
+        return {
+            'studyName': my_obj['studyName'],
+            'GUID': my_obj['GUID']            
+        }
 
     def get_name_by_guid(self, guid):
-        pass
+        my_url='/studies?GUID=' + guid
+        my_obj=self.calls.get_obj(my_url)[0]
+        return {
+            'GUID': my_obj['GUID'],
+            'studyName': my_obj['studyName']
+        }
     
     def get_by_name(self, study_name):
-        pass
+        my_url='/studies?studyName=' + name
+        my_obj=self.calls.get_obj(my_url)[0]
+        return my_obj
 
     def get_by_guid(self, guid):
-        pass
+        my_url='/studies?GUID=' + guid
+        my_obj=self.calls.get_obj(my_url)[0]
+        return my_obj
 
     def get_corpuses(self, guid):
         pass
@@ -86,7 +103,8 @@ class Companies:
         self.SERVER_TYPE=server_type
     
     def get_all(self):
-        pass
+        my_url='/companies'
+        return self.calls.get_obj(my_url)
 
     def get_all_corpuses_unsummarized(self):
         pass
@@ -95,16 +113,30 @@ class Companies:
         pass
 
     def get_guid_by_name(self, name):
-        pass
+        my_url='/companies?companyName=' + name
+        my_obj=self.calls.get_obj(my_url)[0]
+        return {
+            'companyName': my_obj['companyName'],
+            'GUID': my_obj['GUID']            
+        }
 
     def get_name_by_guid(self, guid):
-        pass
+        my_url='/companies?GUID=' + guid
+        my_obj=self.calls.get_obj(my_url)[0]
+        return {
+            'GUID': my_obj['GUID'],
+            'companyName': my_obj['companyName']
+        }
     
-    def get_by_name(self, study_name):
-        pass
+    def get_by_name(self, name):
+        my_url='/companies?companyName=' + name
+        my_obj=self.calls.get_obj(my_url)[0]
+        return my_obj
 
     def get_by_guid(self, guid):
-        pass
+        my_url='/companies?GUID=' + guid
+        my_obj=self.calls.get_obj(my_url)[0]
+        return my_obj
 
     def get_corpuses(self, guid):
         pass
