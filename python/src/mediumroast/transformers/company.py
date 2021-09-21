@@ -221,9 +221,6 @@ class Transform:
         # Temp storage for objects
         tmp_objects={}
 
-        # Integer Id
-        id=1
-
         for object in raw_objects:
 
             # Perform basic transformation of company data based upon data in the configuration file
@@ -240,7 +237,6 @@ class Transform:
             if tmp_objects.get (object[self.RAW_COMPANY_NAME]) == None:
                 long_lat = self.util.locate (object[self.CITY] + ',' + object[self.STATE_PROVINCE] + ',' + object[self.COUNTRY])
                 tmp_objects[object[self.RAW_COMPANY_NAME]] = {
-                    "id": id,
                     "companyName": company_obj['name'],
                     "industry": company_obj['industry'],
                     "role": company_obj['role'],
@@ -274,7 +270,9 @@ class Transform:
             if file_output:
                 # Generally the model to create a GUID is to hash the name and the description for all objects.
                 # We will only use this option when we're outputing to a file.
-                tmp_objects[company]['GUID'] = self.util.hash_it(str(company) + str(tmp_objects[company]['simpleDesc']))
+                guid=self.util.hash_it(str(company) + str(tmp_objects[company]['simpleDesc']))
+                tmp_objects[company]['GUID']=guid
+                tmp_objects[company]['id']=guid
             tmp_objects[company]['totalInteractions'] = self.util.total_item(tmp_objects[company]['linkedInteractions'])
             tmp_objects[company]['totalStudies'] = self.util.total_item(tmp_objects[company]['linkedStudies'])
             tmp_objects[company]["iterations"]=self.util.get_iterations(tmp_objects[company]['linkedInteractions'], interaction_xform, "company")

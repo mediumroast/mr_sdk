@@ -256,9 +256,6 @@ class Transform:
         # Temp storage for objects
         tmp_objects={}
 
-        # Integer Id
-        id=1
-
         for object in raw_objects:
 
             # Perform basic transformation of company data based upon data in the configuration file
@@ -274,7 +271,6 @@ class Transform:
 
             if tmp_objects.get (object[self.RAW_STUDY_NAME]) == None:
                 tmp_objects[object[self.RAW_STUDY_NAME]] = {
-                    "id": id,
                     "studyName": study_obj['name'],
                     "description": study_obj['description'],
                     "linkedCompanies": {company_name: company_id},
@@ -310,7 +306,9 @@ class Transform:
             if file_output:
                 # Generally the model to create a GUID is to hash the name and the description for all objects.
                 # We will only use this option when we're outputing to a file.
-                tmp_objects[study]['GUID'] = self.util.hash_it(study + tmp_objects[study]['description'])
+                guid=self.util.hash_it(study + tmp_objects[study]['description'])
+                tmp_objects[company]['GUID']=guid
+                tmp_objects[company]['id']=guid
             
             interactions_total=self.util.total_item(tmp_objects[study]['linkedInteractions'])
             questions_total=self.util.total_item(tmp_objects[study]['keyQuestions'])

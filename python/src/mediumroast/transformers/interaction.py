@@ -121,9 +121,6 @@ class Transform:
         # Temp storage for objects
         tmp_objects={}
 
-        # Integer Id
-        id=1
-
         for object in raw_objects:
 
             # Capture the right study_name and then fetch the study's ID
@@ -147,7 +144,6 @@ class Transform:
             if tmp_objects.get (interaction_name) == None:
                 long_lat = self.util.locate (object[self.CITY] + ',' + object[self.STATE_PROVINCE] + ',' + object[self.COUNTRY])
                 tmp_objects[interaction_name] = {
-                    "id": id,
                     "interactionName": interaction_name,
                     "time": interaction_time,
                     "date": interaction_date,
@@ -183,7 +179,9 @@ class Transform:
             if file_output:
                 # Generally the model to create a GUID is to hash the name and the description for all objects.
                 # We will only use this option when we're outputing to a file.
-                tmp_objects[interaction]['GUID']=self.util.hash_it(interaction + tmp_objects[interaction]['simpleDesc'])
+                guid=self.util.hash_it(interaction + tmp_objects[interaction]['simpleDesc'])
+                tmp_objects[company]['GUID']=guid
+                tmp_objects[company]['id']=guid
             tmp_objects[interaction]['totalStudies']=self.util.total_item(tmp_objects[interaction]['linkedStudies'])
             tmp_objects[interaction]['totalCompanies']=self.util.total_item(tmp_objects[interaction]['linkedCompanies'])
             final_objects['interactions'].append (tmp_objects[interaction])
