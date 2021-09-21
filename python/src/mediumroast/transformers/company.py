@@ -221,6 +221,9 @@ class Transform:
         # Temp storage for objects
         tmp_objects={}
 
+        # Integer Id
+        id=1
+
         for object in raw_objects:
 
             # Perform basic transformation of company data based upon data in the configuration file
@@ -237,6 +240,7 @@ class Transform:
             if tmp_objects.get (object[self.RAW_COMPANY_NAME]) == None:
                 long_lat = self.util.locate (object[self.CITY] + ',' + object[self.STATE_PROVINCE] + ',' + object[self.COUNTRY])
                 tmp_objects[object[self.RAW_COMPANY_NAME]] = {
+                    "id": id,
                     "companyName": company_obj['name'],
                     "industry": company_obj['industry'],
                     "role": company_obj['role'],
@@ -263,6 +267,8 @@ class Transform:
             else:
                 tmp_objects[object[self.RAW_COMPANY_NAME]]["linkedStudies"][study_name]=study_id
                 tmp_objects[object[self.RAW_COMPANY_NAME]]["linkedInteractions"][interaction_name]=interaction_id
+
+            id+=1
 
         for company in tmp_objects.keys ():
             if file_output:

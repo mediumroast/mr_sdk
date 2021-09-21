@@ -118,7 +118,11 @@ class Transform:
             'interactions': []
         }  
 
+        # Temp storage for objects
         tmp_objects={}
+
+        # Integer Id
+        id=1
 
         for object in raw_objects:
 
@@ -143,6 +147,7 @@ class Transform:
             if tmp_objects.get (interaction_name) == None:
                 long_lat = self.util.locate (object[self.CITY] + ',' + object[self.STATE_PROVINCE] + ',' + object[self.COUNTRY])
                 tmp_objects[interaction_name] = {
+                    "id": id,
                     "interactionName": interaction_name,
                     "time": interaction_time,
                     "date": interaction_date,
@@ -170,6 +175,8 @@ class Transform:
             else:
                 tmp_objects[interaction_name]["linkedStudies"][study_name]=study_id
                 tmp_objects[interaction_name]["linkedCompanies"][company_name]=company_id
+
+            id+=1
 
         # TODO Look at the study.py module for the right approach here
         for interaction in tmp_objects.keys ():
