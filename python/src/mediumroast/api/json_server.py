@@ -88,7 +88,7 @@ class Studies:
         my_obj=self.calls.get_obj(my_url)[0]
         return my_obj
 
-    def get_iterations(self, guid):
+    def get_iterations(self):
         my_url='/studies'
         my_objs=self.calls.get_obj(my_url)
         filtered_objs=[]
@@ -100,11 +100,35 @@ class Studies:
             )
         return filtered_objs
 
-    def get_corpuses_unsummarized(self, guid):
-        pass
+    def get_questions(self):
+        my_url='/studies'
+        my_objs=self.calls.get_obj(my_url)
+        filtered_objs=[]
+        for my_obj in my_objs:
+            filtered_objs.append(
+                {"studyName": my_obj['studyName'],
+                "GUID": my_obj['GUID'],
+                "questions": my_obj['questions']}
+            )
+        return filtered_objs
 
-    def get_corpuses_unthemed(self, guid):
-        pass
+    def get_iterations_by_state(self, state="unthemed"):
+        my_url='/studies?iterations.state=unprocessed_unprocessed'
+        my_objs=self.calls.get_obj(my_url)
+        filtered_objs=[]
+        for my_obj in my_objs:
+            entry={"studyName": my_obj['studyName'],
+                    "GUID": my_obj['GUID'],
+                    "iterations": my_obj['iterations']}
+            theme_state, summary_state=my_obj['iterations']['state'].split('_')
+            if state == "unthemed" and theme_state != "themed":
+                filtered_objs.append(entry)
+            elif state == "unsummarized" and theme_state != "summarized":
+                filtered_objs.append(entry)
+            else:
+                continue
+        return filtered_objs
+
 
 class Companies:
     def __init__(self, credential):
@@ -115,11 +139,17 @@ class Companies:
         my_url='/companies'
         return self.calls.get_obj(my_url)
 
-    def get_all_corpuses_unsummarized(self):
-        pass
-
-    def get_all_corpuses_unthemed(self):
-        pass
+    def get_iterations(self):
+        my_url='/companies'
+        my_objs=self.calls.get_obj(my_url)
+        filtered_objs=[]
+        for my_obj in my_objs:
+            filtered_objs.append(
+                {"companyName": my_obj['companyName'],
+                "GUID": my_obj['GUID'],
+                "iterations": my_obj['iterations']}
+            )
+        return filtered_objs
 
     def get_guid_by_name(self, name):
         my_url='/companies?companyName=' + name
@@ -147,14 +177,23 @@ class Companies:
         my_obj=self.calls.get_obj(my_url)[0]
         return my_obj
 
-    def get_corpuses(self, guid):
-        pass
+    def get_iterations_by_state(self, state="unthemed"):
+        my_url='/companies?iterations.state=unprocessed_unprocessed'
+        my_objs=self.calls.get_obj(my_url)
+        filtered_objs=[]
+        for my_obj in my_objs:
+            entry={"companyName": my_obj['companyName'],
+                    "GUID": my_obj['GUID'],
+                    "iterations": my_obj['iterations']}
+            theme_state, summary_state=my_obj['iterations']['state'].split('_')
+            if state == "unthemed" and theme_state != "themed":
+                filtered_objs.append(entry)
+            elif state == "unsummarized" and theme_state != "summarized":
+                filtered_objs.append(entry)
+            else:
+                continue
+        return filtered_objs
 
-    def get_corpuses_unsummarized(self, guid):
-        pass
-
-    def get_corpuses_unthemed(self, guid):
-        pass
 
 
 class Interactions:

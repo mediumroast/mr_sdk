@@ -45,4 +45,9 @@ if __name__ == "__main__":
         success, resp=interaction_ctl.get_all_unsummarized()
     else:
         success, resp=interaction_ctl.get_all()
-    printer.pprint(resp)
+    
+    if success:
+        printer.pprint(resp)
+    else:
+        print('CLI ERROR: This is a generic error message, as something went wrong.')
+        sys.exit(-1)

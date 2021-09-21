@@ -5,6 +5,7 @@ __copyright__ = "Copyright 2021 mediumroast.io. All rights reserved."
 
 from .json_server import Interactions as json_interactions 
 from .json_server import Studies as json_studies
+from .json_server import Companies as json_companies
 # TODO import other objects
 from .json_server import Auth as json_authenticator
 
@@ -60,45 +61,71 @@ class Studies:
         else:
             raise NotImplementedError
 
-    def get_iterations(self, guid):
+    def get_iterations(self):
         if self.CRED['server_type'] == 'json':
             return True, self.studies.get_iterations()
         else:
             raise NotImplementedError
 
-    def get_corpuses_unsummarized(self, guid):
-        pass
+    def get_questions(self):
+        if self.CRED['server_type'] == 'json':
+            return True, self.studies.get_questions()
+        else:
+            raise NotImplementedError
 
-    def get_corpuses_unthemed(self, guid):
-        pass
+    def get_iterations_by_state(self, state="unthemed"):
+        if self.CRED['server_type'] == 'json':
+            return True, self.studies.get_iterations_by_state(state)
+        else:
+            raise NotImplementedError
+
 
 class Companies:
     def __init__(self, credential):
         self.CRED=credential
+        self.companies=json_companies(credential)
     
     def get_all(self):
-        pass
+        if self.CRED['server_type'] == 'json':
+            return True, self.companies.get_all()
+        else:
+            raise NotImplementedError
 
     def get_guid_by_name(self, name):
-        pass
+        if self.CRED['server_type'] == 'json':
+            return True, self.companies.get_guid_by_name(name)
+        else:
+            raise NotImplementedError
 
     def get_name_by_guid(self, guid):
-        pass
+        if self.CRED['server_type'] == 'json':
+            return True, self.companies.get_name_by_guid(guid)
+        else:
+            raise NotImplementedError
     
-    def get_by_name(self, study_name):
-        pass
+    def get_by_name(self, name):
+        if self.CRED['server_type'] == 'json':
+            return True, self.companies.get_by_name(name)
+        else:
+            raise NotImplementedError
 
     def get_by_guid(self, guid):
-        pass
+        if self.CRED['server_type'] == 'json':
+            return True, self.companies.get_by_guid(guid)
+        else:
+            raise NotImplementedError
 
-    def get_corpuses(self, guid):
-        pass
+    def get_iterations(self):
+        if self.CRED['server_type'] == 'json':
+            return True, self.companies.get_iterations()
+        else:
+            raise NotImplementedError
 
-    def get_corpuses_unsummarized(self, guid):
-        pass
-
-    def get_corpuses_unthemed(self, guid):
-        pass
+    def get_iterations_by_state(self, state="unthemed"):
+        if self.CRED['server_type'] == 'json':
+            return True, self.companies.get_iterations_by_state(state)
+        else:
+            raise NotImplementedError
 
 
 class Interactions:
