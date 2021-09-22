@@ -34,7 +34,7 @@ if __name__ == "__main__":
     elif my_args.guid_by_name:
         success, resp=interaction_ctl.get_guid_by_name(my_args.guid_by_name)
     elif my_args.by_guid:
-        success, resp=interaction_ctl.by_guid(my_args.by_guid)
+        success, resp=interaction_ctl.get_by_guid(my_args.by_guid)
     elif my_args.by_name:
         success, resp=interaction_ctl.get_by_name(my_args.by_name)
     elif my_args.url_by_guid:

@@ -127,6 +127,21 @@ class Companies:
         else:
             raise NotImplementedError
 
+    def set_property(self, guid, json):
+        if self.CRED['server_type'] == 'json':
+            return True, self.companies.set_property(guid, json)
+        else:
+            raise NotImplementedError
+
+    # TODO need to implement this function it is not yet coded
+    def set_states_by_guid(self, guid, states):
+        if self.CRED['server_type'] == 'json':
+            return True, self.companies.set_property(guid, json)
+        else:
+            raise NotImplementedError
+
+    def set_states(self, )
+
 
 class Interactions:
     def __init__(self, credential):
@@ -182,8 +197,25 @@ class Interactions:
             raise NotImplementedError
 
     def set_state(self, guid, state):
+        # TODO Change to try except structure to bettle handle errors
         if self.CRED['server_type'] == 'json':
-            return True, self.interactions.set_state(guid, state)
+            my_json, my_code=self.interactions.set_state(guid, state)
+            if my_code => 400 or my_code => 500:
+                return False, 
+            return True, 
+        else:
+            raise NotImplementedError
+
+    def set_all_states(self, state):
+        if self.CRED['server_type'] == 'json':
+            final_objs=[]
+            interactions=self.interactions.get_all_umsummarized()
+            for interaction in interactions:
+                prev_state=interaction['state']
+                if state == prev_state: continue # Skip if this is already at desired state
+                set_obj=self.set_state(interaction['GUID'], state)
+
+
         else:
             raise NotImplementedError
 

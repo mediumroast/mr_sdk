@@ -19,7 +19,7 @@ class rest_scaffold:
     def put_obj(self, endpoint, obj):
         url=self.CRED['rest_url'] + endpoint
         resp_obj=requests.put(url, json=obj)
-        return resp_obj.json()
+        return resp_obj.json(), resp.status_code
 
     # TODO This needs to be experimented with it will likely not work
     def patch_obj(self, endpoint, obj):
@@ -27,12 +27,10 @@ class rest_scaffold:
         resp_obj=requests.patch(url, json=obj)
         return resp_obj.json()
 
-    # TODO implement put and patch objects
-    # TODO implement interaction.set_abstract
-    # TODO implement interaction.set_state
+
     # TODO implement study.corpus.set_state <-- should be done for parent/children
     # TODO implement company.corpus.set_state <-- should be done for parent/children
-    # TODO change all corpuses to iterations
+
 
 
 
@@ -135,6 +133,22 @@ class Studies:
                 continue
         return filtered_objs
 
+    def get_iterations_by_guid(self, guid):
+        my_url='/studies?GUID=' + guid
+        my_objs=self.calls.get_obj(my_url)
+        filtered_objs=[]
+        my_obj=self.calls.get_obj(my_url)[0]
+        return {
+            'GUID': my_obj['GUID'],
+            'studyName': my_obj['studyName'],
+            'iterations': my_obj['iterations']
+        }
+
+    def set_property(self, guid, json):
+        my_url='/studies/' + guid + '/'
+        my_obj, my_status=self.calls.patch_obj(my_url, json)
+        return my_obj, my_status
+
 
 class Companies:
     def __init__(self, credential):
@@ -200,6 +214,11 @@ class Companies:
                 continue
         return filtered_objs
 
+    def set_property(self, guid, json):
+        my_url='/companies/' + guid + '/'
+        my_obj. my_status=self.calls.patch_obj(my_url, json)
+        return my_obj, my_status
+
 
 
 class Interactions:
@@ -258,6 +277,7 @@ class Interactions:
             'interactionName': my_obj['interactionName'],
             'abstract': my_obj['abstract'],
         }
+
     
     def get_by_name(self, name):
         my_url='/interactions?interactionName=' + name
@@ -269,19 +289,29 @@ class Interactions:
         my_obj=self.calls.get_obj(my_url)[0]
         return my_obj
 
+    def get_state_by_guid(self, guid):
+        my_url='/interactions/?GUID=' + guid + '/'
+        my_obj=self.calls.get_obj(my_url)[0]
+        return {
+            'GUID': my_obj['GUID'],
+            'interactionName': my_obj['interactionName'],
+            'state': my_obj['state'],
+        }
+
     def set_state(self, guid, state):
+        # TODO change to try except structure for better error handling
         my_url='/interactions/' + guid + '/'
         my_json={"state": state}
-        my_obj=self.calls.patch_obj(my_url, my_json)
-        return my_obj
+        my_obj, my_status=self.calls.patch_obj(my_url, my_json)
+        return my_obj, my_status
 
     def set_summary(self, guid, summary):
         my_url='/interactions/' + guid + '/'
         my_json={"abstract": summary}
         my_obj=self.calls.patch_obj(my_url, my_json)
-        return my_obj
+        return my_obj, my_status
 
     def set_property(self, guid, json):
         my_url='/interactions/' + guid + '/'
-        my_obj=self.calls.patch_obj(my_url, json)
-        return my_obj
+        my_obj, my_status=self.calls.patch_obj(my_url, json)
+        return my_obj, my_status
