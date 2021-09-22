@@ -300,15 +300,13 @@ class Transform:
                 tmp_objects[object[self.RAW_STUDY_NAME]]["linkedCompanies"][company_name]=company_id
                 tmp_objects[object[self.RAW_STUDY_NAME]]["linkedInteractions"][interaction_name]=interaction_id
 
-            id+=1
-
         for study in tmp_objects.keys ():
             if file_output:
                 # Generally the model to create a GUID is to hash the name and the description for all objects.
                 # We will only use this option when we're outputing to a file.
                 guid=self.util.hash_it(study + tmp_objects[study]['description'])
-                tmp_objects[company]['GUID']=guid
-                tmp_objects[company]['id']=guid
+                tmp_objects[study]['GUID']=guid
+                tmp_objects[study]['id']=guid
             
             interactions_total=self.util.total_item(tmp_objects[study]['linkedInteractions'])
             questions_total=self.util.total_item(tmp_objects[study]['keyQuestions'])

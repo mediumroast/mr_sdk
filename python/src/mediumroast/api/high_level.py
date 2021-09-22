@@ -180,3 +180,21 @@ class Interactions:
             return True, self.interactions.get_by_guid(guid)
         else:
             raise NotImplementedError
+
+    def set_state(self, guid, state):
+        if self.CRED['server_type'] == 'json':
+            return True, self.interactions.set_state(guid, state)
+        else:
+            raise NotImplementedError
+
+    def set_summary(self, guid, summary):
+        if self.CRED['server_type'] == 'json':
+            return True, self.interactions.set_summary(guid, summary)
+        else:
+            raise NotImplementedError
+
+    def set_property(self, guid, json):
+        if self.CRED['server_type'] == 'json':
+            return True, self.interactions.set_property(guid, json)
+        else:
+            raise NotImplementedError

@@ -15,10 +15,16 @@ class rest_scaffold:
         resp_obj=requests.get(url)
         return resp_obj.json()
 
-    # TODO This needs to be experimented with it will likely not work
+    # NOTE this works for full object adds and replacements
     def put_obj(self, endpoint, obj):
         url=self.CRED['rest_url'] + endpoint
         resp_obj=requests.put(url, json=obj)
+        return resp_obj.json()
+
+    # TODO This needs to be experimented with it will likely not work
+    def patch_obj(self, endpoint, obj):
+        url=self.CRED['rest_url'] + endpoint
+        resp_obj=requests.patch(url, json=obj)
         return resp_obj.json()
 
     # TODO implement put and patch objects
@@ -259,6 +265,23 @@ class Interactions:
         return my_obj
 
     def get_by_guid(self, guid):
-        my_url='/interactions?GUID=' + guid
+        my_url='/interactions/?GUID=' + guid
         my_obj=self.calls.get_obj(my_url)[0]
+        return my_obj
+
+    def set_state(self, guid, state):
+        my_url='/interactions/' + guid + '/'
+        my_json={"state": state}
+        my_obj=self.calls.patch_obj(my_url, my_json)
+        return my_obj
+
+    def set_summary(self, guid, summary):
+        my_url='/interactions/' + guid + '/'
+        my_json={"abstract": summary}
+        my_obj=self.calls.patch_obj(my_url, my_json)
+        return my_obj
+
+    def set_property(self, guid, json):
+        my_url='/interactions/' + guid + '/'
+        my_obj=self.calls.patch_obj(my_url, json)
         return my_obj

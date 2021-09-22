@@ -172,7 +172,6 @@ class Transform:
                 tmp_objects[interaction_name]["linkedStudies"][study_name]=study_id
                 tmp_objects[interaction_name]["linkedCompanies"][company_name]=company_id
 
-            id+=1
 
         # TODO Look at the study.py module for the right approach here
         for interaction in tmp_objects.keys ():
@@ -180,8 +179,8 @@ class Transform:
                 # Generally the model to create a GUID is to hash the name and the description for all objects.
                 # We will only use this option when we're outputing to a file.
                 guid=self.util.hash_it(interaction + tmp_objects[interaction]['simpleDesc'])
-                tmp_objects[company]['GUID']=guid
-                tmp_objects[company]['id']=guid
+                tmp_objects[interaction]['GUID']=guid
+                tmp_objects[interaction]['id']=guid
             tmp_objects[interaction]['totalStudies']=self.util.total_item(tmp_objects[interaction]['linkedStudies'])
             tmp_objects[interaction]['totalCompanies']=self.util.total_item(tmp_objects[interaction]['linkedCompanies'])
             final_objects['interactions'].append (tmp_objects[interaction])
