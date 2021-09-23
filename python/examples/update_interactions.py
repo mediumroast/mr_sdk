@@ -10,6 +10,7 @@ def parse_cli_args(program_name='update_interactions', desc='A mediumroast.io ex
     parser.add_argument ('--rest_url', help="The URL of the target REST server", type=str, dest='rest_url', default='http://mr-01:3000')
     parser.add_argument ('--guid', help="Specify the GUID of the object to operate on", type=str, dest='guid', required=True)
     parser.add_argument ('--set_state', help="Set the state of the interaction", type=str, dest='state', choices=['processing', 'summarized', 'unsummarized'])
+    parser.add_argument ('--set_all_state', help="Set the state of all interactions", type=str, dest='all_state', choices=['processing', 'summarized', 'unsummarized'])
     parser.add_argument ('--set_summary', help="Set the abstract/summary of the interaction", type=str, dest='summary')
     parser.add_argument ('--set_property', help="Set an arbitrary property for the interaction using well formed JSON", type=str, dest='property')
     parser.add_argument ('--user', help="User name", type=str, dest='user', default='foo')
@@ -28,6 +29,8 @@ if __name__ == "__main__":
     success=bool()
     if my_args.state:
         success, resp=interaction_ctl.set_state(my_args.guid, my_args.state)
+    elif my_args.all_state:
+        success, resp=interaction_ctl.set_all_states(my_args.all_state)
     elif my_args.summary:
         success, resp=interaction_ctl.set_summary(my_args.guid, my_args.summary)
     elif my_args.property:
@@ -39,5 +42,5 @@ if __name__ == "__main__":
     if success:
         printer.pprint(resp)
     else:
-        print('CLI ERROR: This is a generic error message, as something went wrong.')
+        printer.pprint(resp)
         sys.exit(-1)

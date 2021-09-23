@@ -140,7 +140,6 @@ class Companies:
         else:
             raise NotImplementedError
 
-    def set_states(self, )
 
 
 class Interactions:
@@ -199,34 +198,39 @@ class Interactions:
     def set_state(self, guid, state):
         # TODO Change to try except structure to bettle handle errors
         if self.CRED['server_type'] == 'json':
-            my_json, my_code=self.interactions.set_state(guid, state)
-            if my_code => 400 or my_code => 500:
-                return False, 
-            return True, 
+            my_status, my_obj=self.interactions.set_state(guid, state)
+            return my_status, my_obj
         else:
             raise NotImplementedError
 
     def set_all_states(self, state):
         if self.CRED['server_type'] == 'json':
             final_objs=[]
-            interactions=self.interactions.get_all_umsummarized()
+            interactions=self.interactions.get_all_states()
             for interaction in interactions:
                 prev_state=interaction['state']
                 if state == prev_state: continue # Skip if this is already at desired state
-                set_obj=self.set_state(interaction['GUID'], state)
-
-
+                my_status, my_obj=self.set_state(interaction['GUID'], state)
+                if not my_status: return my_status, my_obj # Oops there was an error in the request and we need to bale
+                final_objs.append({
+                    'GUID': my_obj['id'],
+                    'state': my_obj['state'],
+                    'previous state': prev_state
+                })
+            return True, final_objs
         else:
             raise NotImplementedError
 
     def set_summary(self, guid, summary):
         if self.CRED['server_type'] == 'json':
-            return True, self.interactions.set_summary(guid, summary)
+            my_status, my_obj=self.interactions.set_summary(guid, summary)
+            return my_status, my_obj
         else:
             raise NotImplementedError
 
     def set_property(self, guid, json):
         if self.CRED['server_type'] == 'json':
-            return True, self.interactions.set_property(guid, json)
+            my_status, my_obj=self.interactions.set_property(guid, json)
+            return my_status, my_obj
         else:
             raise NotImplementedError

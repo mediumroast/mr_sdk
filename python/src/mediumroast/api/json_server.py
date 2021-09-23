@@ -24,8 +24,13 @@ class rest_scaffold:
     # TODO This needs to be experimented with it will likely not work
     def patch_obj(self, endpoint, obj):
         url=self.CRED['rest_url'] + endpoint
-        resp_obj=requests.patch(url, json=obj)
-        return resp_obj.json()
+        try: # Try to make the request
+            resp_obj=requests.patch(url, json=obj)
+            resp_obj.raise_for_status()
+        except requests.exceptions.HTTPError as err: # If the request fails then return the error and False
+            return False, {"status_code": resp_obj.status_code, "message": err}
+        
+        return True, resp_obj.json()
 
 
     # TODO implement study.corpus.set_state <-- should be done for parent/children
@@ -230,8 +235,22 @@ class Interactions:
         my_url='/interactions'
         return self.calls.get_obj(my_url)
 
-    def get_all_unsummarized(self):
-        my_url='/interactions?state=unsummarized'
+    def get_all_states(self):
+        my_url='/interactions'
+        my_objs=self.calls.get_obj(my_url)
+        filtered_objs=[]
+        for my_obj in my_objs:
+            filtered_objs.append(
+                {"interactionName": my_obj['interactionName'],
+                "GUID": my_obj['GUID'],
+                "state": my_obj['state'],
+                "abstract": my_obj['abstract'],
+                "url": my_obj['url']}
+            )
+        return filtered_objs
+    
+    def get_all_unsummarized(self, state='unsummarized'):
+        my_url='/interactions?state=' + state
         my_objs=self.calls.get_obj(my_url)
         filtered_objs=[]
         for my_obj in my_objs:
@@ -278,7 +297,6 @@ class Interactions:
             'abstract': my_obj['abstract'],
         }
 
-    
     def get_by_name(self, name):
         my_url='/interactions?interactionName=' + name
         my_obj=self.calls.get_obj(my_url)[0]
@@ -299,19 +317,18 @@ class Interactions:
         }
 
     def set_state(self, guid, state):
-        # TODO change to try except structure for better error handling
         my_url='/interactions/' + guid + '/'
         my_json={"state": state}
-        my_obj, my_status=self.calls.patch_obj(my_url, my_json)
-        return my_obj, my_status
+        my_status, my_obj=self.calls.patch_obj(my_url, my_json)
+        return my_status, my_obj
 
     def set_summary(self, guid, summary):
         my_url='/interactions/' + guid + '/'
         my_json={"abstract": summary}
-        my_obj=self.calls.patch_obj(my_url, my_json)
-        return my_obj, my_status
+        my_status, my_obj=self.calls.patch_obj(my_url, my_json)
+        return my_status, my_obj
 
     def set_property(self, guid, json):
         my_url='/interactions/' + guid + '/'
-        my_obj, my_status=self.calls.patch_obj(my_url, json)
-        return my_obj, my_status
+        my_status, my_obj=self.calls.patch_obj(my_url, json)
+        return my_status, my_obj
