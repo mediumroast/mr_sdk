@@ -231,7 +231,7 @@ class Transform:
             study_id = study_xform.make_id (study_name) 
             
             # Capture the right study_name and then fetch the study's ID
-            interaction_name=interaction_xform.get_name(object[self.RAW_DATE], study_name)
+            interaction_name=interaction_xform.get_name(object[self.RAW_DATE], study_name, company_obj['name'])
             interaction_id=interaction_xform.make_id (object[self.RAW_DATE], company_obj['name'], study_name)
 
             if tmp_objects.get (object[self.RAW_COMPANY_NAME]) == None:

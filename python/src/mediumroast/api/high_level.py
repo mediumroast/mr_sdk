@@ -132,6 +132,16 @@ class Companies:
             return True, self.companies.set_property(guid, json)
         else:
             raise NotImplementedError
+            
+    def set_interactions_state(self, guid, state='unsummarized'):
+        if self.CRED['server_type'] == 'json':
+            interactions_ctl=Interactions()
+            all_interactions=interactions_ctl.get_all_unsummarized()
+            all_iterations=self.companies.get_iterations_by_state()
+            return True, self.companies.set_interaction_state(guid, state)
+        else:
+            raise NotImplementedError
+
 
     # TODO need to implement this function it is not yet coded
     def set_states_by_guid(self, guid, states):
@@ -155,7 +165,13 @@ class Interactions:
 
     def get_all_unsummarized(self):
         if self.CRED['server_type'] == 'json':
-            return True, self.interactions.get_all_unsummarized()
+            return True, self.interactions.get_all_unsummarized_list()
+        else:
+            raise NotImplementedError
+
+    def get_all_unsummarized_dict(self):
+        if self.CRED['server_type'] == 'json':
+            return True, self.interactions.get_all_unsummarized_dict()
         else:
             raise NotImplementedError
 
@@ -213,6 +229,7 @@ class Interactions:
                 my_status, my_obj=self.set_state(interaction['GUID'], state)
                 if not my_status: return my_status, my_obj # Oops there was an error in the request and we need to bale
                 final_objs.append({
+                    "interactionName": interaction['interactionName'],
                     'GUID': my_obj['id'],
                     'state': my_obj['state'],
                     'previous state': prev_state

@@ -122,7 +122,7 @@ class Studies:
         return filtered_objs
 
     def get_iterations_by_state(self, state="unthemed"):
-        my_url='/studies?iterations.state=unprocessed_unprocessed'
+        my_url='/studies'
         my_objs=self.calls.get_obj(my_url)
         filtered_objs=[]
         for my_obj in my_objs:
@@ -202,27 +202,35 @@ class Companies:
         my_obj=self.calls.get_obj(my_url)[0]
         return my_obj
 
-    def get_iterations_by_state(self, state="unthemed"):
-        my_url='/companies?iterations.state=unprocessed_unprocessed'
+    def get_iterations_by_state(self, state='unsummarized'):
+        my_url='/companies?iterations.state_like=' + state
         my_objs=self.calls.get_obj(my_url)
         filtered_objs=[]
         for my_obj in my_objs:
-            entry={"companyName": my_obj['companyName'],
+            filtered_objs.append({"companyName": my_obj['companyName'],
                     "GUID": my_obj['GUID'],
-                    "iterations": my_obj['iterations']}
-            theme_state, summary_state=my_obj['iterations']['state'].split('_')
-            if state == "unthemed" and theme_state != "themed":
-                filtered_objs.append(entry)
-            elif state == "unsummarized" and theme_state != "summarized":
-                filtered_objs.append(entry)
-            else:
-                continue
+                    "iterations": my_obj['iterations']})
         return filtered_objs
+
+    def set_interaction_state(self, guid, state='umsummarized'):
+        my_url='/companies?GUID=' + guid
+        my_obj=self.calls.get_obj(my_url)[0]
+        return {
+            'companyName': my_obj['companyName'],
+            'GUID': my_obj['GUID'],
+            'iterations': my_obj['iterations']
+        }
+    
+    def set_iteration_state(self, state='umsummarized'):
+        pass
+
+    def set_iteration_container_state(self, state='umsummarized'):
+        pass
 
     def set_property(self, guid, json):
         my_url='/companies/' + guid + '/'
-        my_obj. my_status=self.calls.patch_obj(my_url, json)
-        return my_obj, my_status
+        my_status, my_obj=self.calls.patch_obj(my_url, json)
+        return my_status, my_obj
 
 
 
@@ -248,8 +256,20 @@ class Interactions:
                 "url": my_obj['url']}
             )
         return filtered_objs
+
+    def get_all_unsummarized_dict(self, state='unsummarized'):
+        my_url='/interactions?state=' + state
+        my_objs=self.calls.get_obj(my_url)
+        filtered_objs={}
+        for my_obj in my_objs:
+            filtered_objs[my_obj['GUID']]={
+                "interactionName": my_obj['interactionName'],
+                "state": my_obj['state'],
+                "url": my_obj['url']
+            }
+        return filtered_objs
     
-    def get_all_unsummarized(self, state='unsummarized'):
+    def get_all_unsummarized_list(self, state='unsummarized'):
         my_url='/interactions?state=' + state
         my_objs=self.calls.get_obj(my_url)
         filtered_objs=[]

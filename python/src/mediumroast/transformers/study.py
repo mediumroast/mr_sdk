@@ -206,7 +206,7 @@ class Transform:
                     "totalInteractions": 0,
                     "interactions": {
                         interaction: {
-                            "guid": interactions[interaction],
+                            "GUID": interactions[interaction],
                             "state": int_state
                         }
                     }
@@ -266,7 +266,7 @@ class Transform:
             company_id = company_xform.make_id(company_name)
             
             # Capture the right study_name and then fetch the study's ID
-            interaction_name=interaction_xform.get_name(object[self.RAW_DATE], study_obj['name'])
+            interaction_name=interaction_xform.get_name(object[self.RAW_DATE], study_obj['name'], company_name)
             interaction_id=interaction_xform.make_id(object[self.RAW_DATE], company_name, study_obj['name'])
 
             if tmp_objects.get (object[self.RAW_STUDY_NAME]) == None:

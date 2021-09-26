@@ -127,18 +127,19 @@ class Transform:
             study_xform=studies(rewrite_config_dir=self.RULES['dir'])
             study_name=study_xform.get_name (object[self.RAW_STUDY_NAME]) 
             study_id=study_xform.make_id (study_name) 
-            
-            # Perform basic transformation of company data based upon data in the configuration file
-            interaction_xform=interactions(rewrite_config_dir=self.RULES['dir'])
-            interaction_name=interaction_xform.get_name(object[self.RAW_DATE], study_name)
-            interaction_obj=self._transform_interaction(interaction_name)
-            interaction_date, interaction_time=self.util.correct_date(object[self.DATETIME])
 
             # Capture the right company_name and then fetch the study's ID
             company_xform=companies(rewrite_config_dir=self.RULES['dir'])
             company_name=company_xform.get_name (object[self.RAW_COMPANY_NAME])
             company_id=company_xform.make_id (company_name) 
             
+            # Perform basic transformation of company data based upon data in the configuration file
+            interaction_xform=interactions(rewrite_config_dir=self.RULES['dir'])
+            interaction_name=interaction_xform.get_name(object[self.RAW_DATE], study_name, company_name)
+            interaction_obj=self._transform_interaction(interaction_name)
+            interaction_date, interaction_time=self.util.correct_date(object[self.DATETIME])
+
+                        
             # TODO the date needs to be fixed potentially with the helper functions included
             # TODO this is only partially implemented and needs to be looked at again
             if tmp_objects.get (interaction_name) == None:

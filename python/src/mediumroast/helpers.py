@@ -9,7 +9,7 @@ from summarizer import Summarizer
 from transformers import pipeline, T5ForConditionalGeneration, T5Tokenizer
 from nltk.util import everygrams as nltk_ngrams
 from pdfminer.high_level import extract_text
-import hashlib, time, re, nltk
+import hashlib, time, re, nltk, os
 import configparser as conf
 
 
@@ -53,6 +53,20 @@ class utilities:
                 return True, 'Successfully wrote the data to [' + file_name +']'
 
 
+    def make_directory(self, dirname):
+        """Safely create a directory and if it already exists gracefully return.
+        """
+        try: 
+            os.mkdir(dirname)
+        except FileExistsError as err:
+            return False, 'The directory [' + dirname + '] already exists, unable to create.'
+        except:
+            return False, 'Something abnormal happened when attempting to create the directory [' + dirname + '] please check the system logs.'
+        finally:
+            return True, 'Successfully created directory [' + dirname + '] '
+
+
+
     def correct_date (self, date_time, default_time='0000'):
         """Ensure that the date and time are correct
 
@@ -85,7 +99,7 @@ class utilities:
 
     def get_iterations(self, interactions, interaction_xform, src_type):
         """Internal method to create the iterations structure"""
-        itr_state="unprocessed_unprocessed"
+        itr_state="unthemed_unsummarized"
         int_state="unsummarized"
         final_iterations={}
         for interaction in interactions:
@@ -298,7 +312,7 @@ class interactions:
         self.util=utilities()
 
 
-    def get_name (self, date, study_name):
+    def get_name (self, date, study_name, company_name):
         """Create an interaction name and return the resulting string.
 
         Generate an interaction name from the date and study_name
@@ -311,7 +325,7 @@ class interactions:
             string: The generated name of the interaction which is the synthesis of the date string and study name
 
         """
-        return str(date) + '-' + str(study_name)
+        return str(date) + '-' + str(study_name) + '-' + str(company_name)
 
 
     def get_description (self, company_name, study_name):
@@ -350,7 +364,7 @@ class interactions:
         Returns:
             string: A textual representation of the interactions's ID
         """
-        interaction_name=self.get_name(date, study_name)
+        interaction_name=self.get_name(date, study_name, company_name)
         description=self.get_description(company_name, study_name)
         id='NULL_GUID' # This should never happen, but leaving here in case something is odd in the configuration file
         if file_output: id=self.util.hash_it(interaction_name + description) 

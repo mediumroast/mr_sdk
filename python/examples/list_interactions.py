@@ -14,7 +14,7 @@ def parse_cli_args(program_name='list_interactions', desc='A mediumroast.io exam
     parser.add_argument ('--get_abs_by_guid', help="Get interaction abstract by GUID", type=str, dest='abs_by_guid')
     parser.add_argument ('--get_by_guid', help="Get interaction object by GUID", type=str, dest='by_guid')
     parser.add_argument ('--get_by_name', help="Get interaction object by interaction name", type=str, dest='by_name')
-    parser.add_argument ('--get_all_unsummarized', help="Get all interactions that are unsummarized", type=bool, dest='all_unsummarized')
+    parser.add_argument ('--get_all_unsummarized', help="Get all interactions that are unsummarized", type=str, dest='all_unsummarized')
     parser.add_argument ('--user', help="User name", type=str, dest='user', default='foo')
     parser.add_argument ('--secret', help="Secret or password", type=str, dest='secret', default='bar')
     cli_args = parser.parse_args ()
@@ -41,8 +41,10 @@ if __name__ == "__main__":
         success, resp=interaction_ctl.get_url_by_guid(my_args.url_by_guid)
     elif my_args.abs_by_guid:
         success, resp=interaction_ctl.get_abs_by_guid(my_args.abs_by_guid)
-    elif my_args.all_unsummarized:
+    elif my_args.all_unsummarized == 'all':
         success, resp=interaction_ctl.get_all_unsummarized()
+    elif my_args.all_unsummarized == 'dictionary':
+        success, resp=interaction_ctl.get_all_unsummarized_dict()
     else:
         success, resp=interaction_ctl.get_all()
     
