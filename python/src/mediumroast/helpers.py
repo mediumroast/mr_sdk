@@ -9,7 +9,7 @@ from summarizer import Summarizer
 from transformers import pipeline, T5ForConditionalGeneration, T5Tokenizer
 from nltk.util import everygrams as nltk_ngrams
 from pdfminer.high_level import extract_text
-import hashlib, time, re, nltk
+import hashlib, time, re, nltk, os, json
 import configparser as conf
 
 
@@ -53,6 +53,33 @@ class utilities:
                 return True, 'Successfully wrote the data to [' + file_name +']'
 
 
+    def json_read(self, file_name):
+        data=""
+        with open(file_name, 'r') as my_file:
+            try:
+                data=my_file.read()
+            except IOError as err:
+                return False, err
+            except:
+                return False, 'Something went wrong, check the file output.'
+            finally:
+                return True, json.loads(data)
+
+
+    def make_directory(self, dirname):
+        """Safely create a directory and if it already exists gracefully return.
+        """
+        try: 
+            os.mkdir(dirname)
+        except FileExistsError as err:
+            return False, 'The directory [' + dirname + '] already exists, unable to create.'
+        except:
+            return False, 'Something abnormal happened when attempting to create the directory [' + dirname + '] please check the system logs.'
+        finally:
+            return True, 'Successfully created directory [' + dirname + '] '
+
+
+
     def correct_date (self, date_time, default_time='0000'):
         """Ensure that the date and time are correct
 
@@ -81,6 +108,49 @@ class utilities:
         """
         (time_stamp, time_string)=self.get_date_time()
         return {"1":{time_stamp: "This is an example note created for the '" + obj_type + "' object on " + time_string + " by a " + creator}}
+
+
+    def get_iterations(self, interactions, interaction_xform, src_type):
+        """Internal method to create the iterations structure"""
+        itr_state="unthemed_unsummarized"
+        int_state="unsummarized"
+        final_iterations={}
+        for interaction in interactions:
+            id_type=str()
+            itr_study_id, itr_company_id=interaction_xform.get_iteration_id(interaction) # Provide the interaction name
+            if src_type == "study":
+                id_type=str(itr_study_id)
+            else: 
+                id_type=str(itr_company_id)
+                
+            if final_iterations.get(id_type) == None:
+                final_iterations[id_type]={
+                    "state": itr_state,
+                    "totalInteractions": 0,
+                    "interactions": {
+                        interaction: {
+                            "guid": interactions[interaction],
+                            "state": int_state
+                        }
+                    }
+                }
+            else:
+                final_iterations[id_type]["interactions"][interaction]={"guid": interactions[interaction], "state": int_state}
+        
+        interactions_sum=0
+        iterations_sum=0
+        for iteration in final_iterations:
+            total_interactions=self.total_item(final_iterations[iteration]["interactions"])
+            final_iterations[iteration]["totalInteractions"]=total_interactions
+            interactions_sum+=total_interactions
+            iterations_sum+=1
+
+        final_iterations["state"]=itr_state 
+        final_iterations["totalInteractions"]=interactions_sum
+        final_iterations["totalIterations"]=iterations_sum
+
+        return final_iterations
+
 
 class companies:
 
@@ -255,7 +325,7 @@ class interactions:
         self.util=utilities()
 
 
-    def get_name (self, date, study_name):
+    def get_name (self, date, study_name, company_name):
         """Create an interaction name and return the resulting string.
 
         Generate an interaction name from the date and study_name
@@ -268,7 +338,7 @@ class interactions:
             string: The generated name of the interaction which is the synthesis of the date string and study name
 
         """
-        return str(date) + '-' + str(study_name)
+        return str(date) + '-' + str(study_name) + '-' + str(company_name)
 
 
     def get_description (self, company_name, study_name):
@@ -307,13 +377,36 @@ class interactions:
         Returns:
             string: A textual representation of the interactions's ID
         """
-        interaction_name=self.get_name(date, study_name)
+        interaction_name=self.get_name(date, study_name, company_name)
         description=self.get_description(company_name, study_name)
         id='NULL_GUID' # This should never happen, but leaving here in case something is odd in the configuration file
         if file_output: id=self.util.hash_it(interaction_name + description) 
         return id
 
+    def get_iteration_id (self, interaction_name):
+        """Lookup study and company iteration ids and return them.
 
+        If there are rewrite rules available for the interaction name related to the iteration ids for one or both
+        of the associated company and study return them else return default.  Iteration ids are needed to construct
+        subcorpuses for both company and study objects to build at least proper summarizations when there is no 
+        questionnaire.  While there is more research needed it is also likely a helpful grouping for KeyTheme detection
+        and associated extraction.
+
+        Args:
+            interaction_name (str): The name of the interaction
+
+
+        Returns:
+            study_iteration_id (str): A textual representation of the iteration id of within the study for the interaction
+            company_iteration_id (str): A textual representation of the iteration id of within the company for the interaction
+        """
+        study_iteration_id=self.rules.get('iterations_studies', interaction_name) if self.rules.has_option('iterations_studies', interaction_name) else "default"
+        company_iteration_id=self.rules.get('iterations_companies', interaction_name) if self.rules.has_option('iterations_companies', interaction_name) else "default"
+        #print("iteration id>>> " + study_iteration_id)
+        return study_iteration_id, company_iteration_id
+
+
+#TODO this class is moved to caffeine and should be removed
 class TextPreprocessing:
     """Various methods to extract, clean and compare text sufficiently for at least extractive summarization.
 
@@ -475,41 +568,13 @@ class TextPreprocessing:
         final=self.clean(raw_text) # clean the text
         return final # return the document
 
-
+# TODO this class has been moved to caffeine and should be removed
 class Summarization:
 
     def __init__(self, ratio=0.2, sentence_count=0):
         self.RATIO=ratio
         self.SENTENCE_COUNT=sentence_count
 
-    # TODO this is deprecated and should be removed
-    def rm_enumerators(self, text, debug=False):
-        final=[]
-        tokens=text.split('\n') 
-        skip_return=re.compile('^\n+') 
-        skip_date=re.compile(r'\w+\.?\s{1}\S{1,4}\,?\s{1}\d{4}\s{1}\d{1,2}\:\d{2}\s?\w{2}\s{1}\w{3}')
-        # Detects this date format 
-        skip_day_and_time=re.compile(r'\w+\.?\s{1}\S{1,4}\,?\s{1}\d{1,2}\:\d{2}\s?\w{2}\s{1}\w{3}')
-        for token in tokens:
-            token=token.strip() # Remove white space
-            token=re.sub(r'^\S\.','', token)
-            if not token: continue
-            elif skip_return.search(token): continue
-            elif skip_date.search(token): continue
-            elif skip_day_and_time.search(token): continue
-            if self.DEBUG: print('token>>> "' + token + '"')
-            final.append(token)
-        return list(final)
-
-    # TODO this is deprecated and should be removed
-    def rm_questions (self, tokens, questions, debug=False):
-        final=[]
-        for token in tokens:
-            for question in questions:
-                token=re.sub(question, '', token)
-                if debug: print('token>>> "' + token + '"')
-            final.append(token)
-        return " ".join(final)
 
     def extractive_bert(self, text):
         model=Summarizer()

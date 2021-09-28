@@ -214,6 +214,11 @@ class Transform:
             'companies': []
         }  
 
+        # Construct objects
+        interaction_xform=interactions(rewrite_config_dir=self.RULES['dir'])  
+        study_xform=studies(rewrite_config_dir=self.RULES['dir'])
+
+        # Temp storage for objects
         tmp_objects={}
 
         for object in raw_objects:
@@ -222,13 +227,11 @@ class Transform:
             company_obj=self._transform_company(object[self.RAW_COMPANY_NAME])
 
             # Capture the right study_name and then fetch the study's ID
-            study_xform=studies(rewrite_config_dir=self.RULES['dir'])
             study_name = study_xform.get_name (object[self.RAW_STUDY_NAME])
             study_id = study_xform.make_id (study_name) 
             
             # Capture the right study_name and then fetch the study's ID
-            interaction_xform=interactions(rewrite_config_dir=self.RULES['dir'])
-            interaction_name=interaction_xform.get_name(object[self.RAW_DATE], study_name)
+            interaction_name=interaction_xform.get_name(object[self.RAW_DATE], study_name, company_obj['name'])
             interaction_id=interaction_xform.make_id (object[self.RAW_DATE], company_obj['name'], study_name)
 
             if tmp_objects.get (object[self.RAW_COMPANY_NAME]) == None:
@@ -243,6 +246,7 @@ class Transform:
                     "stateProvince": object[self.STATE_PROVINCE],
                     "country": object[self.COUNTRY],
                     "region": object[self.REGION],
+                    "iterations": {},
                     "phone": company_obj['phone'],
                     "simpleDesc": company_obj['description'],
                     "cik": company_obj['cik'],
@@ -264,9 +268,12 @@ class Transform:
             if file_output:
                 # Generally the model to create a GUID is to hash the name and the description for all objects.
                 # We will only use this option when we're outputing to a file.
-                tmp_objects[company]['GUID'] = self.util.hash_it(str(company) + str(tmp_objects[company]['simpleDesc']))
+                guid=self.util.hash_it(str(company) + str(tmp_objects[company]['simpleDesc']))
+                tmp_objects[company]['GUID']=guid
+                tmp_objects[company]['id']=guid
             tmp_objects[company]['totalInteractions'] = self.util.total_item(tmp_objects[company]['linkedInteractions'])
             tmp_objects[company]['totalStudies'] = self.util.total_item(tmp_objects[company]['linkedStudies'])
+            tmp_objects[company]["iterations"]=self.util.get_iterations(tmp_objects[company]['linkedInteractions'], interaction_xform, "company")
             if (self.debug): print (tmp_objects[company])
             final_objects['companies'].append(tmp_objects[company])
 

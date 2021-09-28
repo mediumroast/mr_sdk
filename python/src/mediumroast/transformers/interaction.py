@@ -118,6 +118,7 @@ class Transform:
             'interactions': []
         }  
 
+        # Temp storage for objects
         tmp_objects={}
 
         for object in raw_objects:
@@ -126,18 +127,19 @@ class Transform:
             study_xform=studies(rewrite_config_dir=self.RULES['dir'])
             study_name=study_xform.get_name (object[self.RAW_STUDY_NAME]) 
             study_id=study_xform.make_id (study_name) 
-            
-            # Perform basic transformation of company data based upon data in the configuration file
-            interaction_xform=interactions(rewrite_config_dir=self.RULES['dir'])
-            interaction_name=interaction_xform.get_name(object[self.RAW_DATE], study_name)
-            interaction_obj=self._transform_interaction(interaction_name)
-            interaction_date, interaction_time=self.util.correct_date(object[self.DATETIME])
 
             # Capture the right company_name and then fetch the study's ID
             company_xform=companies(rewrite_config_dir=self.RULES['dir'])
             company_name=company_xform.get_name (object[self.RAW_COMPANY_NAME])
             company_id=company_xform.make_id (company_name) 
             
+            # Perform basic transformation of company data based upon data in the configuration file
+            interaction_xform=interactions(rewrite_config_dir=self.RULES['dir'])
+            interaction_name=interaction_xform.get_name(object[self.RAW_DATE], study_name, company_name)
+            interaction_obj=self._transform_interaction(interaction_name)
+            interaction_date, interaction_time=self.util.correct_date(object[self.DATETIME])
+
+                        
             # TODO the date needs to be fixed potentially with the helper functions included
             # TODO this is only partially implemented and needs to be looked at again
             if tmp_objects.get (interaction_name) == None:
@@ -146,6 +148,7 @@ class Transform:
                     "interactionName": interaction_name,
                     "time": interaction_time,
                     "date": interaction_date,
+                    "state": "unsummarized",
                     "simpleDesc": interaction_xform.get_description(company_name, study_name),
                     "contactAddress": interaction_obj['contactAddress'],
                     "contactZipPostal": interaction_obj['contactZipPostal'],
@@ -162,20 +165,23 @@ class Transform:
                     "linkedCompanies": {company_name: company_id},
                     "longitude": long_lat[0],
                     "latitude": long_lat[1],
-                    "url": self.URL,
-                    "thumbnail": self.THUMBNAIL,
+                    "url": object[self.URL],
+                    "thumbnail": object[self.THUMBNAIL],
                     "notes": self.util.make_note(obj_type='Interaction Object: [' + interaction_name + ']')
                 }
             else:
                 tmp_objects[interaction_name]["linkedStudies"][study_name]=study_id
                 tmp_objects[interaction_name]["linkedCompanies"][company_name]=company_id
 
+
         # TODO Look at the study.py module for the right approach here
         for interaction in tmp_objects.keys ():
             if file_output:
                 # Generally the model to create a GUID is to hash the name and the description for all objects.
                 # We will only use this option when we're outputing to a file.
-                tmp_objects[interaction]['GUID']=self.util.hash_it(interaction + tmp_objects[interaction]['simpleDesc'])
+                guid=self.util.hash_it(interaction + tmp_objects[interaction]['simpleDesc'])
+                tmp_objects[interaction]['GUID']=guid
+                tmp_objects[interaction]['id']=guid
             tmp_objects[interaction]['totalStudies']=self.util.total_item(tmp_objects[interaction]['linkedStudies'])
             tmp_objects[interaction]['totalCompanies']=self.util.total_item(tmp_objects[interaction]['linkedCompanies'])
             final_objects['interactions'].append (tmp_objects[interaction])

@@ -1,5 +1,7 @@
 #!/bin/env python3
 
+# TODO This utility should be moved to mr_json_server and removed from this repo
+
 import sys, pprint, argparse
 sys.path.append ('../src')
 
