@@ -9,7 +9,7 @@ from summarizer import Summarizer
 from transformers import pipeline, T5ForConditionalGeneration, T5Tokenizer
 from nltk.util import everygrams as nltk_ngrams
 from pdfminer.high_level import extract_text
-import hashlib, time, re, nltk, os
+import hashlib, time, re, nltk, os, json
 import configparser as conf
 
 
@@ -51,6 +51,19 @@ class utilities:
                 return False, 'Something went wrong, check the file output.'
             finally:
                 return True, 'Successfully wrote the data to [' + file_name +']'
+
+
+    def json_read(self, file_name):
+        data=""
+        with open(file_name, 'r') as my_file:
+            try:
+                data=my_file.read()
+            except IOError as err:
+                return False, err
+            except:
+                return False, 'Something went wrong, check the file output.'
+            finally:
+                return True, json.loads(data)
 
 
     def make_directory(self, dirname):

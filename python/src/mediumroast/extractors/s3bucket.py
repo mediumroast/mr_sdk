@@ -11,7 +11,7 @@ from mediumroast.helpers import utilities
 from botocore.client import Config
 
 class Extract:
-    def __init__ (self, url='http://192.168.1.42:9000', access='foo', secret='foo12345', bucket='interactions', debug=False):
+    def __init__ (self, url='http://192.168.1.42:9000', access='medium_roast_io', secret='b7d1ac5ec5c2193a7d6dd61e7a8a76451885da5bd754b2b776632afd413d53e7', bucket='interactions', debug=False):
         self.s3=boto3.resource('s3',
                             endpoint_url=url,
                             aws_access_key_id=access,

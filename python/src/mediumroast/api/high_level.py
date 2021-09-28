@@ -35,36 +35,42 @@ class Studies:
         if self.CRED['server_type'] == 'json':
             return True, self.studies.get_all()
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def get_guid_by_name(self, name):
         if self.CRED['server_type'] == 'json':
             return True, self.studies.get_guid_by_name(name)
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def get_name_by_guid(self, guid):
         if self.CRED['server_type'] == 'json':
             return True, self.studies.get_name_by_guid(guid)
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
     
     def get_by_name(self, name):
         if self.CRED['server_type'] == 'json':
             return True, self.studies.get_by_name(name)
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def get_by_guid(self, guid):
         if self.CRED['server_type'] == 'json':
             return True, self.studies.get_by_guid(guid)
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def get_iterations(self):
         if self.CRED['server_type'] == 'json':
             return True, self.studies.get_iterations()
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def get_questions(self):
@@ -77,6 +83,7 @@ class Studies:
         if self.CRED['server_type'] == 'json':
             return True, self.studies.get_iterations_by_state(state)
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
 
@@ -89,48 +96,55 @@ class Companies:
         if self.CRED['server_type'] == 'json':
             return True, self.companies.get_all()
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def get_guid_by_name(self, name):
         if self.CRED['server_type'] == 'json':
             return True, self.companies.get_guid_by_name(name)
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def get_name_by_guid(self, guid):
         if self.CRED['server_type'] == 'json':
             return True, self.companies.get_name_by_guid(guid)
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
     
     def get_by_name(self, name):
         if self.CRED['server_type'] == 'json':
             return True, self.companies.get_by_name(name)
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def get_by_guid(self, guid):
         if self.CRED['server_type'] == 'json':
             return True, self.companies.get_by_guid(guid)
-        else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def get_iterations(self):
         if self.CRED['server_type'] == 'json':
             return True, self.companies.get_iterations()
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def get_iterations_by_state(self, state="unthemed"):
         if self.CRED['server_type'] == 'json':
             return True, self.companies.get_iterations_by_state(state)
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def set_property(self, guid, json):
         if self.CRED['server_type'] == 'json':
             return True, self.companies.set_property(guid, json)
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
             
     def set_interactions_state(self, guid, state='unsummarized'):
@@ -140,6 +154,7 @@ class Companies:
             all_iterations=self.companies.get_iterations_by_state()
             return True, self.companies.set_interaction_state(guid, state)
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
 
@@ -148,6 +163,7 @@ class Companies:
         if self.CRED['server_type'] == 'json':
             return True, self.companies.set_property(guid, json)
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
 
@@ -161,54 +177,63 @@ class Interactions:
         if self.CRED['server_type'] == 'json':
             return True, self.interactions.get_all()
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def get_all_unsummarized(self):
         if self.CRED['server_type'] == 'json':
             return True, self.interactions.get_all_unsummarized_list()
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def get_all_unsummarized_dict(self):
         if self.CRED['server_type'] == 'json':
             return True, self.interactions.get_all_unsummarized_dict()
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def get_guid_by_name(self, name):
         if self.CRED['server_type'] == 'json':
             return True, self.interactions.get_guid_by_name(name)
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def get_name_by_guid(self, guid):
         if self.CRED['server_type'] == 'json':
             return True, self.interactions.get_name_by_guid(guid)
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def get_url_by_guid(self, guid):
         if self.CRED['server_type'] == 'json':
             return True, self.interactions.get_url_by_guid(guid)
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def get_abs_by_guid(self, guid):
         if self.CRED['server_type'] == 'json':
             return True, self.interactions.get_abs_by_guid(guid)
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
     
     def get_by_name(self, name):
         if self.CRED['server_type'] == 'json':
             return True, self.interactions.get_by_name(name)
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def get_by_guid(self, guid):
         if self.CRED['server_type'] == 'json':
             return True, self.interactions.get_by_guid(guid)
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def set_state(self, guid, state):
@@ -217,6 +242,7 @@ class Interactions:
             my_status, my_obj=self.interactions.set_state(guid, state)
             return my_status, my_obj
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def set_all_states(self, state):
@@ -236,6 +262,7 @@ class Interactions:
                 })
             return True, final_objs
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def set_summary(self, guid, summary):
@@ -243,6 +270,7 @@ class Interactions:
             my_status, my_obj=self.interactions.set_summary(guid, summary)
             return my_status, my_obj
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
     def set_property(self, guid, json):
@@ -250,4 +278,5 @@ class Interactions:
             my_status, my_obj=self.interactions.set_property(guid, json)
             return my_status, my_obj
         else:
+            """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
