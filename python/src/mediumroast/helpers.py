@@ -9,7 +9,7 @@ from summarizer import Summarizer
 from transformers import pipeline, T5ForConditionalGeneration, T5Tokenizer
 from nltk.util import everygrams as nltk_ngrams
 from pdfminer.high_level import extract_text
-import hashlib, time, re, nltk, os, json
+import hashlib, time, re, nltk, os, json, pathlib
 import configparser as conf
 
 
@@ -69,15 +69,29 @@ class utilities:
     def make_directory(self, dirname):
         """Safely create a directory and if it already exists gracefully return.
         """
-        try: 
-            os.mkdir(dirname)
-        except FileExistsError as err:
-            return False, 'The directory [' + dirname + '] already exists, unable to create.'
-        except:
-            return False, 'Something abnormal happened when attempting to create the directory [' + dirname + '] please check the system logs.'
-        finally:
-            return True, 'Successfully created directory [' + dirname + '] '
+        path_check=pathlib.Path(dirname)
+        if not path_check.exists() and not path_check.is_dir():
+            try: 
+                os.mkdir(dirname)
+            except FileExistsError as err:
+                return 0, 'The directory [' + dirname + '] already exists, unable to create.'
+            except:
+                return 0, 'Something abnormal happened when attempting to create the directory [' + dirname + '] please check the system logs.'
+            finally:
+                return 1, 'Successfully created directory [' + dirname + '].'
+        else:
+            logging.warning('The directory [' + dirname + '] appears to already exist, no action performed.')
+            return 2, 'The directory [' + dirname + '] appears to already exist, no action performed.'
 
+
+    def check_file_system_object(self, full_filename):
+        """A simple check to see if a file system object exists, returns false if it doesn't exist.
+        """
+        fso_check=pathlib.Path(dirname)
+        if fso_check.exists():
+            return True, 'The file named [' + full_filename + '] already exists'
+        else:
+            return False, 'No such file named [' + full_filename + '] exists.'
 
 
     def correct_date (self, date_time, default_time='0000'):
