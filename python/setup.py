@@ -11,7 +11,7 @@ setup(
     author="Michael Hay",
     url="https://github.com/mediumroast/mr_sdk/python",
     author_email="michael.hay@mediumroast.io",
-    classifiers=[  # Optional
+    classifiers=[ 
         # How mature is this project? Common values are
         #   3 - Alpha
         #   4 - Beta
@@ -35,10 +35,10 @@ setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3 :: Only',
     ],
-    packages=['src/mediumroast', 'src/mediumroast/transformers', 'src/mediumroast/extractors', 'src/mediumroast/loaders', 'src/mediumroast/api'],
+    packages=['mediumroast', 'mediumroast/transformers', 'mediumroast/extractors', 'mediumroast/loaders', 'mediumroast/api'],
     python_requires='>=3.6, <4',
     project_urls={  # Optional
         'Bug Reports': 'https://github.com/mediumroast/mr_sdk/issues',
-        'Source': 'https://github.com/pypa/sampleproject/',
+        'Source': 'https://github.com/mediumroast/mr_sdk/python',
     },
 )
