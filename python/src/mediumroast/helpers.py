@@ -9,20 +9,20 @@ from summarizer import Summarizer
 from transformers import pipeline, T5ForConditionalGeneration, T5Tokenizer
 from nltk.util import everygrams as nltk_ngrams
 from pdfminer.high_level import extract_text
-import hashlib, time, re, nltk, os, json, pathlib
+from datetime import datetime
+import hashlib, time, re, nltk, os, json, pathlib, logging
 import configparser as conf
 
 
 class utilities:
 
-    def __init__ (self):
-        self.locator = ArcGIS (timeout=2)
+    def __init__ (self, silent=True):
+        self.locator=ArcGIS(timeout=2) # Set up the locator for ArcGIS to get lat/long data
+        self.silent=silent # If set to True log_it will only print START, STOP and STATS
 
-        # TODO create a defaults config file for a few things
 
     def total_item (self, items):
         """Total items in dicts and lists and return the result.
-
         """
         return len (items)
 
@@ -33,12 +33,11 @@ class utilities:
 
     def locate (self, place):
         """Using an input string return the lat long combo using geopy
-
         """
         l = self.locator.geocode (place)
         return [l.longitude, l.latitude]
 
-    # TODO beef this up with proper error handling including try and except and returning the success or failure
+
     def save (self, file_name, string_data):
         """ Save string content to a file
         """
@@ -54,6 +53,8 @@ class utilities:
 
 
     def json_read(self, file_name):
+        """Read a JSON file into memory and transform into Pythonic objects
+        """
         data=""
         with open(file_name, 'r') as my_file:
             try:
@@ -64,6 +65,38 @@ class utilities:
                 return False, 'Something went wrong, check the file output.'
             finally:
                 return True, json.loads(data)
+
+    def log_it(self, body='', function='MAIN', log_type='START'):
+        """This is a very simple standin logger, ideally we will revert back to logging at some point
+        """
+        my_sep=' | '
+        prefix={
+            'START': '-' * 5 + '[ BEGIN: ' + function + ' ]' + '-' * 5,
+            'STEP': '>' * 2 + '[' + function + ']: ',
+            'STOP': '-' * 5 + '[ END: ' + function + ' ]' + '-' * 5,
+            'STAT': '#' * 2 + '[' + function + ']: ',
+            'DEBUG': '<< DEBUG >>>>> [' + function + ']: '
+        }
+        message=str()
+        
+        override=False
+        if log_type == 'START':
+            message=prefix[log_type]
+            override=True
+        elif log_type == 'STOP':
+            message=prefix[log_type]
+            override=True
+        elif log_type == 'STAT':
+            message=prefix[log_type] + body
+            override=True
+        elif log_type == 'STEP':
+            message=prefix[log_type] + body
+        elif log_type == 'DEBUG':
+            message=prefix[log_type] + body
+
+        timestamp=datetime.now()
+        if self.silent == False or override: print (str(timestamp) + my_sep + message)
+
 
 
     def make_directory(self, dirname):
@@ -87,7 +120,7 @@ class utilities:
     def check_file_system_object(self, full_filename):
         """A simple check to see if a file system object exists, returns false if it doesn't exist.
         """
-        fso_check=pathlib.Path(dirname)
+        fso_check=pathlib.Path(full_filename)
         if fso_check.exists():
             return True, 'The file named [' + full_filename + '] already exists'
         else:
@@ -96,7 +129,6 @@ class utilities:
 
     def correct_date (self, date_time, default_time='0000'):
         """Ensure that the date and time are correct
-
         """
         my_time=default_time
         my_date=date_time
@@ -108,7 +140,6 @@ class utilities:
 
     def get_date_time (self):
         """Get the time presently and return in two formats
-
         """
         the_time_is=time.localtime()
         time_concat=the_time_is.tm_year + the_time_is.tm_mon + the_time_is.tm_mday + the_time_is.tm_hour + the_time_is.tm_min
@@ -118,14 +149,14 @@ class utilities:
 
     def make_note (self, obj_type, creator='Mediumroast SDK load utility.'):
         """Create a sample note for an object or a child object
-
         """
         (time_stamp, time_string)=self.get_date_time()
         return {"1":{time_stamp: "This is an example note created for the '" + obj_type + "' object on " + time_string + " by a " + creator}}
 
 
     def get_iterations(self, interactions, interaction_xform, src_type):
-        """Internal method to create the iterations structure"""
+        """Internal method to create the iterations structure
+        """
         itr_state="unthemed_unsummarized"
         int_state="unsummarized"
         final_iterations={}

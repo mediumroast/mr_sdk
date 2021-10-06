@@ -257,6 +257,18 @@ class Interactions:
             )
         return filtered_objs
 
+    def get_all_states_dict(self):
+        my_url='/interactions'
+        my_objs=self.calls.get_obj(my_url)
+        filtered_objs={}
+        for my_obj in my_objs:
+            filtered_objs[my_obj['GUID']]={
+                "interactionName": my_obj['interactionName'],
+                "state": my_obj['state'],
+                "url": my_obj['url']
+            }
+        return filtered_objs
+
     def get_all_unsummarized_dict(self, state='unsummarized'):
         my_url='/interactions?state=' + state
         my_objs=self.calls.get_obj(my_url)
