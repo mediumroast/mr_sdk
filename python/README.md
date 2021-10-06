@@ -13,9 +13,9 @@ For developers of the package the `setup.py` file is available to enable a local
 2. `sudo pip install -e ./`
 With this accomplished tools that depend upon this package including the [mr_json_server](https://github.com/mediumroast/mr_json_server) and the [mr_caffeine](https://github.com/mediumroast/mr_caffeine) service should operate.  If there are issues encountered then please open an [issue](https://github.com/mediumroast/mr_sdk/issues).
 
-## Installation for Early Users and Testers
+## Installation for Early Adopters and Testers
 The package has reached a stage where there is a demo branch and associated tarball that can be used for installation.  Other components, associated to the mediumroast.io demo, will make use of this package in their images, distributions and code.  In particular the [mr_caffeine](https://github.com/mediumroast/mr_caffeine) service will include this python package to operate, and the [mr_json_server](https://github.com/mediumroast/mr_json_server) assumes the package is installed for all users on your system.  The installation steps of this `demo` package follow and verification steps assume both `mr_json_server` as well as `mr_minio` are operable.  If both of these components are not operable then the verification steps listed below will fail.
-1. Install the package: `sudo pip3 install https://github.com/mediumroast/mr_sdk/raw/demo/python/dist/mediumroast-0.7.5.tar.gz`
+1. Install the package for all users: `sudo pip3 install https://github.com/mediumroast/mr_sdk/raw/demo/python/dist/mediumroast-0.7.5.tar.gz`
 2. Verify that the package can talk to the `mr_minio` service
 3. Verify that the package can talk to the `my_json_server` service
 
