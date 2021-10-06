@@ -35,7 +35,7 @@ setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3 :: Only',
     ],
-    package_dir={'': 'src/mediumroast'}, # TODO this might need to be src/mediumroast
+    packages=['src/mediumroast'], # TODO this might need to be src/mediumroast
     python_requires='>=3.6, <4',
     project_urls={  # Optional
         'Bug Reports': 'https://github.com/mediumroast/mr_sdk/issues',
