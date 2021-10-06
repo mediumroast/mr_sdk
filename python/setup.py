@@ -35,7 +35,7 @@ setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3 :: Only',
     ],
-    packages=['src/mediumroast'], # TODO this might need to be src/mediumroast
+    packages=['src/mediumroast', 'src/mediumroast/transformers', 'src/mediumroast/extractors', 'src/mediumroast/loaders', 'src/mediumroast/api'],
     python_requires='>=3.6, <4',
     project_urls={  # Optional
         'Bug Reports': 'https://github.com/mediumroast/mr_sdk/issues',
