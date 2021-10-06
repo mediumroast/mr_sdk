@@ -35,6 +35,7 @@ setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3 :: Only',
     ],
+    scripts=['cli/list_interactions.py', 'cli/list_studies.py', 'cli/list_companies.py', 'cli/list_raw_objects.py'],
     packages=['mediumroast', 'mediumroast/transformers', 'mediumroast/extractors', 'mediumroast/loaders', 'mediumroast/api'],
     python_requires='>=3.6, <4',
     project_urls={  # Optional
