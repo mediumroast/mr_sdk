@@ -3,17 +3,15 @@ import pathlib
 
 here = pathlib.Path(__file__).parent.resolve()
 
-# Get the long description from the README file
-long_description = (here / 'README.md').read_text(encoding='utf-8')
-
 setup(
     name="mediumroast",
     version="0.7.5",
     description="An API binding and ETL toolset for the mediumroast.io.",
+    long_description = (here / 'README.md').read_text(encoding='utf-8'),
     author="Michael Hay",
-    url="https://github.com/mediumroast/mr_sdk",
+    url="https://github.com/mediumroast/mr_sdk/python",
     author_email="michael.hay@mediumroast.io",
-    classifiers=[  # Optional
+    classifiers=[ 
         # How mature is this project? Common values are
         #   3 - Alpha
         #   4 - Beta
@@ -37,11 +35,11 @@ setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3 :: Only',
     ],
-    package_dir={'': 'src'}, # TODO this might need to be src/mediumroast
+    scripts=['cli/list_interactions.py', 'cli/list_studies.py', 'cli/list_companies.py', 'cli/list_raw_objects.py'],
+    packages=['mediumroast', 'mediumroast/transformers', 'mediumroast/extractors', 'mediumroast/loaders', 'mediumroast/api'],
     python_requires='>=3.6, <4',
     project_urls={  # Optional
         'Bug Reports': 'https://github.com/mediumroast/mr_sdk/issues',
-        'Say Thanks!': 'http://saythanks.io/to/example',
-        'Source': 'https://github.com/pypa/sampleproject/',
+        'Source': 'https://github.com/mediumroast/mr_sdk/python',
     },
 )

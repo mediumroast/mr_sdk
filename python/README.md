@@ -7,27 +7,33 @@ Assuming `git` is installed and your credentials are set up to talk to the mediu
 2. `git clone git@github.com:mediumroast/mr_sdk.git`
 This will create an `mr_sdk` directory in `~/dev/` and allow you to proceed to the following steps for installation.
 
-## Installation
-The current state of the distribution is as a development package while there is a `setup.py` file that is available a local software distribution hasn't yet been produced, package released on Github and so on.  As inspired by [this article](https://python-packaging-tutorial.readthedocs.io/en/latest/setup_py.html) the best current way to perform the installation after cloning is to:
+## Installation for Developers
+For developers of the package the `setup.py` file is available to enable a local software distribution that can be improved upon.  As inspired by [this article](https://python-packaging-tutorial.readthedocs.io/en/latest/setup_py.html) the best current way to perform the installation of a developer version after cloning is to assuming you've cloned into `~/dev`:
 1. `cd ~/dev/mr_sdk/python`
 2. `sudo pip install -e ./`
 With this accomplished tools that depend upon this package including the [mr_json_server](https://github.com/mediumroast/mr_json_server) and the [mr_caffeine](https://github.com/mediumroast/mr_caffeine) service should operate.  If there are issues encountered then please open an [issue](https://github.com/mediumroast/mr_sdk/issues).
 
-## Structure
+## Installation for Early Adopters and Testers
+The package has reached a stage where there is a demo branch and associated tarball that can be used for installation.  Other components, associated to the mediumroast.io demo, will make use of this package in their images, distributions and code.  In particular the [mr_caffeine](https://github.com/mediumroast/mr_caffeine) service will include this python package to operate, and the [mr_json_server](https://github.com/mediumroast/mr_json_server) assumes the package is installed for all users on your system.  The installation steps of this `demo` package follow and verification steps assume both `mr_json_server` as well as `mr_minio` are operable.  If both of these components are not operable then the verification steps listed below will fail.
+1. Install the package for all users: `sudo pip3 install https://github.com/mediumroast/mr_sdk/raw/demo/python/dist/mediumroast-0.7.5.tar.gz`
+2. Verify that the package can talk to the `mr_minio` service
+3. Verify that the package can talk to the `my_json_server` service
+
+## Structure on Github
 The following structure is available for the Python SDK, as new SDK implementations are created additional top level directories will be created.
 ```
 mr_sdk/
         python/
-                examples/
-                src/
-                    mediumroast/
-                        api/
-                        extractors/
-                        transformers/
-                        loaders/
-                        helpers.py
-                        setup.py
-                        README.md
+            cli_examples/
+            mediumroast/
+                  api/
+                  extractors/
+                  transformers/
+                  loaders/
+                  helpers.py
+            setup.py
+            README.md
+            LICENSE
 ```
 ### Preconditions for the examples to run
 Again the assumption is that you have `mr_json_server` and `mr_minio` working along with the SDK installed as per the installation section above.
