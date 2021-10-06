@@ -187,6 +187,13 @@ class Interactions:
             """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
+    def get_all_states_dict(self):
+        if self.CRED['server_type'] == 'json':
+            return True, self.interactions.get_all_states_dict()
+        else:
+            """The official mr_backend implementation of this would go here"""
+            raise NotImplementedError
+
     def get_all_unsummarized_dict(self):
         if self.CRED['server_type'] == 'json':
             return True, self.interactions.get_all_unsummarized_dict()
