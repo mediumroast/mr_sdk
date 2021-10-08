@@ -1,7 +1,19 @@
 # Python SDK for the mediumroast.io
 This is the Python portion of the SDK, Software Development Kit, for the mediumroast.io.  Over time the API support, helpers and ETL (Extract, Transform and Load) capabilities will mature and be replicated in other languages like JavaScript/TypeScript and so on.  When ready this tool set will be released as an open source package for consumption by any clients interested in engaging the system programatically.
 
-## Cloning the repository
+## Installation for Early Adopters and Testers
+The package has reached a stage where there is a demo branch and associated tarball that can be used for installation.  Other components, associated to the mediumroast.io demo, will make use of this package in their images, distributions and code.  In particular the [mr_caffeine](https://github.com/mediumroast/mr_caffeine) service will include this python package to operate, and the [mr_json_server](https://github.com/mediumroast/mr_json_server) assumes the package is installed for all users on your system.  The installation steps of this `demo` package follow and verification steps assume both `mr_json_server` as well as `mr_minio` are operable.  If both of these components are not operable then the verification steps listed below will fail.
+1. Install the *mediumroast* python package for all users: `sudo pip3 install https://github.com/mediumroast/mr_sdk/raw/demo/python/dist/mediumroast-0.7.5.tar.gz`
+2. Download the *mediumroast-cli* package: `wget https://github.com/mediumroast/mr_sdk/raw/demo/python/dist/mediumroast-cli-0.7.5.tar.gz`
+3. Unpack the *mediumroast-cli* package into your current working directory: `tar -zxvf ./mediumroast-cli-0.7.5.tar.gz`. This will create a `cli/` directory in your current working directory.
+4. Enter the `cli/` directory: `cd cli/`
+5. Verify that the package can talk to the `mr_minio` service using `./list_raw_objects.py`. This assumes that `mr_minio` is operable.
+6. Verify that the package can talk to the `my_json_server` service using `./list_interactions.py`. This assumes that `mr_json_server` is operable.
+At this point the package and the basic servers are verified and operational.  Later steps will get the `mr_web_ui` running to enable use case walk through of the demonstration system.
+
+# Installation and Configuration Steps for Developers
+The following steps are important if you are developing or extending the Python SDK.  If you're not a developer these steps aren't as important to you and you should pay attention to section entitled *Installation for Early Adopters and Testers*.
+## Cloning the repository for Developers
 Assuming `git` is installed and your credentials are set up to talk to the mediumroast.io set of repositories it should be possible to do the following as a user on the system:
 1. `mkdir ~/dev;cd ~/dev`
 2. `git clone git@github.com:mediumroast/mr_sdk.git`
@@ -13,18 +25,13 @@ For developers of the package the `setup.py` file is available to enable a local
 2. `sudo pip install -e ./`
 With this accomplished tools that depend upon this package including the [mr_json_server](https://github.com/mediumroast/mr_json_server) and the [mr_caffeine](https://github.com/mediumroast/mr_caffeine) service should operate.  If there are issues encountered then please open an [issue](https://github.com/mediumroast/mr_sdk/issues).
 
-## Installation for Early Adopters and Testers
-The package has reached a stage where there is a demo branch and associated tarball that can be used for installation.  Other components, associated to the mediumroast.io demo, will make use of this package in their images, distributions and code.  In particular the [mr_caffeine](https://github.com/mediumroast/mr_caffeine) service will include this python package to operate, and the [mr_json_server](https://github.com/mediumroast/mr_json_server) assumes the package is installed for all users on your system.  The installation steps of this `demo` package follow and verification steps assume both `mr_json_server` as well as `mr_minio` are operable.  If both of these components are not operable then the verification steps listed below will fail.
-1. Install the package for all users: `sudo pip3 install https://github.com/mediumroast/mr_sdk/raw/demo/python/dist/mediumroast-0.7.5.tar.gz`
-2. Verify that the package can talk to the `mr_minio` service
-3. Verify that the package can talk to the `my_json_server` service
-
-## Structure on Github
+## Structure of the repository
 The following structure is available for the Python SDK, as new SDK implementations are created additional top level directories will be created.
 ```
 mr_sdk/
         python/
-            cli_examples/
+            cli/
+            dist/
             mediumroast/
                   api/
                   extractors/
@@ -35,13 +42,9 @@ mr_sdk/
             README.md
             LICENSE
 ```
-### Preconditions for the examples to run
-Again the assumption is that you have `mr_json_server` and `mr_minio` working along with the SDK installed as per the installation section above.
-1. Creation of a default user in `mr_minio` called `medium_roast_io` with an API-key being `b7d1ac5ec5c2193a7d6dd61e7a8a76451885da5bd754b2b776632afd413d53e7`
-2. The user must have both read and write privileges to the `/interactions` bucket.  For ease of use these credentials are encoded as defaults in the `s3bucket.py` module, but other related services, like `mr_caffeine` will explicitly call this out.
-### examples
+# The CLI, Command Line Interface
 The following example CLI wrappers have been built that wrap the sample API implementation and other elements in the SDK.  As appropriate example outputs are also included in the documentation.
-#### list_companies.py
+## list_companies.py
 ```
 usage: list_companies [-h] [--rest_url REST_URL] [--get_name_by_guid NAME_BY_GUID] [--get_guid_by_name GUID_BY_NAME] [--get_iterations {all,unthemed,unsummarized}] [--get_by_guid BY_GUID] [--get_by_name BY_NAME]
                       [--user USER] [--secret SECRET]
@@ -64,7 +67,7 @@ optional arguments:
   --user USER           User name
   --secret SECRET       Secret or password
 ```
-##### Example output
+### Example output
 ```
 ./list_companies.py --get_by_guid=6dbfa33b06706033931b0154210fbcb5fafb995315eccfbd8bc5b12d5e5569f7
 {'GUID': '6dbfa33b06706033931b0154210fbcb5fafb995315eccfbd8bc5b12d5e5569f7',
@@ -166,7 +169,7 @@ optional arguments:
  'url': 'Unknown',
  'zipPostal': 'Unknown'}
 ```
-#### list_interactions.py
+## list_interactions.py
 ```
 usage: list_interactions [-h] [--rest_url REST_URL] [--get_name_by_guid NAME_BY_GUID] [--get_guid_by_name GUID_BY_NAME] [--get_url_by_guid URL_BY_GUID] [--get_abs_by_guid ABS_BY_GUID] [--get_by_guid BY_GUID]
                          [--get_by_name BY_NAME] [--get_all_unsummarized ALL_UNSUMMARIZED] [--user USER] [--secret SECRET]
@@ -193,7 +196,7 @@ optional arguments:
   --user USER           User name
   --secret SECRET       Secret or password
 ```
-##### Example output
+### Example output
 ```
 ./list_interactions.py --get_by_guid=a1049f53de0929252fd6b655be1da37ae9ed27fe44f2814b5f0f9e102b7cabd3
 {'GUID': 'a1049f53de0929252fd6b655be1da37ae9ed27fe44f2814b5f0f9e102b7cabd3',
@@ -245,9 +248,9 @@ optional arguments:
         'DIEGO-ICT-Customer Insights-Aha-Online.pdf'}
 ```
 
-#### list_raw_objects.py
+## list_raw_objects.py
 A basic utility that talks to the `mr_minio` service and lists the raw objects for eventual transformation and loading.
-#### list_studies.py
+## list_studies.py
 ```
 usage: list_studies [-h] [--rest_url REST_URL] [--get_name_by_guid NAME_BY_GUID] [--get_guid_by_name GUID_BY_NAME] [--get_iterations {all,unthemed,unsummarized}] [--get_questions GET_QUESTIONS] [--get_by_guid BY_GUID]
                     [--get_by_name BY_NAME] [--user USER] [--secret SECRET]
@@ -272,7 +275,7 @@ optional arguments:
   --user USER           User name
   --secret SECRET       Secret or password
 ```
-##### Example output
+### Example output
 ```
 ./list_studies.py --get_by_guid=f3eae874b1fba924e81d5963a2bc7752ab8d2acd906bb2944f6243f163a6bf23
 {'GUID': 'f3eae874b1fba924e81d5963a2bc7752ab8d2acd906bb2944f6243f163a6bf23',
@@ -1053,7 +1056,7 @@ optional arguments:
  'totalKeyQuestions': 12,
  'totalKeyThemes': 9}
 ```
-#### update_companies.py - this is a work in progress and is not guaranteed to work at this stage
+## update_companies.py - this is a work in progress and is not guaranteed to work at this stage
 ```
 usage: update_companies [-h] [--rest_url REST_URL] --guid GUID [--set_interactions_state {processing,summarized,unsummarized}] [--set_iteration_state {processing,summarized,unsummarized,themed,unthemed}]
                         [--set_container_state CONTAINER_STATE] [--set_property PROPERTY] [--user USER] [--secret SECRET]
@@ -1075,7 +1078,7 @@ optional arguments:
   --user USER           User name
   --secret SECRET       Secret or password
 ```
-#### update_interactions.py
+## update_interactions.py
 ```
 usage: update_interactions [-h] [--rest_url REST_URL] --guid GUID [--set_state {processing,summarized,unsummarized}] [--set_all_state {processing,summarized,unsummarized}] [--set_summary SUMMARY] [--set_property PROPERTY]
                            [--user USER] [--secret SECRET]
@@ -1097,5 +1100,3 @@ optional arguments:
   --user USER           User name
   --secret SECRET       Secret or password
 ```
-#### Other examples
-There are several other examples, but these should not be deeply inspected as they aren't likely to remain in this example folder or additional evaluation is required for ensuring they can be brought into overall distribution.
