@@ -159,7 +159,7 @@ class Companies:
 
 
     # TODO need to implement this function it is not yet coded
-    def set_states_by_guid(self, guid, states):
+    def set_states_by_guid(self, guid, json):
         if self.CRED['server_type'] == 'json':
             return True, self.companies.set_property(guid, json)
         else:
@@ -266,6 +266,26 @@ class Interactions:
                     'GUID': my_obj['id'],
                     'state': my_obj['state'],
                     'previous state': prev_state
+                })
+            return True, final_objs
+        else:
+            """The official mr_backend implementation of this would go here"""
+            raise NotImplementedError
+
+    def del_all_abstracts(self):
+        if self.CRED['server_type'] == 'json':
+            final_objs=[]
+            interactions=self.interactions.get_all_states()
+            for interaction in interactions:
+                my_status, my_obj=self.set_summary(interaction['GUID'], 'Unknown')
+                if not my_status: return my_status, my_obj # Oops there was an error in the request and we need to bale
+                my_status, my_obj=self.set_state(interaction['GUID'], 'unsummarized')
+                if not my_status: return my_status, my_obj # Oops there was an error in the request and we need to bale
+                final_objs.append({
+                    "interactionName": interaction['interactionName'],
+                    'GUID': my_obj['id'],
+                    'state': my_obj['state'],
+                    'abstract': my_obj['abstract']
                 })
             return True, final_objs
         else:

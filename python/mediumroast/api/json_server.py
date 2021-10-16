@@ -19,7 +19,7 @@ class rest_scaffold:
     def put_obj(self, endpoint, obj):
         url=self.CRED['rest_url'] + endpoint
         resp_obj=requests.put(url, json=obj)
-        return resp_obj.json(), resp.status_code
+        return resp_obj.json(), resp_obj.status_code
 
     # TODO This needs to be experimented with it will likely not work
     def patch_obj(self, endpoint, obj):
