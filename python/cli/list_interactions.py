@@ -43,7 +43,7 @@ if __name__ == "__main__":
         success, resp=interaction_ctl.get_abs_by_guid(my_args.abs_by_guid)
     elif my_args.all_unsummarized == 'all':
         success, resp=interaction_ctl.get_all_unsummarized()
-    elif my_args.all_unsummarized == 'dictionary' or 'dict':
+    elif my_args.all_unsummarized == 'dictionary':
         success, resp=interaction_ctl.get_all_unsummarized_dict()
     else:
         success, resp=interaction_ctl.get_all()
