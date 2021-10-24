@@ -98,10 +98,18 @@ def _create_cover_page(doc_obj, study, conf, logo_size=60, font_size=30):
     
 
 def _create_summary(doc_obj, study_doc, conf):
-    # Create the Introduction
+    # Create the Introduction section
     doc_obj.add_heading('Introduction')
     clean_intro=" ".join(study_doc['Introduction'].split("\n"))
     doc_obj.add_paragraph(clean_intro)
+
+    # Create the Opportunity section
+    doc_obj.add_heading('Opportunity')
+    clean_opportunity=" ".join(study_doc['Opportunity']['text'].split("\n"))
+    doc_obj.add_paragraph(clean_opportunity)
+    del(study_doc['Opportunity']['text']) # Remove the text section before we process the numbered bullets
+    for opp in study_doc['Opportunity']:
+        doc_obj.add_paragraph(study_doc['Opportunity'][opp], style='List Number')
 
 def report(study, format, conf):
     # Document generics
