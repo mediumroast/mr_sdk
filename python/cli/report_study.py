@@ -70,15 +70,12 @@ def _create_cover_page(doc_obj, study, conf, logo_size=60, font_size=30):
     cover_title.style=doc_obj.styles['Title']
 
     # Define the Subtitle content
-    cover_subtitle=doc_obj.add_paragraph(
+    cover_subtitle=doc_obj.add_paragraph().add_run(
         subtitle + author + my_date
     )
-    style=doc_obj.styles['Title']
-    font=style.font
-    font.size=Pt(18)
+    font=cover_subtitle.font
+    font.size=font_size-10
     font.bold=False
-    cover_subtitle.style=doc_obj.styles['Title']
-
     # Add a page break
     doc_obj.add_page_break()
     
