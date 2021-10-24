@@ -3,6 +3,7 @@
 import sys, pprint, argparse, configparser
 
 from docx import Document
+from docx.shared import Pt
 from datetime import datetime
 from mediumroast.api.high_level import Auth as authenticate
 from mediumroast.api.high_level import Studies as study
@@ -30,7 +31,12 @@ def _create_header(doc_obj, conf):
     s=doc_obj.sections[0]
     header=s.header
     header_p=header.paragraphs[0]
-    header_p.text=conf['org'] + "\t | \t Created on: " + date_string 
+    header_p.text=conf['org'] + "\t | \t Created on: " + date_string
+    style=doc_obj.styles['Header']
+    font=style.font
+    font.name=conf['font']
+    font.size=Pt(8)
+    header_p.style=doc_obj.styles['Header']
 
 def _create_footer(doc_obj, conf):
     date_string=f'{datetime.now():%Y-%m-%d %H:%M}'
@@ -38,6 +44,11 @@ def _create_footer(doc_obj, conf):
     footer=s.footer
     footer_p=footer.paragraphs[0]
     footer_p.text=conf['confidentiality']
+    style=doc_obj.styles['Footer']
+    font=style.font
+    font.name=conf['font']
+    font.size=Pt(8)
+    footer_p.style=doc_obj.styles['Footer']
 
 def _create_title(doc_obj, study, conf):
     org=conf['org']
@@ -55,6 +66,10 @@ def _create_summary(doc_obj, study, format):
 def report(study, format, conf):
     # Document generics
     d=Document() # Create doc object
+    style=d.styles['Normal']
+    font=style.font
+    font.name=conf['font']
+    font.size=Pt(int(conf['font_size']))
     _create_header(d, conf) # Create the doc header
     _create_footer(d, conf) # Create the doc footer
     _create_title(d, study, conf) # Create the title page
