@@ -32,30 +32,39 @@ def _create_header(doc_obj, conf):
     header_p=header.paragraphs[0]
     header_p.text=conf['org'] + "\t | \t Created on: " + date_string 
 
-def _create_footer():
-    pass
+def _create_footer(doc_obj, conf):
+    date_string=f'{datetime.now():%Y-%m-%d %H:%M}'
+    s=doc_obj.sections[0]
+    footer=s.footer
+    footer_p=footer.paragraphs[0]
+    footer_p.text=conf['confidentiality']
 
-def _create_title():
-    pass
+def _create_title(doc_obj, study, conf):
+    org=conf['org']
+    logo=conf['logo']
+    title="Study Name: " + study['studyName']
+    subtitle="A " + org + " study report enabling attributable market insights."
+    author="Mediumroast, Inc. auto information barrista"
 
-def report(study, format, conf):
-    # Create doc object
-    d=Document()
-    _create_header(d, conf)
-
-    # d=report_summary(study, format, all=True, doc=d)
-    # d=report_references(study, format, all=True, doc=d)
-    return d
-
-def report_summary(study, format, all=False, doc=None):
+def _create_summary(doc_obj, study, format):
     # Get the key themes
     # Construct the table for the key themes including if possible the refereneces within the document
     # Build the summary paragraph
     pass
 
+def report(study, format, conf):
+    # Document generics
+    d=Document() # Create doc object
+    _create_header(d, conf) # Create the doc header
+    _create_footer(d, conf) # Create the doc footer
+    _create_title(d, study, conf) # Create the title page
+
+    # d=report_summary(study, format, doc=d)
+    # d=report_references(study, format, doc=d)
+    return d
+
 def report_references(study, format, all=False, doc=None):
     interaction_ctl=interaction(credential)
-    # create doc object
     # Loop over the interaction GUIDs
     #   Get each interaction by GUID
     #   Obtain each abstract
@@ -72,7 +81,6 @@ def report_references(study, format, all=False, doc=None):
     pass
 
 if __name__ == "__main__":
-    printer=pprint.PrettyPrinter()
     my_args=parse_cli_args()
     configurator=read_config(conf_file=my_args.config_file)
 
@@ -92,8 +100,10 @@ if __name__ == "__main__":
     study_ctl=study(credential)
     success, study_obj=study_ctl.get_by_guid(my_args.guid)
     if success:
+        doc_name=study_obj['studyName'].replace(' ', '_') + "_study_report.docx"
         document=report(study_obj, my_args.report_format, report_conf)
-        
+        document.save(doc_name)
+
     else:
         print('CLI ERROR: This is a generic error message, as something went wrong.')
         sys.exit(-1)
