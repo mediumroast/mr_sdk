@@ -109,7 +109,17 @@ def _create_summary(doc_obj, study_doc, conf):
     doc_obj.add_paragraph(clean_opportunity)
     del(study_doc['Opportunity']['text']) # Remove the text section before we process the numbered bullets
     for opp in study_doc['Opportunity']:
-        doc_obj.add_paragraph(study_doc['Opportunity'][opp], style='List Number')
+        clean_opp=" ".join(study_doc['Opportunity'][opp])
+        doc_obj.add_paragraph(clean_opp, style='List Number')
+
+    # Create the Action section
+    doc_obj.add_heading('Actions')
+    clean_action=" ".join(study_doc['Action']['text'].split("\n"))
+    doc_obj.add_paragraph(clean_action)
+    del(study_doc['Action']['text']) # Remove the text section before we process the numbered bullets
+    for action in study_doc['Action']:
+        clean_act=" ".join(study_doc['Action'][action])
+        doc_obj.add_paragraph(clean_act, style='List Number')
 
 def report(study, format, conf):
     # Document generics
