@@ -50,10 +50,10 @@ def _create_footer(doc_obj, conf, font_size=7):
     font.size=Pt(font_size)
     footer_p.style=doc_obj.styles['Footer']
 
-def _create_cover_page(doc_obj, study, conf, logo_size=30, font_size=30):
+def _create_cover_page(doc_obj, study, conf, logo_size=60, font_size=30):
     org=conf['org']
     logo=conf['logo']
-    title="\n\nStudy Name: " + study['studyName'] + "\n"
+    title="\nStudy Name: " + study['studyName'] + "\n"
     subtitle="A " + org + " study report enabling attributable market insights.\n"
     author="Author: Mediumroast Barrista Robot\n"
     date_string=f'{datetime.now():%Y-%m-%d %H:%M}'
@@ -73,6 +73,8 @@ def _create_cover_page(doc_obj, study, conf, logo_size=30, font_size=30):
     cover_subtitle=doc_obj.add_paragraph(
         subtitle + author + my_date
     )
+    style=doc_obj.styles['Title']
+    font=style.font
     font.size=Pt(font_size - 10)
     font.bold=False
     cover_subtitle.style=doc_obj.styles['Title']
