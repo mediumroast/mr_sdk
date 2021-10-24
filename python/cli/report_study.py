@@ -51,19 +51,19 @@ def _create_footer(doc_obj, conf, font_size=7):
     footer_p.style=doc_obj.styles['Footer']
 
 def _create_cover_page(doc_obj, study, conf, logo_size=60, font_size=30):
-    org=conf['org'] # Organization
+    
+    # Generics
     title_font_size=Pt(font_size) # Title Font Size
+    logo_size=Pt(font_size*2)
     
     
     # Organization name and logo
     logo=conf['logo']
     logo_title=doc_obj.add_paragraph().add_run()
-    logo_title.add_picture(logo, height=title_font_size)
-    logo_title.add_text(org)
-    logo_font=logo_title.font
-    logo_font.size=title_font_size
+    logo_title.add_picture(logo, height=logo_size)
 
     # Define the Cover Title Style
+    org=conf['org'] # Organization
     title="\nTitle: " + study['studyName']
     cover_title=doc_obj.add_paragraph(title)
     style=doc_obj.styles['Title']
