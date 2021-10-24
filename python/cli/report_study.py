@@ -53,18 +53,18 @@ def _create_footer(doc_obj, conf, font_size=7):
 def _create_cover_page(doc_obj, study, conf, logo_size=60, font_size=30):
     org=conf['org']
     logo=conf['logo']
-    title="Study Name: " + study['studyName']
+    title="Title: " + study['studyName']
     subtitle="A " + org + " study report enabling attributable market insights.\n"
     author="Author: Mediumroast Barrista Robot\n"
     date_string=f'{datetime.now():%Y-%m-%d %H:%M}'
-    my_date="Creation Date: " + date_string + "\n"
+    creation_date="Creation Date: " + date_string + "\n"
     doc_obj.add_picture(logo, width=Pt(logo_size))
     
     # Title Font Size
     title_font_size=Pt(font_size)
 
     #Subtitle Font Sizes
-    sub_font_size=Pt(font_size-10)
+    sub_font_size=Pt(font_size-12)
 
     # Define the Cover Title Style
     cover_title=doc_obj.add_paragraph(title)
@@ -76,22 +76,22 @@ def _create_cover_page(doc_obj, study, conf, logo_size=60, font_size=30):
     cover_title.style=doc_obj.styles['Title']
 
     # Define the Subtitle content
-    cover_subtitle=doc_obj.add_paragraph("\t")
+    cover_subtitle=doc_obj.add_paragraph("")
     s=cover_subtitle.add_run(subtitle)
     subtitle_font=s.font
     subtitle_font.size=sub_font_size
     subtitle_font.bold=False
 
     # Define the Author content
-    cover_author=doc_obj.add_paragraph("\t")
-    a=cover_author.add_run(subtitle)
+    cover_author=doc_obj.add_paragraph("")
+    a=cover_author.add_run(author)
     author_font=a.font
     author_font.size=sub_font_size
     author_font.bold=False
 
     # Define the Creation date content
-    cover_date=doc_obj.add_paragraph("\t")
-    d=cover_date.add_run(subtitle)
+    cover_date=doc_obj.add_paragraph("")
+    d=cover_date.add_run(creation_date)
     date_font=d.font
     date_font.size=sub_font_size
     date_font.bold=False
