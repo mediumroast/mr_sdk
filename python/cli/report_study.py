@@ -100,7 +100,8 @@ def _create_cover_page(doc_obj, study, conf, logo_size=60, font_size=30):
 def _create_summary(doc_obj, study_doc, conf):
     # Create the Introduction
     doc_obj.add_heading('Introduction')
-    doc_obj.add_paragraph(study_doc['Introduction'])
+    clean_intro=" ".join(study_doc['Introduction'].split("\n"))
+    doc_obj.add_paragraph(clean_intro)
 
 def report(study, format, conf):
     # Document generics
