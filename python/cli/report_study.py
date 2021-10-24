@@ -50,12 +50,36 @@ def _create_footer(doc_obj, conf, font_size=7):
     font.size=Pt(font_size)
     footer_p.style=doc_obj.styles['Footer']
 
-def _create_cover_page(doc_obj, study, conf):
+def _create_cover_page(doc_obj, study, conf, logo_size=30, font_size=30):
     org=conf['org']
     logo=conf['logo']
-    title="Study Name: " + study['studyName']
-    subtitle="A " + org + " study report enabling attributable market insights."
-    author="Author: Mediumroast Barrista Robot"
+    title="\n\nStudy Name: " + study['studyName'] + "\n"
+    subtitle="A " + org + " study report enabling attributable market insights.\n"
+    author="Author: Mediumroast Barrista Robot\n"
+    date_string=f'{datetime.now():%Y-%m-%d %H:%M}'
+    my_date="Creation Date: " + date_string + "\n"
+    doc_obj.add_picture(logo, width=Pt(logo_size))
+    
+    # Define the Cover Title Style
+    cover_title=doc_obj.add_paragraph(title)
+    style=doc_obj.styles['Title']
+    font=style.font
+    font.name=conf['font']
+    font.size=Pt(font_size)
+    font.bold=True
+    cover_title.style=doc_obj.styles['Title']
+
+    # Define the Subtitle content
+    cover_subtitle=doc_obj.add_paragraph(
+        subtitle + author + my_date
+    )
+    font.size=Pt(font_size - 10)
+    font.bold=False
+    cover_subtitle.style=doc_obj.styles['Title']
+
+    # Add a page break
+    doc_obj.add_page_break()
+    
 
 def _create_summary(doc_obj, study, format):
     # Get the key themes
@@ -107,7 +131,7 @@ if __name__ == "__main__":
         'font': configurator['DEFAULT']['font_type'],
         'font_size': configurator['DEFAULT']['font_size'],
         'font_measure': configurator['DEFAULT']['font_measure'],
-        'copyright': configurator['DEFAULT']['copy_right_notice'],
+        'copyright': configurator['DEFAULT']['copyright_notice'],
         'confidentiality': configurator['DEFAULT']['confidential_notice'],
     }
 
