@@ -58,7 +58,7 @@ def _create_cover_page(doc_obj, study, conf, logo_size=60, font_size=30):
     # Organization name and logo
     logo=conf['logo']
     logo_title=doc_obj.add_paragraph().add_run()
-    logo_title.add_picture(logo, width=Pt(logo_size))
+    logo_title.add_picture(logo)
     logo_title.add_text(org)
     logo_font=logo_title.font
     logo_font.size=title_font_size
