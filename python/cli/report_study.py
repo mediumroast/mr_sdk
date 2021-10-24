@@ -97,11 +97,10 @@ def _create_cover_page(doc_obj, study, conf, logo_size=60, font_size=30):
     doc_obj.add_page_break()
     
 
-def _create_summary(doc_obj, study, format):
-    # Get the key themes
-    # Construct the table for the key themes including if possible the refereneces within the document
-    # Build the summary paragraph
-    pass
+def _create_summary(doc_obj, study_doc, conf):
+    # Create the Introduction
+    doc_obj.add_heading('Introduction')
+    doc_obj.add_paragraph(study_doc['Introduction'])
 
 def report(study, format, conf):
     # Document generics
@@ -113,6 +112,7 @@ def report(study, format, conf):
     _create_cover_page(d, study, conf) # Create the cover page
     _create_header(d, conf) # Create the doc header
     _create_footer(d, conf) # Create the doc footer
+    _create_summary(d, study['document'], conf)
     
 
     # d=report_summary(study, format, doc=d)
