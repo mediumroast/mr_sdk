@@ -26,7 +26,7 @@ def read_config(conf_file='./reports.ini'):
     c.read(conf_file)
     return c
 
-def _create_header(doc_obj, conf):
+def _create_header(doc_obj, conf, font_size=7):
     date_string=f'{datetime.now():%Y-%m-%d %H:%M}'
     s=doc_obj.sections[0]
     header=s.header
@@ -35,27 +35,27 @@ def _create_header(doc_obj, conf):
     style=doc_obj.styles['Header']
     font=style.font
     font.name=conf['font']
-    font.size=Pt(8)
+    font.size=Pt(font_size)
     header_p.style=doc_obj.styles['Header']
 
-def _create_footer(doc_obj, conf):
+def _create_footer(doc_obj, conf, font_size=7):
     date_string=f'{datetime.now():%Y-%m-%d %H:%M}'
     s=doc_obj.sections[0]
     footer=s.footer
     footer_p=footer.paragraphs[0]
-    footer_p.text=conf['confidentiality']
+    footer_p.text=conf['confidentiality'] + "\t | \t" + conf['copyright']
     style=doc_obj.styles['Footer']
     font=style.font
     font.name=conf['font']
-    font.size=Pt(8)
+    font.size=Pt(font_size)
     footer_p.style=doc_obj.styles['Footer']
 
-def _create_title(doc_obj, study, conf):
+def _create_cover_page(doc_obj, study, conf):
     org=conf['org']
     logo=conf['logo']
     title="Study Name: " + study['studyName']
     subtitle="A " + org + " study report enabling attributable market insights."
-    author="Mediumroast, Inc. auto information barrista"
+    author="Author: Mediumroast Barrista Robot"
 
 def _create_summary(doc_obj, study, format):
     # Get the key themes
@@ -70,9 +70,10 @@ def report(study, format, conf):
     font=style.font
     font.name=conf['font']
     font.size=Pt(int(conf['font_size']))
+    _create_cover_page(d, study, conf) # Create the cover page
     _create_header(d, conf) # Create the doc header
     _create_footer(d, conf) # Create the doc footer
-    _create_title(d, study, conf) # Create the title page
+    
 
     # d=report_summary(study, format, doc=d)
     # d=report_references(study, format, doc=d)
