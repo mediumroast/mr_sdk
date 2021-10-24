@@ -54,7 +54,7 @@ def _create_cover_page(doc_obj, study, conf, logo_size=60, font_size=30):
     
     # Generics
     title_font_size=Pt(font_size) # Title Font Size
-    logo_size=Pt(font_size*2)
+    logo_size=Pt(font_size*2.5)
     
     
     # Organization name and logo
@@ -64,7 +64,7 @@ def _create_cover_page(doc_obj, study, conf, logo_size=60, font_size=30):
 
     # Define the Cover Title Style
     org=conf['org'] # Organization
-    title="\nTitle: " + study['studyName']
+    title="\n\nTitle: " + study['studyName']
     cover_title=doc_obj.add_paragraph(title)
     style=doc_obj.styles['Title']
     font=style.font
