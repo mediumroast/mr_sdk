@@ -54,10 +54,10 @@ def _create_cover_page(doc_obj, study, conf, logo_size=60, font_size=30):
     org=conf['org']
     logo=conf['logo']
     title="Title: " + study['studyName']
-    subtitle="A " + org + " study report enabling attributable market insights.\n"
-    author="Author: Mediumroast Barrista Robot\n"
+    subtitle="A " + org + " study report enabling attributable market insights."
+    author="Author: Mediumroast Barrista Robot"
     date_string=f'{datetime.now():%Y-%m-%d %H:%M}'
-    creation_date="Creation Date: " + date_string + "\n"
+    creation_date="Creation Date: " + date_string
     doc_obj.add_picture(logo, width=Pt(logo_size))
     
     # Title Font Size
