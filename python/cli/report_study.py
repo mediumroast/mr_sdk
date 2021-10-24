@@ -71,28 +71,24 @@ def _create_cover_page(doc_obj, study, conf, logo_size=60, font_size=30):
     font=style.font
     font.name=conf['font']
     font.size=title_font_size
-    font.bold=True
     cover_title.style=doc_obj.styles['Title']
 
     # Define the Subtitle content
-    cover_subtitle=doc_obj.add_paragraph("Author: ")
+    cover_subtitle=doc_obj.add_paragraph("")
     s=cover_subtitle.add_run(subtitle)
     subtitle_font=s.font
-    subtitle_font.size=sub_font_size
     subtitle_font.bold=True
 
     # Define the Author content
-    cover_author=doc_obj.add_paragraph("")
+    cover_author=doc_obj.add_paragraph("\nAuthor: ")
     a=cover_author.add_run(author)
     author_font=a.font
-    author_font.size=sub_font_size
-    author_font.bold=False
+    author_font.bold=True
 
     # Define the Creation date content
     cover_date=doc_obj.add_paragraph("Creation Date: ")
     d=cover_date.add_run(creation_date)
     date_font=d.font
-    date_font.size=sub_font_size
     date_font.bold=True
 
     # Add a page break
