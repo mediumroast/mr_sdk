@@ -75,7 +75,7 @@ def _create_cover_page(doc_obj, study, conf, logo_size=60, font_size=30):
     )
     style=doc_obj.styles['Title']
     font=style.font
-    font.size=Pt(font_size - 10)
+    font.size=Pt(18)
     font.bold=False
     cover_subtitle.style=doc_obj.styles['Title']
 
