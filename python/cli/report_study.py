@@ -99,6 +99,8 @@ def _create_cover_page(doc_obj, study, conf, logo_size=60, font_size=30):
 
 def _create_summary(doc_obj, study_doc, conf):
     # Create the Introduction section
+    section_title=doc_obj.add_paragraph('Findings') # Create the Findings section
+    section_title.style=doc_obj.styles['Title']
     doc_obj.add_heading('Introduction')
     clean_intro=" ".join(study_doc['Introduction'].split("\n"))
     doc_obj.add_paragraph(clean_intro)
@@ -110,7 +112,7 @@ def _create_summary(doc_obj, study_doc, conf):
     del(study_doc['Opportunity']['text']) # Remove the text section before we process the numbered bullets
     for opp in study_doc['Opportunity']:
         clean_opp=" ".join(study_doc['Opportunity'][opp].split("\n"))
-        doc_obj.add_paragraph(clean_opp, style='List Number')
+        doc_obj.add_paragraph(clean_opp, style='List Bullet')
 
     # Create the Action section
     doc_obj.add_heading('Actions')
@@ -120,6 +122,36 @@ def _create_summary(doc_obj, study_doc, conf):
     for action in study_doc['Action']:
         clean_act=" ".join(study_doc['Action'][action].split("\n"))
         doc_obj.add_paragraph(clean_act, style='List Number')
+
+    # Add a page break
+    doc_obj.add_page_break()
+
+def _create_reference(interaction_guid, iteration, doc_obj, conf, char_limit=500):
+    interaction_ctl=interaction(credential)
+    success, interaction_data=interaction_ctl.get_by_guid(interaction_guid)
+    if success:
+        doc_obj.add_heading(interaction_data['interactionName'], 2)
+        my_time=str(interaction_data['time'][0:1]) + ':' + str(interaction_data['time'][2:3])
+        my_date=str(interaction_data['date'][0:3]) + '-' + str(interaction_data['date'][4:5]) + '-' \
+            + str(interaction_data['date'][6:7])
+        interaction_meta=" | ".join(['Date: ' + my_date + "\t\t" + my_time,
+            'Study Iteration: ' + iteration])
+        doc_obj.add_paragraph(interaction_meta)
+        doc_obj.add_paragraph(interaction_data['abstract'][0:char_limit] + '...')
+        doc_obj.add_paragraph(interaction_data['url'])
+    else:
+        print('Something went wrong obtaining the interaction data for [' + interaction_guid + ']')
+
+def _create_references(iteration_list, doc_obj, conf):
+    section_title=doc_obj.add_paragraph('References') # Create the References section
+    section_title.style=doc_obj.styles['Title']
+    for iteration in iteration_list:
+        if iteration == 'state' or iteration == 'totalInteractions' or iteration == 'totalIterations':
+            continue
+        for interaction in iteration_list[iteration]['interactions']:
+            interaction_guid=iteration_list[iteration]['interactions'][interaction]['guid']
+            _create_reference(interaction_guid, iteration, doc_obj, conf)
+    
 
 def report(study, format, conf):
     # Document generics
@@ -131,29 +163,15 @@ def report(study, format, conf):
     _create_cover_page(d, study, conf) # Create the cover page
     _create_header(d, conf) # Create the doc header
     _create_footer(d, conf) # Create the doc footer
-    _create_summary(d, study['document'], conf)
+    _create_summary(d, study['document'], conf) # Create the intro, opportunity and actions sections
+    _create_references( study['iterations'], d, conf) # Create references sections
     
 
     # d=report_summary(study, format, doc=d)
     # d=report_references(study, format, doc=d)
     return d
 
-def report_references(study, format, all=False, doc=None):
-    interaction_ctl=interaction(credential)
-    # Loop over the interaction GUIDs
-    #   Get each interaction by GUID
-    #   Obtain each abstract
-    #   Shorten the abstract
-    #   Obtain each interaction URL
-    #   Obtain each interactionName
-    #   Obtain each interaction date & time
-    #   Obtain each interaction city, state/province, country
-    #   Format the interaction data
-    #   Add to parent object, but we might need to added to the docx structure here
-    # Save the document
-    # If the save works return true and exit
-    # Should also consider if this was called by report_all we need to do something different, see the all and doc arguments above
-    pass
+
 
 if __name__ == "__main__":
     my_args=parse_cli_args()
