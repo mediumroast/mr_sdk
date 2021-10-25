@@ -1,9 +1,10 @@
 #!/bin/env python3
 
-import sys, pprint, argparse, configparser
+import sys, pprint, argparse, configparser, docx
 
 from docx import Document
 from docx.shared import Pt
+from docx.enum.dml import MSO_THEME_COLOR_INDEX
 from datetime import datetime
 from mediumroast.api.high_level import Auth as authenticate
 from mediumroast.api.high_level import Studies as study
@@ -126,6 +127,37 @@ def _create_summary(doc_obj, study_doc, conf):
     # Add a page break
     doc_obj.add_page_break()
 
+def _add_hyperlink(paragraph, text, url):
+    """Taken from https://stackoverflow.com/questions/47666642/adding-an-hyperlink-in-msword-by-using-python-docx
+    """
+    # This gets access to the document.xml.rels file and gets a new relation id value
+    part = paragraph.part
+    r_id = part.relate_to(url, docx.opc.constants.RELATIONSHIP_TYPE.HYPERLINK, is_external=True)
+
+    # Create the w:hyperlink tag and add needed values
+    hyperlink = docx.oxml.shared.OxmlElement('w:hyperlink')
+    hyperlink.set(docx.oxml.shared.qn('r:id'), r_id, )
+
+    # Create a w:r element and a new w:rPr element
+    new_run = docx.oxml.shared.OxmlElement('w:r')
+    rPr = docx.oxml.shared.OxmlElement('w:rPr')
+
+    # Join all the xml elements together add add the required text to the w:r element
+    new_run.append(rPr)
+    new_run.text = text
+    hyperlink.append(new_run)
+
+    # Create a new Run object and add the hyperlink into it
+    r = paragraph.add_run ()
+    r._r.append (hyperlink)
+
+    # A workaround for the lack of a hyperlink style (doesn't go purple after using the link)
+    # Delete this if using a template that has the hyperlink style in it
+    r.font.color.theme_color = MSO_THEME_COLOR_INDEX.HYPERLINK
+    r.font.underline = True
+
+    return hyperlink
+
 def _create_reference(interaction_guid, iteration, doc_obj, conf, char_limit=500):
     interaction_ctl=interaction(credential)
     success, interaction_data=interaction_ctl.get_by_guid(interaction_guid)
@@ -134,11 +166,12 @@ def _create_reference(interaction_guid, iteration, doc_obj, conf, char_limit=500
         my_time=str(interaction_data['time'][0:2]) + ':' + str(interaction_data['time'][2:4])
         my_date=str(interaction_data['date'][0:4]) + '-' + str(interaction_data['date'][4:6]) + '-' \
             + str(interaction_data['date'][6:8])
-        interaction_meta="\t|\t".join(['Date: ' + my_date + "\t" + my_time,
+        interaction_meta="\t\t|\t".join(['Date: ' + my_date + "\t" + my_time,
             'Study Iteration: ' + iteration])
         doc_obj.add_paragraph(interaction_meta)
         doc_obj.add_paragraph(interaction_data['abstract'][0:char_limit] + '...')
-        doc_obj.add_paragraph(interaction_data['url'])
+        resource=doc_obj.add_paragraph('Interaction Resource: ')
+        _add_hyperlink(resource, interaction_data['interactionName'], interaction_data['url'].replace('s3', 'http'))
     else:
         print('Something went wrong obtaining the interaction data for [' + interaction_guid + ']')
 
