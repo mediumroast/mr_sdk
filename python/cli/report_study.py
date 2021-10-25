@@ -1,6 +1,6 @@
 #!/bin/env python3
 
-import sys, pprint, argparse, configparser, docx
+import sys, argparse, configparser, docx
 
 from docx import Document
 from docx.shared import Pt
