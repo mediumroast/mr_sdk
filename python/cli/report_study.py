@@ -131,10 +131,10 @@ def _create_reference(interaction_guid, iteration, doc_obj, conf, char_limit=500
     success, interaction_data=interaction_ctl.get_by_guid(interaction_guid)
     if success:
         doc_obj.add_heading(interaction_data['interactionName'], 2)
-        my_time=str(interaction_data['time'][0:1]) + ':' + str(interaction_data['time'][2:3])
-        my_date=str(interaction_data['date'][0:3]) + '-' + str(interaction_data['date'][4:5]) + '-' \
-            + str(interaction_data['date'][6:7])
-        interaction_meta=" | ".join(['Date: ' + my_date + "\t\t" + my_time,
+        my_time=str(interaction_data['time'][0:2]) + ':' + str(interaction_data['time'][2:4])
+        my_date=str(interaction_data['date'][0:4]) + '-' + str(interaction_data['date'][4:6]) + '-' \
+            + str(interaction_data['date'][6:8])
+        interaction_meta="\t|\t".join(['Date: ' + my_date + "\t" + my_time,
             'Study Iteration: ' + iteration])
         doc_obj.add_paragraph(interaction_meta)
         doc_obj.add_paragraph(interaction_data['abstract'][0:char_limit] + '...')
