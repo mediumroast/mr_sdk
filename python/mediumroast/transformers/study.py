@@ -291,6 +291,7 @@ class Transform:
                         }
                     },
                     "iterations": {},
+                    "substudies": {},
                     "totalKeyQuestions": 0,
                     "document": self._get_document(study_obj['name']),
                     "public": study_obj['public'],
