@@ -14,8 +14,6 @@ def parse_cli_args(program_name='report_study', desc='A mediumroast.io utility t
     parser=argparse.ArgumentParser(prog=program_name, description=desc)
     parser.add_argument ('--rest_url', help="The URL of the target REST server", type=str, dest='rest_url', default='http://mr-01:3000')
     parser.add_argument ('--guid', help="The GUID for the study to be reported on.", type=str, dest='guid', required=True)
-    parser.add_argument ('--report_type', help="Specify the type of report to produce", type=str, dest='report_type', choices=['all', 'references', 'summary'], default='all')
-    parser.add_argument ('--report_format', help="Define the report output format", type=bool, dest='report_format', choices=['docx', 'pdf'], default='docx')
     parser.add_argument ('--user', help="User name", type=str, dest='user', default='foo')
     parser.add_argument ('--secret', help="Secret or password", type=str, dest='secret', default='bar')
     parser.add_argument ('--config_file', help="The location to the configuration files", type=str, dest='config_file', default='./reports.ini')
@@ -184,9 +182,12 @@ def _create_references(iteration_list, doc_obj, conf):
         for interaction in iteration_list[iteration]['interactions']:
             interaction_guid=iteration_list[iteration]['interactions'][interaction]['guid']
             _create_reference(interaction_guid, iteration, doc_obj, conf)
+
+def _create_key_themes(study, doc_obj, conf):
+    pass
     
 
-def report(study, format, conf):
+def report(study, conf):
     # Document generics
     d=Document() # Create doc object
     style=d.styles['Normal']
@@ -227,7 +228,7 @@ if __name__ == "__main__":
     success, study_obj=study_ctl.get_by_guid(my_args.guid)
     if success:
         doc_name=study_obj['studyName'].replace(' ', '_') + "_study_report.docx"
-        document=report(study_obj, my_args.report_format, report_conf)
+        document=report(study_obj, report_conf)
         document.save(doc_name)
 
     else:
