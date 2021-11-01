@@ -1,15 +1,12 @@
-__version__ = '1.0'
+__version__ = '1.1'
 __author__  = "Michael Hay"
-__date__    = '2021-August-30'
+__date__    = '2021-November-01'
 __copyright__ = "Copyright 2021 mediumroast.io. All rights reserved."
 
 
 from geopy.geocoders import ArcGIS
-from summarizer import Summarizer
-from transformers import pipeline, T5ForConditionalGeneration, T5Tokenizer
-from pdfminer.high_level import extract_text
 from datetime import datetime
-import hashlib, time, re, os, json, pathlib, logging
+import hashlib, time, os, json, pathlib, logging
 import configparser as conf
 
 
@@ -153,9 +150,6 @@ class utilities:
         (time_stamp, time_string)=self.get_date_time()
         return {"1":{time_stamp: "This is an example note created for the '" + obj_type + "' object on " + time_string + " by a " + creator}}
 
-
-    def make_substudy(self, study, *kwargs):
-        pass
 
     def get_iterations(self, interactions, interaction_xform, src_type):
         """Internal method to create the iterations structure

@@ -57,12 +57,19 @@ class Transform:
         description=self.rules.get('descriptions', study_name) if self.rules.has_option('descriptions', study_name) else self.rules.get('DEFAULT', 'description')
         security_scope=self.rules.get('security_scopes', study_name) if self.rules.has_option('security_scopes', study_name) else self.rules.get('DEFAULT', 'security_scope')
         security_scope=True if security_scope == 'True' else False
+        substudies=dict()
+        if self.rules.has_option('substudies', study_name):
+            for substudy in self.rules.get('substudies', study_name).split('|'):
+                substudies[substudy]=dict()
+        else: 
+            substudies[self.rules.get('DEFAULT', 'substudies')]=dict()
     
-
+        # return the basic structure of the study
         return {'name': name, 
                 'groups': groups,
                 'public': security_scope, 
-                'description': description}
+                'description': description,
+                'substudies': substudies}
 
 
     # INTERNAL METHODS AND HELPER FUNCTIONS
@@ -86,9 +93,9 @@ class Transform:
             }
         return themes
     
-    def _get_keythemes(self, study_name, default='DEFAULT_KeyThemes'):
+    def _get_keythemes(self, study_name, substudy_id, default='DEFAULT_KeyThemes'):
         """Internal method to obtain either the default set of keythemes or the study specific set of keythemes."""
-        section=self._reformat_name(study_name) + '_KeyThemes'
+        section=self._reformat_name(study_name) + '_Themes'
         themes=self._themes_helper(section) if self.rules.has_section(section) else self._themes_helper(default)
         return themes
 
@@ -192,6 +199,34 @@ class Transform:
         document=self._document_helper(section) if self.rules.has_section(section) else self._document_helper(default)
         return document
 
+    def _make_substudies(self, study):
+        theme_state=False # Define the default state of a substudy's theme
+        final_substudies=dict() # Where we will store the final structure to be returned
+        noise_text=dict() # A blank dict which can contain noise data to remove from summaries, theming, etc.
+        totalInteractions=0 # Set this sum to 0
+        totalQuestions=0 # Set this sum to 0
+        totalThemes=0 # Set this sum to 0
+        config_pre=study['studyName'] + '_Substudy_'
+        definition='Definitions'
+
+        # Process each substudy
+        for substudy in study['substudies']:
+            definition=self.rules.get(config_pre + definition, substudy) if self.rules.has_section(config_pre + definition) else self.rules.get('DEFAULT', 'substudy_definition')
+            name, description=definition.split('|')
+            guid=self.util.hash_it(name + description) # For now set the GUID to be the combo of name and description, may be overidden by the DB in the future.
+            final_substudies[substudy]={
+                'totalInteractions': totalInteractions,
+                'totalQuestions': totalQuestions,
+                'totalThemes': totalThemes,
+                'noiseText': noise_text,
+                'name': name,
+                'description': description,
+                'GUID': guid,
+                'interactions': self._get_keythemes(study['studyName'], substudy), # This needs to be reworked to get the substudy interactions
+                'questions': self._get_keyquestions(study['studyName'], substudy), # This needs to be reworked to get the substudy questions
+
+            }
+        return final_substudies
 
     def _get_iterations(self, interactions, interaction_xform):
         """Internal method to create the iterations structure"""
@@ -245,7 +280,6 @@ class Transform:
             dict: An object containing a list of all study objects and the total number of study objects processed
         """
         final_objects={
-            'totalStudies': 0,
             'studies': []
         }
 
@@ -277,22 +311,9 @@ class Transform:
                     "totalCompanies": 0,
                     "linkedInteractions": {interaction_name: interaction_id},
                     "totalInteractions": 0,
-                    "keyThemes": self._get_keythemes(study_obj['name']),
-                    "keyThemeQuotes": self._get_keytheme_quotes(study_obj['name']),
-                    "keyThemeFrequencies": self._get_keytheme_frequencies(study_obj['name']),
                     "totalKeyThemes": 0,
-                    "keyQuestions": self._get_keyquestions(study_obj['name']),
-                    "questions": { # NOTE this is something that will need to change in the long term, it is ok for now. Essentially need iterations.
-                        "totalIterations": 0,
-                        "totalQuestions": 0,
-                        "default": {
-                            "totalQuestions": 0,
-                            "questions": self._get_keyquestions(study_obj['name'])
-                        }
-                    },
-                    "iterations": {},
-                    "substudies": {},
-                    "totalKeyQuestions": 0,
+                    "substudies": study_obj['substudies'],
+                    "totalQuestions": 0,
                     "document": self._get_document(study_obj['name']),
                     "public": study_obj['public'],
                     "groups": study_obj['groups']
@@ -310,16 +331,10 @@ class Transform:
                 tmp_objects[study]['id']=guid
             
             interactions_total=self.util.total_item(tmp_objects[study]['linkedInteractions'])
-            questions_total=self.util.total_item(tmp_objects[study]['keyQuestions'])
             tmp_objects[study]['totalInteractions']=interactions_total
             tmp_objects[study]['totalCompanies'] = self.util.total_item(tmp_objects[study]['linkedCompanies'])
             tmp_objects[study]['totalKeyThemes'] = self.util.total_item(tmp_objects[study]['keyThemes'])
-            tmp_objects[study]['totalKeyQuestions']=questions_total
-            tmp_objects[study]['questions']['totalQuestions']=questions_total # NOTE this is a hack
-            tmp_objects[study]['questions']['totalIterations']=self.util.total_item(tmp_objects[study]['questions']) - 2 # NOTE this is a hack
-            tmp_objects[study]['questions']['default']['totalQuestions']=questions_total  # NOTE this is a hack
             tmp_objects[study]['iterations']=self.util.get_iterations(tmp_objects[study]['linkedInteractions'], interaction_xform, "study")
-            if (self.debug): print (tmp_objects[study])
             final_objects['studies'].append(tmp_objects[study])
 
         final_objects['totalStudies'] = self.util.total_item(final_objects['studies'])
