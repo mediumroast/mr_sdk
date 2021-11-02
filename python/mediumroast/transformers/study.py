@@ -129,14 +129,13 @@ class Transform:
     # Pull in the interactions to the substudy
     def _get_interactions(self, interactions, substudy, interaction_xform):
         """Internal method to create the iterations structure"""
-        int_state=False
         final_interactions={}
         for interaction in interactions:
             substudy_id, company_itr_id=interaction_xform.get_substudy_id(interaction)
             if substudy_id == substudy:
                 final_interactions[interaction]={
                         "GUID": interactions[interaction],
-                        "state": int_state
+                        "abstractState": False # set the default to False
                 }
             else: continue
         return final_interactions
@@ -146,7 +145,7 @@ class Transform:
         """Helper method for _get_keytheme_quotes to obtain, parse, format and return the quotes"""
         quotes={}
         many_quotes=re.compile(separator) # For the case when there are more than 1 quote per theme
-        to_skip=re.compile('^description|groups|security_scope', re.IGNORECASE)
+        to_skip=re.compile('^description|groups|security_scope|substudies|substudy_definition', re.IGNORECASE)
         for idx in list(self.rules[section]):
             if to_skip.match(idx): continue
             if many_quotes.search(self.rules[section][idx]): # More than 1 quote
@@ -169,7 +168,7 @@ class Transform:
     def _frequencies_helper(self, section, separator=',', sub_separator='|'):
         """Helper method for _get_keytheme_frequencies to obtain, parse, format and return the frequencies."""
         frequencies={}
-        to_skip=re.compile('^description|groups|security_scope', re.IGNORECASE)
+        to_skip=re.compile('^description|groups|security_scope|substudies|substudy_definition', re.IGNORECASE)
         for idx in list(self.rules[section]):
             if to_skip.match(idx): continue
             for set in self.rules[section][idx].split(separator):
@@ -187,7 +186,7 @@ class Transform:
     def _themes_helper(self, section, separator='|'):
         """Helper method for _get_keythemes to obtain, parse, format and return the themes."""
         themes={}
-        to_skip=re.compile('^description|groups|security_scope', re.IGNORECASE)
+        to_skip=re.compile('^description|groups|security_scope|substudies|substudy_definition', re.IGNORECASE)
         for idx in list(self.rules[section]):
             if to_skip.match(idx): continue
             theme=self.rules[section][idx].split(separator)
@@ -221,10 +220,10 @@ class Transform:
             }
         return questions
 
-    def _get_questions(self, study_name, substudy, default='DEFAULT_Questions'):
+    def _get_questions(self, study_name, substudy):
         """Internal method to obtain either the default set of questions or the study specific set of questions."""
         section=self._reformat_name(study_name) + '_Substudy_' + substudy + '_Questions'
-        questions=self._questions_helper(section) if self.rules.has_section(section) else self._questions_helper(default)
+        questions=self._questions_helper(section) if self.rules.has_section(section) else dict()
         return questions
 
     def _make_substudies(self, study, interaction_xform):
@@ -247,7 +246,7 @@ class Transform:
                 'name': name,
                 'description': description,
                 'GUID': guid,
-                'interactions': self._get_interactions(study['studyName'], substudy, interaction_xform), # This needs to be reworked to get the substudy interactions
+                'interactions': self._get_interactions(study['linkedInteractions'], substudy, interaction_xform), # This needs to be reworked to get the substudy interactions
                 'questions': self._get_questions(study['studyName'], substudy),
                 'keyThemes': self._get_themes(study['studyName'], substudy),
                 'keyThemeQuotes': self._get_theme_quotes(study['studyName'], substudy),
@@ -255,7 +254,7 @@ class Transform:
             }
             final_substudies[substudy]['totalInteractions']=self.util.total_item(final_substudies[substudy]['interactions'])
             final_substudies[substudy]['totalQuestions']=self.util.total_item(final_substudies[substudy]['questions'])
-            final_substudies[substudy]['totalThemes']=self.util.total_item(final_substudies[substudy]['themes'])
+            final_substudies[substudy]['keyThemes']=self.util.total_item(final_substudies[substudy]['keyThemes'])
             if final_substudies[substudy]['totalThemes'] > 0: theme_state=True
             final_substudies[substudy]['themeState']=theme_state
         return final_substudies
