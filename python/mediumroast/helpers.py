@@ -425,11 +425,11 @@ class interactions:
         if file_output: id=self.util.hash_it(interaction_name + description) 
         return id
 
-    def get_iteration_id (self, interaction_name):
-        """Lookup study and company iteration ids and return them.
+    def get_substudy_id(self, interaction_name):
+        """Lookup study and company substudy ids and return them.
 
-        If there are rewrite rules available for the interaction name related to the iteration ids for one or both
-        of the associated company and study return them else return default.  Iteration ids are needed to construct
+        If there are rewrite rules available for the interaction name related to the substudy ids for one or both
+        of the associated company and study return them else return default.  Substudy ids are needed to construct
         subcorpuses for both company and study objects to build at least proper summarizations when there is no 
         questionnaire.  While there is more research needed it is also likely a helpful grouping for KeyTheme detection
         and associated extraction.
@@ -439,11 +439,10 @@ class interactions:
 
 
         Returns:
-            study_iteration_id (str): A textual representation of the iteration id of within the study for the interaction
+            substudy_id (str): A textual representation of the iteration id of within the study for the interaction
             company_iteration_id (str): A textual representation of the iteration id of within the company for the interaction
         """
-        study_iteration_id=self.rules.get('iterations_studies', interaction_name) if self.rules.has_option('iterations_studies', interaction_name) else "default"
+        substudy_id=self.rules.get('substudy_mappings', interaction_name) if self.rules.has_option('substudy_mappings', interaction_name) else "default"
         company_iteration_id=self.rules.get('iterations_companies', interaction_name) if self.rules.has_option('iterations_companies', interaction_name) else "default"
-        #print("iteration id>>> " + study_iteration_id)
-        return study_iteration_id, company_iteration_id
+        return substudy_id, company_iteration_id
 
