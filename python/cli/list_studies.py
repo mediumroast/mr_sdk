@@ -10,8 +10,7 @@ def parse_cli_args(program_name='list_studies', desc='A mediumroast.io example u
     parser.add_argument ('--rest_url', help="The URL of the target REST server", type=str, dest='rest_url', default='http://mr-01:3000')
     parser.add_argument ('--get_name_by_guid', help="Get study name by GUID", type=str, dest='name_by_guid')
     parser.add_argument ('--get_guid_by_name', help="Get GUID by study name", type=str, dest='guid_by_name')
-    parser.add_argument ('--get_iterations', help="Get all iterations or by status", type=str, dest='get_iterations', choices=['all', 'unthemed', 'unsummarized'])
-    parser.add_argument ('--get_questions', help="Get all questions", type=bool, dest='get_questions')
+    parser.add_argument ('--get_substudies', help="Get all iterations or by status", type=str, dest='get_substudies', choices=['all', 'unthemed'])
     parser.add_argument ('--get_by_guid', help="Get study object by GUID", type=str, dest='by_guid')
     parser.add_argument ('--get_by_name', help="Get study object by study name", type=str, dest='by_name')
     parser.add_argument ('--user', help="User name", type=str, dest='user', default='foo')
@@ -34,16 +33,12 @@ if __name__ == "__main__":
         success, resp=study_ctl.get_guid_by_name(my_args.guid_by_name)
     elif my_args.by_guid:
         success, resp=study_ctl.get_by_guid(my_args.by_guid)
-    elif my_args.get_questions:
-        success, resp=study_ctl.get_questions()
     elif my_args.by_name:
         success, resp=study_ctl.get_by_name(my_args.by_name)
-    elif my_args.get_iterations == 'all':
-        success, resp=study_ctl.get_iterations()
-    elif my_args.get_iterations == 'unthemed':
-        success, resp=study_ctl.get_iterations_by_state(my_args.get_iterations)
-    elif my_args.get_iterations == 'unsummarized':
-        success, resp=study_ctl.get_iterations_by_state(my_args.get_iterations)
+    elif my_args.get_substudies == 'all':
+        success, resp=study_ctl.get_substudies()
+    elif my_args.get_substudies == 'unthemed':
+        success, resp=study_ctl.get_unthemed_substudies()
     else:
         success, resp=study_ctl.get_all()
 
