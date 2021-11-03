@@ -97,7 +97,7 @@ class Studies:
         my_obj=self.calls.get_obj(my_url)[0]
         return my_obj
 
-    def get_iterations(self):
+    def get_substudies(self):
         my_url='/studies'
         my_objs=self.calls.get_obj(my_url)
         filtered_objs=[]
@@ -105,40 +105,25 @@ class Studies:
             filtered_objs.append(
                 {"studyName": my_obj['studyName'],
                 "GUID": my_obj['GUID'],
-                "iterations": my_obj['iterations']}
+                "substudies": my_obj['substudies']}
             )
         return filtered_objs
 
-    def get_questions(self):
-        my_url='/studies'
-        my_objs=self.calls.get_obj(my_url)
-        filtered_objs=[]
-        for my_obj in my_objs:
-            filtered_objs.append(
-                {"studyName": my_obj['studyName'],
-                "GUID": my_obj['GUID'],
-                "questions": my_obj['questions']}
-            )
-        return filtered_objs
-
-    def get_iterations_by_state(self, state="unthemed"):
+    def get_unthemed_substudies(self):
         my_url='/studies'
         my_objs=self.calls.get_obj(my_url)
         filtered_objs=[]
         for my_obj in my_objs:
             entry={"studyName": my_obj['studyName'],
                     "GUID": my_obj['GUID'],
-                    "iterations": my_obj['iterations']}
-            theme_state, summary_state=my_obj['iterations']['state'].split('_')
-            if state == "unthemed" and theme_state != "themed":
+                    "substudies": my_obj['iterations']}
+            if my_obj['substudies']['themeState']:
                 filtered_objs.append(entry)
-            elif state == "unsummarized" and theme_state != "summarized":
-                filtered_objs.append(entry)
-            else:
                 continue
+            else: continue
         return filtered_objs
 
-    def get_iterations_by_guid(self, guid):
+    def get_substudies_by_guid(self, guid):
         my_url='/studies?GUID=' + guid
         my_objs=self.calls.get_obj(my_url)
         filtered_objs=[]
@@ -146,7 +131,7 @@ class Studies:
         return {
             'GUID': my_obj['GUID'],
             'studyName': my_obj['studyName'],
-            'iterations': my_obj['iterations']
+            'substudies': my_obj['substudies']
         }
 
     def set_property(self, guid, json):
@@ -164,7 +149,7 @@ class Companies:
         my_url='/companies'
         return self.calls.get_obj(my_url)
 
-    def get_iterations(self):
+    """def get_iterations(self):
         my_url='/companies'
         my_objs=self.calls.get_obj(my_url)
         filtered_objs=[]
@@ -174,7 +159,7 @@ class Companies:
                 "GUID": my_obj['GUID'],
                 "iterations": my_obj['iterations']}
             )
-        return filtered_objs
+        return filtered_objs """
 
     def get_guid_by_name(self, name):
         my_url='/companies?companyName=' + name

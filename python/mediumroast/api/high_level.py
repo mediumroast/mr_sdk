@@ -66,22 +66,16 @@ class Studies:
             """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
-    def get_iterations(self):
+    def get_substudies(self):
         if self.CRED['server_type'] == 'json':
-            return True, self.studies.get_iterations()
+            return True, self.studies.get_substudies()
         else:
             """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
-    def get_questions(self):
+    def get_unthemed_substudies(self):
         if self.CRED['server_type'] == 'json':
-            return True, self.studies.get_questions()
-        else:
-            raise NotImplementedError
-
-    def get_iterations_by_state(self, state="unthemed"):
-        if self.CRED['server_type'] == 'json':
-            return True, self.studies.get_iterations_by_state(state)
+            return True, self.studies.get_unthemed_substudies()
         else:
             """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
@@ -126,19 +120,19 @@ class Companies:
             """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
-    def get_iterations(self):
+    """ def get_iterations(self):
         if self.CRED['server_type'] == 'json':
             return True, self.companies.get_iterations()
         else:
-            """The official mr_backend implementation of this would go here"""
+            #The official mr_backend implementation of this would go here
             raise NotImplementedError
 
     def get_iterations_by_state(self, state="unthemed"):
         if self.CRED['server_type'] == 'json':
             return True, self.companies.get_iterations_by_state(state)
         else:
-            """The official mr_backend implementation of this would go here"""
-            raise NotImplementedError
+            #The official mr_backend implementation of this would go here
+            raise NotImplementedError """
 
     def set_property(self, guid, json):
         if self.CRED['server_type'] == 'json':

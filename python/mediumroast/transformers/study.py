@@ -208,7 +208,7 @@ class Transform:
     def _questions_helper(self, section, separator='|'):
         """Helper method for _get_questions to obtain, parse, format and return a question."""
         questions={}
-        to_skip=re.compile('^description|groups|security_scope', re.IGNORECASE)
+        to_skip=re.compile('^description|groups|security_scope|substudies|substudy_definition', re.IGNORECASE)
         for idx in list(self.rules[section]):
             if to_skip.match(idx): continue
             question=self.rules[section][idx].split(separator)
@@ -230,12 +230,11 @@ class Transform:
         theme_state=False # Define the default state of a substudy's theme; NOTE: should assign only after we detect if there are more than system assigned default themes
         final_substudies=dict() # Where we will store the final structure to be returned
         noise_text=dict() # A blank dict which can contain noise data to remove from summaries, theming, etc.
-        config_pre=study['studyName'] + '_Substudy_'
-        definition='Definitions'
+        config_pre=self._reformat_name(study['studyName']) + '_Substudy_'
 
         # Process each substudy
-        for substudy in study['substudies']:
-            definition=self.rules.get(config_pre + definition, substudy) if self.rules.has_section(config_pre + definition) else self.rules.get('DEFAULT', 'substudy_definition')
+        for substudy in study['substudies'].keys():
+            definition=self.rules.get(config_pre + 'Definitions', substudy) if self.rules.has_section(config_pre + 'Definitions') else self.rules.get('DEFAULT', 'substudy_definition')
             name, description=definition.split('|')
             guid=self.util.hash_it(name + description) # For now set the GUID to be the combo of name and description, may be overidden by the DB in the future.
             final_substudies[substudy]={
