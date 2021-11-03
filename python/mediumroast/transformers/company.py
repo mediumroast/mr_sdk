@@ -210,7 +210,6 @@ class Transform:
             dict: An object containing a list of all company objects and the total number of company objects processed
         """
         final_objects={
-            'totalCompanies': 0,
             'companies': []
         }  
 
@@ -246,7 +245,6 @@ class Transform:
                     "stateProvince": object[self.STATE_PROVINCE],
                     "country": object[self.COUNTRY],
                     "region": object[self.REGION],
-                    "iterations": {},
                     "phone": company_obj['phone'],
                     "simpleDesc": company_obj['description'],
                     "cik": company_obj['cik'],
@@ -273,11 +271,7 @@ class Transform:
                 tmp_objects[company]['id']=guid
             tmp_objects[company]['totalInteractions'] = self.util.total_item(tmp_objects[company]['linkedInteractions'])
             tmp_objects[company]['totalStudies'] = self.util.total_item(tmp_objects[company]['linkedStudies'])
-            tmp_objects[company]["iterations"]=self.util.get_iterations(tmp_objects[company]['linkedInteractions'], interaction_xform, "company")
-            if (self.debug): print (tmp_objects[company])
             final_objects['companies'].append(tmp_objects[company])
-
-        final_objects['totalCompanies'] = self.util.total_item(final_objects['companies'])
 
         return final_objects
 

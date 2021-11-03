@@ -57,12 +57,19 @@ class Transform:
         description=self.rules.get('descriptions', study_name) if self.rules.has_option('descriptions', study_name) else self.rules.get('DEFAULT', 'description')
         security_scope=self.rules.get('security_scopes', study_name) if self.rules.has_option('security_scopes', study_name) else self.rules.get('DEFAULT', 'security_scope')
         security_scope=True if security_scope == 'True' else False
+        substudies=dict()
+        if self.rules.has_option('substudies', study_name):
+            for substudy in self.rules.get('substudies', study_name).split('|'):
+                substudies[substudy]=dict()
+        else: 
+            substudies[self.rules.get('DEFAULT', 'substudies')]=dict()
     
-
+        # return the basic structure of the study
         return {'name': name, 
                 'groups': groups,
                 'public': security_scope, 
-                'description': description}
+                'description': description,
+                'substudies': substudies}
 
 
     # INTERNAL METHODS AND HELPER FUNCTIONS
@@ -71,95 +78,13 @@ class Transform:
         """Internal method to reformat the study name by replacing spaces with the separator."""
         return study_name.replace(' ', separator)
 
-    # Transform either default or study specific keythemes into the proper data structure
-    def _themes_helper(self, section, separator='|'):
-        """Helper method for _get_keythemes to obtain, parse, format and return the themes."""
-        themes={}
-        to_skip=re.compile('^description|groups|security_scope', re.IGNORECASE)
-        for idx in list(self.rules[section]):
-            if to_skip.match(idx): continue
-            theme=self.rules[section][idx].split(separator)
-            themes[idx]={
-                "name": theme[0],
-                "description": theme[1],
-                "frequency": theme[2]
-            }
-        return themes
-    
-    def _get_keythemes(self, study_name, default='DEFAULT_KeyThemes'):
-        """Internal method to obtain either the default set of keythemes or the study specific set of keythemes."""
-        section=self._reformat_name(study_name) + '_KeyThemes'
-        themes=self._themes_helper(section) if self.rules.has_section(section) else self._themes_helper(default)
-        return themes
 
-
-    # Transform either default or study specific keytheme quotes into the proper data structure
-    def _quotes_helper(self, section, separator='<->', sub_separator='|'):
-        """Helper method for _get_keytheme_quotes to obtain, parse, format and return the quotes"""
-        quotes={}
-        many_quotes=re.compile(separator) # For the case when there are more than 1 quote per theme
-        to_skip=re.compile('^description|groups|security_scope', re.IGNORECASE)
-        for idx in list(self.rules[section]):
-            if to_skip.match(idx): continue
-            if many_quotes.search(self.rules[section][idx]): # More than 1 quote
-                quotes[idx]={}
-                for set in self.rules[section][idx].split(separator):
-                    (quote, name)=set.split(sub_separator)
-                    quotes[idx][name]=quote
-            else: # Only 1 quote
-                (quote, name)=self.rules[section][idx].split(sub_separator)
-                quotes[idx]={name: quote}
-        return quotes
-
-    def _get_keytheme_quotes (self, study_name, default='DEFAULT_KeyTheme_Quotes'):
-        """Internal method to obtain either the default set of keytheme quotes or the study specific set of quotes."""
-        section=self._reformat_name(study_name) + '_KeyTheme_Quotes'
-        quotes=self._quotes_helper(section) if self.rules.has_section(section) else self._quotes_helper(default)
-        return quotes
-
-
-    # Transform either default or study specific keytheme frequencies into the proper data structure
-    def _frequencies_helper(self, section, separator=',', sub_separator='|'):
-        """Helper method for _get_keytheme_frequencies to obtain, parse, format and return the frequencies."""
-        frequencies={}
-        to_skip=re.compile('^description|groups|security_scope', re.IGNORECASE)
-        for idx in list(self.rules[section]):
-            if to_skip.match(idx): continue
-            for set in self.rules[section][idx].split(separator):
-                (name, frequency)=set.split(sub_separator)
-                frequencies[idx]={name: frequency}
-        return frequencies
-
-    def _get_keytheme_frequencies(self, study_name, default='DEFAULT_KeyTheme_Frequencies'):
-        """Internal method to obtain either the default set of keytheme frequencies or the study specific set of frequencies."""
-        section=self._reformat_name(study_name) + '_KeyTheme_Frequencies'
-        frequencies=self._frequencies_helper(section) if self.rules.has_section(section) else self._frequencies_helper(default)
-        return frequencies
-
-    
-    # Transform either default or study specific keyQuestions into the proper data structure
-    def _questions_helper(self, section, separator='|'):
-        """Helper method for _get_keyquestions to obtain, parse, format and return the questions."""
-        questions={}
-        to_skip=re.compile('^description|groups|security_scope', re.IGNORECASE)
-        for idx in list(self.rules[section]):
-            if to_skip.match(idx): continue
-            question=self.rules[section][idx].split(separator)
-            state=True if question[1] == 'True' else False
-            questions[idx]={
-                "question": question[0],
-                "notes": question[2],
-                "included": state
-            }
-        return questions
-
-    def _get_keyquestions(self, study_name, default='DEFAULT_Questions'):
-        """Internal method to obtain either the default set of questions or the study specific set of questions."""
-        section=self._reformat_name(study_name) + '_Questions'
-        questions=self._questions_helper(section) if self.rules.has_section(section) else self._questions_helper(default)
-        return questions
-
-
+    #############################################################################################
+    # All methods to create a study's document which include:
+    #   - Introduction
+    #   - Opportunity
+    #   - Actions
+    ############################################################################################# 
     # Transform either default or study specific document elements into the proper data structure
     def _document_helper(self, section, seperator='_'):
         intro='Introduction'
@@ -192,45 +117,149 @@ class Transform:
         document=self._document_helper(section) if self.rules.has_section(section) else self._document_helper(default)
         return document
 
-
-    def _get_iterations(self, interactions, interaction_xform):
+   
+    #############################################################################################
+    # All methods to create a substudy attributes, which include:
+    #   - Interactions
+    #   - Questions
+    #   - Themes
+    #   - Theme Quotes
+    #   - Theme Frequencies
+    #############################################################################################
+    # Pull in the interactions to the substudy
+    def _get_interactions(self, interactions, substudy, interaction_xform):
         """Internal method to create the iterations structure"""
-        itr_state="unprocessed_unprocessed"
-        int_state="unsummarized"
-        final_iterations={}
+        final_interactions={}
         for interaction in interactions:
-            itr_study_id, itr_company_id=interaction_xform.get_iteration_id(interaction) # Provide the interaction name
-            if final_iterations.get(itr_study_id) == None:
-                final_iterations[itr_study_id]={
-                    "state": itr_state,
-                    "totalInteractions": 0,
-                    "interactions": {
-                        interaction: {
-                            "GUID": interactions[interaction],
-                            "state": int_state
-                        }
-                    }
+            substudy_id, company_itr_id=interaction_xform.get_substudy_id(interaction)
+            if substudy_id == substudy:
+                final_interactions[interaction]={
+                        "GUID": interactions[interaction],
+                        "abstractState": False # set the default to False
                 }
-            else:
-                final_iterations[itr_study_id]["interactions"][interaction]={"guid": interactions[interaction], "state": int_state}
-        
-        interactions_sum=0
-        iterations_sum=0
-        for iteration in final_iterations:
-            total_interactions=self.util.total_item(final_iterations[iteration]["interactions"])
-            final_iterations[iteration]["totalInteractions"]=total_interactions
-            interactions_sum+=total_interactions
-            iterations_sum+=1
+            else: continue
+        return final_interactions
+    
+    # Transform either default or study specific keytheme quotes into the proper data structure
+    def _quotes_helper(self, section, separator='<->', sub_separator='|'):
+        """Helper method for _get_keytheme_quotes to obtain, parse, format and return the quotes"""
+        quotes={}
+        many_quotes=re.compile(separator) # For the case when there are more than 1 quote per theme
+        to_skip=re.compile('^description|groups|security_scope|substudies|substudy_definition', re.IGNORECASE)
+        for idx in list(self.rules[section]):
+            if to_skip.match(idx): continue
+            if many_quotes.search(self.rules[section][idx]): # More than 1 quote
+                quotes[idx]={}
+                for set in self.rules[section][idx].split(separator):
+                    (quote, name)=set.split(sub_separator)
+                    quotes[idx][name]=quote
+            else: # Only 1 quote
+                (quote, name)=self.rules[section][idx].split(sub_separator)
+                quotes[idx]={name: quote}
+        return quotes
 
-        final_iterations["state"]=itr_state 
-        final_iterations["totalInteractions"]=interactions_sum
-        final_iterations["totalIterations"]=iterations_sum
+    def _get_theme_quotes (self, study_name, substudy):
+        """Internal method to obtain either the default set of keytheme quotes or the study specific set of quotes."""
+        section=self._reformat_name(study_name) + '_Substudy_' + substudy + '_Theme_Quotes'
+        quotes=self._quotes_helper(section) if self.rules.has_section(section) else dict()
+        return quotes
 
-        return final_iterations
+    # Transform either default or study specific keytheme frequencies into the proper data structure
+    def _frequencies_helper(self, section, separator=',', sub_separator='|'):
+        """Helper method for _get_keytheme_frequencies to obtain, parse, format and return the frequencies."""
+        frequencies={}
+        to_skip=re.compile('^description|groups|security_scope|substudies|substudy_definition', re.IGNORECASE)
+        for idx in list(self.rules[section]):
+            if to_skip.match(idx): continue
+            for set in self.rules[section][idx].split(separator):
+                (name, frequency)=set.split(sub_separator)
+                frequencies[idx]={name: frequency}
+        return frequencies
+
+    def _get_theme_frequencies(self, study_name, substudy):
+        """Internal method to obtain either the default set of keytheme frequencies or the study specific set of frequencies."""
+        section=self._reformat_name(study_name) + '_Substudy_' + substudy + '_Theme_Frequencies'
+        frequencies=self._frequencies_helper(section) if self.rules.has_section(section) else dict()
+        return frequencies
+
+    # Transform either default or study specific keythemes into the proper data structure
+    def _themes_helper(self, section, separator='|'):
+        """Helper method for _get_keythemes to obtain, parse, format and return the themes."""
+        themes={}
+        to_skip=re.compile('^description|groups|security_scope|substudies|substudy_definition', re.IGNORECASE)
+        for idx in list(self.rules[section]):
+            if to_skip.match(idx): continue
+            theme=self.rules[section][idx].split(separator)
+            themes[idx]={
+                "name": theme[0],
+                "description": theme[1],
+                "frequency": theme[2]
+            }
+        return themes
+    
+    def _get_themes(self, study_name, substudy):
+        """Internal method to obtain either the default set of keythemes or the study specific set of keythemes."""
+        section=self._reformat_name(study_name) + '_Substudy_' + substudy + '_Theme_Definitions'
+        # If there is a themes section for this substudy define it otherwise return an empty dict
+        themes=self._themes_helper(section) if self.rules.has_section(section) else dict()
+        return themes
+    
+    # Transform either default or study specific questions into the proper data structure
+    def _questions_helper(self, section, separator='|'):
+        """Helper method for _get_questions to obtain, parse, format and return a question."""
+        questions={}
+        to_skip=re.compile('^description|groups|security_scope|substudies|substudy_definition', re.IGNORECASE)
+        for idx in list(self.rules[section]):
+            if to_skip.match(idx): continue
+            question=self.rules[section][idx].split(separator)
+            state=True if question[1] == 'True' else False
+            questions[idx]={
+                "question": question[0],
+                "notes": question[2],
+                "included": state
+            }
+        return questions
+
+    def _get_questions(self, study_name, substudy):
+        """Internal method to obtain either the default set of questions or the study specific set of questions."""
+        section=self._reformat_name(study_name) + '_Substudy_' + substudy + '_Questions'
+        questions=self._questions_helper(section) if self.rules.has_section(section) else dict()
+        return questions
+
+    def _make_substudies(self, study, interaction_xform):
+        theme_state=False # Define the default state of a substudy's theme; NOTE: should assign only after we detect if there are more than system assigned default themes
+        final_substudies=dict() # Where we will store the final structure to be returned
+        noise_text=dict() # A blank dict which can contain noise data to remove from summaries, theming, etc.
+        config_pre=self._reformat_name(study['studyName']) + '_Substudy_'
+
+        # Process each substudy
+        for substudy in study['substudies'].keys():
+            definition=self.rules.get(config_pre + 'Definitions', substudy) if self.rules.has_section(config_pre + 'Definitions') else self.rules.get('DEFAULT', 'substudy_definition')
+            name, description=definition.split('|')
+            guid=self.util.hash_it(name + description) # For now set the GUID to be the combo of name and description, may be overidden by the DB in the future.
+            final_substudies[substudy]={
+                'totalInteractions': 0, # Set this sum to 0
+                'totalQuestions': 0, # Set this sum to 0
+                'totalThemes': 0, # Set this sum to 0
+                'noiseText': noise_text,
+                'name': name,
+                'description': description,
+                'GUID': guid,
+                'interactions': self._get_interactions(study['linkedInteractions'], substudy, interaction_xform), # This needs to be reworked to get the substudy interactions
+                'questions': self._get_questions(study['studyName'], substudy),
+                'keyThemes': self._get_themes(study['studyName'], substudy),
+                'keyThemeQuotes': self._get_theme_quotes(study['studyName'], substudy),
+                'keyThemeFrequencies': self._get_theme_frequencies(study['studyName'], substudy)
+            }
+            final_substudies[substudy]['totalInteractions']=self.util.total_item(final_substudies[substudy]['interactions'])
+            final_substudies[substudy]['totalQuestions']=self.util.total_item(final_substudies[substudy]['questions'])
+            final_substudies[substudy]['keyThemes']=self.util.total_item(final_substudies[substudy]['keyThemes'])
+            if final_substudies[substudy]['totalThemes'] > 0: theme_state=True
+            final_substudies[substudy]['themeState']=theme_state
+        return final_substudies
 
 
     # EXTERNAL METHODS AND HELPER FUNCTIONS
-
     def create_objects (self, raw_objects, file_output=True):
         """Create study objects from a raw list of input data.
 
@@ -245,7 +274,6 @@ class Transform:
             dict: An object containing a list of all study objects and the total number of study objects processed
         """
         final_objects={
-            'totalStudies': 0,
             'studies': []
         }
 
@@ -277,22 +305,7 @@ class Transform:
                     "totalCompanies": 0,
                     "linkedInteractions": {interaction_name: interaction_id},
                     "totalInteractions": 0,
-                    "keyThemes": self._get_keythemes(study_obj['name']),
-                    "keyThemeQuotes": self._get_keytheme_quotes(study_obj['name']),
-                    "keyThemeFrequencies": self._get_keytheme_frequencies(study_obj['name']),
-                    "totalKeyThemes": 0,
-                    "keyQuestions": self._get_keyquestions(study_obj['name']),
-                    "questions": { # NOTE this is something that will need to change in the long term, it is ok for now. Essentially need iterations.
-                        "totalIterations": 0,
-                        "totalQuestions": 0,
-                        "default": {
-                            "totalQuestions": 0,
-                            "questions": self._get_keyquestions(study_obj['name'])
-                        }
-                    },
-                    "iterations": {},
-                    "substudies": {},
-                    "totalKeyQuestions": 0,
+                    "substudies": study_obj['substudies'],
                     "document": self._get_document(study_obj['name']),
                     "public": study_obj['public'],
                     "groups": study_obj['groups']
@@ -309,20 +322,10 @@ class Transform:
                 tmp_objects[study]['GUID']=guid
                 tmp_objects[study]['id']=guid
             
-            interactions_total=self.util.total_item(tmp_objects[study]['linkedInteractions'])
-            questions_total=self.util.total_item(tmp_objects[study]['keyQuestions'])
-            tmp_objects[study]['totalInteractions']=interactions_total
+            tmp_objects[study]['totalInteractions']=self.util.total_item(tmp_objects[study]['linkedInteractions'])
             tmp_objects[study]['totalCompanies'] = self.util.total_item(tmp_objects[study]['linkedCompanies'])
-            tmp_objects[study]['totalKeyThemes'] = self.util.total_item(tmp_objects[study]['keyThemes'])
-            tmp_objects[study]['totalKeyQuestions']=questions_total
-            tmp_objects[study]['questions']['totalQuestions']=questions_total # NOTE this is a hack
-            tmp_objects[study]['questions']['totalIterations']=self.util.total_item(tmp_objects[study]['questions']) - 2 # NOTE this is a hack
-            tmp_objects[study]['questions']['default']['totalQuestions']=questions_total  # NOTE this is a hack
-            tmp_objects[study]['iterations']=self.util.get_iterations(tmp_objects[study]['linkedInteractions'], interaction_xform, "study")
-            if (self.debug): print (tmp_objects[study])
+            tmp_objects[study]['substudies']=self._make_substudies(tmp_objects[study], interaction_xform,)
             final_objects['studies'].append(tmp_objects[study])
-
-        final_objects['totalStudies'] = self.util.total_item(final_objects['studies'])
 
         return final_objects
 
