@@ -115,12 +115,14 @@ class Studies:
         filtered_objs=[]
         for my_obj in my_objs:
             entry={"studyName": my_obj['studyName'],
-                    "GUID": my_obj['GUID'],
-                    "substudies": my_obj['iterations']}
-            if my_obj['substudies']['themeState']:
-                filtered_objs.append(entry)
-                continue
-            else: continue
+                    "GUID": my_obj['GUID']}
+            substudies=dict()
+            for substudy in my_obj['substudies']:
+                if not my_obj['substudies'][substudy]['themeState']:
+                    substudies[substudy]=my_obj['substudies'][substudy]
+                else: continue
+            entry['substudies']=substudies
+            filtered_objs.append(entry)
         return filtered_objs
 
     def get_substudies_by_guid(self, guid):
