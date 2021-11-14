@@ -207,7 +207,7 @@ class Transform:
     # Transform either default or study specific questions into the proper data structure
     def _questions_helper(self, section, separator='|'):
         """Helper method for _get_questions to obtain, parse, format and return a question."""
-        questions={}
+        questions=dict()
         to_skip=re.compile('^description|groups|security_scope|substudies|substudy_definition', re.IGNORECASE)
         for idx in list(self.rules[section]):
             if to_skip.match(idx): continue
@@ -226,10 +226,25 @@ class Transform:
         questions=self._questions_helper(section) if self.rules.has_section(section) else dict()
         return questions
 
+    def _noises_helper(self, section):
+        """Helper method for _get_noises to obtain, parse, format and return the noises."""
+        noises=dict()
+        to_skip=re.compile('^description|groups|security_scope|substudies|substudy_definition', re.IGNORECASE)
+        for idx in list(self.rules[section]):
+            if to_skip.match(idx): continue
+            noise=self.rules[section][idx]
+            noises[idx]=noise
+        return noises
+    
+    def _get_noises(self, study_name, substudy):
+        """Internal method to obtain the set of study noises if they exist."""
+        section=self._reformat_name(study_name) + '_Substudy_' + substudy + '_Noises'
+        noises=self._noises_helper(section) if self.rules.has_section(section) else dict()
+        return noises
+
     def _make_substudies(self, study, interaction_xform):
         theme_state=False # Define the default state of a substudy's theme; NOTE: should assign only after we detect if there are more than system assigned default themes
         final_substudies=dict() # Where we will store the final structure to be returned
-        noise_text=dict() # A blank dict which can contain noise data to remove from summaries, theming, etc.
         config_pre=self._reformat_name(study['studyName']) + '_Substudy_'
 
         # Process each substudy
@@ -241,7 +256,7 @@ class Transform:
                 'totalInteractions': 0, # Set this sum to 0
                 'totalQuestions': 0, # Set this sum to 0
                 'totalThemes': 0, # Set this sum to 0
-                'noiseText': noise_text,
+                'noiseText': self._get_noises(study['studyName'], substudy),
                 'name': name,
                 'description': description,
                 'GUID': guid,

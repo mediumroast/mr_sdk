@@ -116,7 +116,8 @@ class Studies:
         for my_obj in my_objs:
             entry={"studyName": my_obj['studyName'],
                     "GUID": my_obj['GUID'],
-                    "substudies": my_obj['iterations']}
+                    "substudies": my_obj['substudies'],
+                    "linkedCompanies": my_obj['linkedCompanies']}
             if my_obj['substudies']['themeState']:
                 filtered_objs.append(entry)
                 continue
@@ -125,8 +126,6 @@ class Studies:
 
     def get_substudies_by_guid(self, guid):
         my_url='/studies?GUID=' + guid
-        my_objs=self.calls.get_obj(my_url)
-        filtered_objs=[]
         my_obj=self.calls.get_obj(my_url)[0]
         return {
             'GUID': my_obj['GUID'],
