@@ -185,7 +185,7 @@ class Transform:
     # Transform either default or study specific keythemes into the proper data structure
     def _themes_helper(self, section, separator='|'):
         """Helper method for _get_keythemes to obtain, parse, format and return the themes."""
-        themes={}
+        themes=dict()
         to_skip=re.compile('^description|groups|security_scope|substudies|substudy_definition', re.IGNORECASE)
         for idx in list(self.rules[section]):
             if to_skip.match(idx): continue
@@ -263,12 +263,13 @@ class Transform:
                 'interactions': self._get_interactions(study['linkedInteractions'], substudy, interaction_xform), # This needs to be reworked to get the substudy interactions
                 'questions': self._get_questions(study['studyName'], substudy),
                 'keyThemes': self._get_themes(study['studyName'], substudy),
+                'keyTags': dict(),
                 'keyThemeQuotes': self._get_theme_quotes(study['studyName'], substudy),
                 'keyThemeFrequencies': self._get_theme_frequencies(study['studyName'], substudy)
             }
             final_substudies[substudy]['totalInteractions']=self.util.total_item(final_substudies[substudy]['interactions'])
             final_substudies[substudy]['totalQuestions']=self.util.total_item(final_substudies[substudy]['questions'])
-            final_substudies[substudy]['keyThemes']=self.util.total_item(final_substudies[substudy]['keyThemes'])
+            final_substudies[substudy]['totalThemes']=self.util.total_item(final_substudies[substudy]['keyThemes'])
             if final_substudies[substudy]['totalThemes'] > 0: theme_state=True
             final_substudies[substudy]['themeState']=theme_state
         return final_substudies

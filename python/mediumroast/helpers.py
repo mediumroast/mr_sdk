@@ -164,7 +164,7 @@ class utilities:
         (time_stamp, time_string)=self.get_date_time()
         return {"1":{time_stamp: "This is an example note created for the '" + obj_type + "' object on " + time_string + " by a " + creator}}
 
-
+    # This is deprecated and can be removed in a future version
     def get_iterations(self, interactions, interaction_xform, src_type):
         """Internal method to create the iterations structure
         """
