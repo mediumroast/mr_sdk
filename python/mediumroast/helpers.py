@@ -63,6 +63,20 @@ class utilities:
             finally:
                 return True, json.loads(data)
 
+    def txt_read(self, file_name):
+        """Read a TXT file into memory and transform into Pythonic objects
+        """
+        data=""
+        with open(file_name, 'r') as my_file:
+            try:
+                data=my_file.read()
+            except IOError as err:
+                return False, err
+            except:
+                return False, 'Something went wrong, check the file output.'
+            finally:
+                return True, data.strip()
+
     def log_it(self, body='', function='MAIN', log_type='START'):
         """This is a very simple standin logger, ideally we will revert back to logging at some point
         """
@@ -92,7 +106,7 @@ class utilities:
             message=prefix[log_type] + body
 
         timestamp=datetime.now()
-        if self.silent == False or override: print (str(timestamp) + my_sep + message)
+        if override or self.silent == False: print (str(timestamp) + my_sep + message)
 
 
 
@@ -150,7 +164,7 @@ class utilities:
         (time_stamp, time_string)=self.get_date_time()
         return {"1":{time_stamp: "This is an example note created for the '" + obj_type + "' object on " + time_string + " by a " + creator}}
 
-
+    # This is deprecated and can be removed in a future version
     def get_iterations(self, interactions, interaction_xform, src_type):
         """Internal method to create the iterations structure
         """

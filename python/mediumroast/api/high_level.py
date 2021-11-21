@@ -80,6 +80,13 @@ class Studies:
             """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
+    def set_property(self, guid, json):
+        if self.CRED['server_type'] == 'json':
+            return True, self.studies.set_property(guid, json)
+        else:
+            """The official mr_backend implementation of this would go here"""
+            raise NotImplementedError
+
 
 class Companies:
     def __init__(self, credential):

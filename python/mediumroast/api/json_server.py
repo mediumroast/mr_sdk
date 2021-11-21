@@ -115,7 +115,8 @@ class Studies:
         filtered_objs=[]
         for my_obj in my_objs:
             entry={"studyName": my_obj['studyName'],
-                    "GUID": my_obj['GUID']}
+                    "GUID": my_obj['GUID'],
+                    "linkedCompanies": my_obj['linkedCompanies']}
             substudies=dict()
             for substudy in my_obj['substudies']:
                 if not my_obj['substudies'][substudy]['themeState']:
@@ -127,8 +128,6 @@ class Studies:
 
     def get_substudies_by_guid(self, guid):
         my_url='/studies?GUID=' + guid
-        my_objs=self.calls.get_obj(my_url)
-        filtered_objs=[]
         my_obj=self.calls.get_obj(my_url)[0]
         return {
             'GUID': my_obj['GUID'],
