@@ -105,6 +105,7 @@ class Studies:
             filtered_objs.append(
                 {"studyName": my_obj['studyName'],
                 "GUID": my_obj['GUID'],
+                "linkedCompanies": my_obj['linkedCompanies'],
                 "substudies": my_obj['substudies']}
             )
         return filtered_objs
