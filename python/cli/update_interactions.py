@@ -8,10 +8,10 @@ from mediumroast.api.high_level import Interactions as interaction
 def parse_cli_args(program_name='update_interactions', desc='A mediumroast.io example utility that updates interaction properties using mr_api.'):
     parser=argparse.ArgumentParser(prog=program_name, description=desc)
     parser.add_argument ('--rest_url', help="The URL of the target REST server", type=str, dest='rest_url', default='http://mr-01:3000')
-    parser.add_argument ('--guid', help="Specify the GUID of the object to operate on", type=str, dest='guid', required=True)
+    parser.add_argument ('--guid', help="Specify the GUID of the object to operate on", type=str, dest='guid')
     parser.add_argument ('--set_state', help="Set the state of the interaction", type=str, dest='state', choices=['processing', 'summarized', 'unsummarized'])
     parser.add_argument ('--set_all_state', help="Set the state of all interactions", type=str, dest='all_state', choices=['processing', 'summarized', 'unsummarized'])
-    parser.add_argument ('--delete_all_abstracts', help="Remove all abstracts", type=bool, dest='del_abstracts', default=False, action='store_true')
+    parser.add_argument ('--delete_all_abstracts', help="Remove all abstracts", dest='del_abstracts', default=False, action='store_true')
     parser.add_argument ('--set_summary', help="Set the abstract/summary of the interaction", type=str, dest='summary')
     parser.add_argument ('--set_property', help="Set an arbitrary property for the interaction using well formed JSON", type=str, dest='property')
     parser.add_argument ('--user', help="User name", type=str, dest='user', default='foo')
@@ -33,8 +33,10 @@ if __name__ == "__main__":
     elif my_args.all_state:
         success, resp=interaction_ctl.set_all_states(my_args.all_state)
     elif my_args.summary:
+        # TODO Add check for GUID
         success, resp=interaction_ctl.set_summary(my_args.guid, my_args.summary)
     elif my_args.property:
+        # TODO Add check for GUID
         success, resp=interaction_ctl.set_property(my_args.guid, json.loads(my_args.property))
     elif my_args.del_abstracts:
         success, resp=interaction_ctl.del_all_abstracts()

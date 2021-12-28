@@ -58,7 +58,10 @@ class Transform:
 
         # Set debug to true or false
         self.debug=debug
-
+        
+        # TODO Update for this object type and put into the various helper methods.  This is wrong as of now
+        # Specify what to skip when processing sections in the conf file
+        self.to_skip=r"^description|groups|security_scope|substudies|substudy_definition|substudy_type"
 
     def _transform_company (self, company_name, extended_rewrite=False):
         """Internal method to rewrite or augment key aspects of a company object as per definitions in the configuration file."""
