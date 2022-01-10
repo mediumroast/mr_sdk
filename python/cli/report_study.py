@@ -183,8 +183,23 @@ def _create_references(iteration_list, doc_obj, conf):
             interaction_guid=iteration_list[iteration]['interactions'][interaction]['guid']
             _create_reference(interaction_guid, iteration, doc_obj, conf)
 
-def _create_key_themes(study, doc_obj, conf):
-    pass
+def _create_key_theme(doc_obj, themes):
+    for theme in ['summary_theme']: #, 'discrete_themes']:
+        doc_obj.add_paragraph(themes[theme]['name'])
+        doc_obj.add_paragraph(themes[theme]['description'])
+        doc_obj.add_paragraph(themes[theme]['tags'])
+
+
+
+
+
+def _create_key_themes(doc_obj, substudies):
+    section_title=doc_obj.add_paragraph('Key Themes') # Create the References section
+    section_title.style=doc_obj.styles['Title']
+    for substudy in substudies:
+        doc_obj.add_heading(substudies[substudy]['description'], 2)
+        _create_key_theme(doc_obj, substudies[substudy]['keyThemes'])
+        
     
 
 def report(study, conf):
@@ -199,6 +214,7 @@ def report(study, conf):
     _create_footer(d, conf) # Create the doc footer
     _create_summary(d, study['document'], conf) # Create the intro, opportunity and actions sections
     #_create_references( study['iterations'], d, conf) # Create references sections
+    _create_key_themes(d, study['substudies'])
     
 
     # d=report_summary(study, format, doc=d)
