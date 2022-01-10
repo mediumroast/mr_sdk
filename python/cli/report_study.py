@@ -185,9 +185,9 @@ def _create_references(iteration_list, doc_obj, conf):
 
 def _create_key_theme(doc_obj, themes):
     for theme in ['summary_theme']: #, 'discrete_themes']:
-        doc_obj.add_paragraph(themes[theme]['name'])
-        doc_obj.add_paragraph(themes[theme]['description'])
-        doc_obj.add_paragraph(themes[theme]['tags'])
+        doc_obj.add_paragraph('Definition: ' + themes[theme]['name'] + ' [system generated]')
+        doc_obj.add_paragraph('Description:' + themes[theme]['description'] + ' [system default]')
+        doc_obj.add_paragraph('Tags: ' + " | ".join(themes[theme]['tags'].keys()))
 
 
 
