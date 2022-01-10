@@ -184,10 +184,13 @@ def _create_references(iteration_list, doc_obj, conf):
             _create_reference(interaction_guid, iteration, doc_obj, conf)
 
 def _create_key_theme(doc_obj, themes):
-    for theme in ['summary_theme']: #, 'discrete_themes']:
-        doc_obj.add_paragraph('Definition: ' + themes[theme]['name'] + ' [system generated]')
-        doc_obj.add_paragraph('Description:' + themes[theme]['description'] + ' [system default]')
-        doc_obj.add_paragraph('Tags: ' + " | ".join(themes[theme]['tags'].keys()))
+    theme='summary_theme'
+    theme_name='Summary Theme'
+    doc_obj.add_heading(theme_name, level=1)
+    #for theme in ['summary_theme']: #, 'discrete_themes']:
+    doc_obj.add_paragraph('Definition: ' + themes[theme]['name'] + ' [system generated]')
+    doc_obj.add_paragraph('Description: ' + themes[theme]['description'] + ' [system default]')
+    doc_obj.add_paragraph('Tags: ' + " | ".join(themes[theme]['tags'].keys()))
 
 
 
