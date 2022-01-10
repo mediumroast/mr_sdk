@@ -80,6 +80,13 @@ class Studies:
             """The official mr_backend implementation of this would go here"""
             raise NotImplementedError
 
+    def get_themes(self, guid):
+        if self.CRED['server_type'] == 'json':
+            return True, self.studies.get_themes_by_guid(guid)
+        else:
+            """The official mr_backend implementation of this would go here"""
+            raise NotImplementedError
+
     def set_property(self, guid, json):
         if self.CRED['server_type'] == 'json':
             return True, self.studies.set_property(guid, json)

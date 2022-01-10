@@ -198,7 +198,7 @@ def report(study, conf):
     _create_header(d, conf) # Create the doc header
     _create_footer(d, conf) # Create the doc footer
     _create_summary(d, study['document'], conf) # Create the intro, opportunity and actions sections
-    _create_references( study['iterations'], d, conf) # Create references sections
+    #_create_references( study['iterations'], d, conf) # Create references sections
     
 
     # d=report_summary(study, format, doc=d)
