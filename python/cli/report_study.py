@@ -186,21 +186,32 @@ def _create_references(iteration_list, doc_obj, conf):
 def _create_key_theme(doc_obj, themes):
     theme='summary_theme'
     theme_name='Summary Theme'
-    doc_obj.add_heading(theme_name, level=1)
+    doc_obj.add_heading(theme_name, level=2)
     #for theme in ['summary_theme']: #, 'discrete_themes']:
     doc_obj.add_paragraph('Definition: ' + themes[theme]['name'] + ' [system generated]')
-    doc_obj.add_paragraph('Description: ' + themes[theme]['description'] + ' [system default]')
+    #doc_obj.add_paragraph('Description: ' + themes[theme]['description'] + ' [system default]')
     doc_obj.add_paragraph('Tags: ' + " | ".join(themes[theme]['tags'].keys()))
+
+    theme='discrete_themes'
+    theme_name='Detailed Themes'
+    doc_obj.add_heading(theme_name, level=2)
+    my_themes=themes[theme]
+    for my_theme in my_themes:
+        my_theme_name='Detailed Theme: ' + my_theme
+        doc_obj.add_heading(my_theme_name, level=2)
+        doc_obj.add_paragraph('Definition: ' + my_themes[my_theme]['name'] + ' [system generated]')
+        doc_obj.add_paragraph('Tags: ' + " | ".join(my_themes[my_theme]['tags'].keys()))
+
 
 
 
 
 
 def _create_key_themes(doc_obj, substudies):
-    section_title=doc_obj.add_paragraph('Key Themes') # Create the References section
+    section_title=doc_obj.add_paragraph('Key Themes by Sub-Study') # Create the References section
     section_title.style=doc_obj.styles['Title']
     for substudy in substudies:
-        doc_obj.add_heading(substudies[substudy]['description'], 2)
+        doc_obj.add_heading(substudies[substudy]['description'], 1)
         _create_key_theme(doc_obj, substudies[substudy]['keyThemes'])
         
     
