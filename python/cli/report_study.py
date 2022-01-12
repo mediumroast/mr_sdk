@@ -183,14 +183,16 @@ def _create_references(doc_obj, substudy_list, conf):
 
 
 
-def _create_key_theme(doc_obj, themes, include_fortune=False):
+def _create_key_theme(doc_obj, themes, quotes, include_fortune=False):
     theme='summary_theme'
     theme_name='Summary Theme'
     doc_obj.add_heading(theme_name, level=2)
-    #for theme in ['summary_theme']: #, 'discrete_themes']:
-    doc_obj.add_paragraph('Definition: ' + themes[theme]['name'] + ' [system generated]')
-    #doc_obj.add_paragraph('Description: ' + themes[theme]['description'] + ' [system default]')
+    doc_obj.add_paragraph('Definition: ' + themes[theme]['description'] + ' [system generated]')
+    if include_fortune: doc_obj.add_paragraph('Fortune: ' + themes[theme]['name'] + ' [system generated]')
     doc_obj.add_paragraph('Tags: ' + " | ".join(themes[theme]['tags'].keys()))
+    for doc in quotes['summary']:
+        for quote in quotes['summary'][doc]['quotes']:
+            doc_obj.add_paragraph(quote, style='List Number')
 
     theme='discrete_themes'
     theme_name='Detailed Themes'
@@ -202,6 +204,7 @@ def _create_key_theme(doc_obj, themes, include_fortune=False):
         doc_obj.add_paragraph('Definition: ' + my_themes[my_theme]['description'] + ' [system generated]')
         if include_fortune: doc_obj.add_paragraph('Fortune: ' + my_themes[my_theme]['name'] + ' [system generated]')
         doc_obj.add_paragraph('Tags: ' + " | ".join(my_themes[my_theme]['tags'].keys()))
+    doc_obj.add_page_break()
 
 
 
@@ -213,7 +216,7 @@ def _create_key_themes(doc_obj, substudies):
     section_title.style=doc_obj.styles['Title']
     for substudy in substudies:
         doc_obj.add_heading(substudies[substudy]['description'], 1)
-        _create_key_theme(doc_obj, substudies[substudy]['keyThemes'])
+        _create_key_theme(doc_obj, substudies[substudy]['keyThemes'], substudies[substudy]['keyThemeQuotes'])
         
     
 
