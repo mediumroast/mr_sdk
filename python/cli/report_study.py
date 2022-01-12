@@ -192,7 +192,7 @@ def _create_key_theme(doc_obj, themes, quotes, include_fortune=False):
     doc_obj.add_paragraph('Tags: ' + " | ".join(themes[theme]['tags'].keys()))
     for doc in quotes['summary']:
         for quote in quotes['summary'][doc]['quotes']:
-            doc_obj.add_paragraph(quote, style='List Number')
+            doc_obj.add_paragraph(quote, style='List Bullet')
 
     theme='discrete_themes'
     theme_name='Detailed Themes'
