@@ -156,7 +156,7 @@ def _add_hyperlink(paragraph, text, url):
 
     return hyperlink
 
-def _create_reference(interaction_guid, iteration, doc_obj, conf, char_limit=500):
+def _create_reference(interaction_guid, substudy, doc_obj, conf, char_limit=500):
     interaction_ctl=interaction(credential)
     success, interaction_data=interaction_ctl.get_by_guid(interaction_guid)
     if success:
@@ -165,7 +165,7 @@ def _create_reference(interaction_guid, iteration, doc_obj, conf, char_limit=500
         my_date=str(interaction_data['date'][0:4]) + '-' + str(interaction_data['date'][4:6]) + '-' \
             + str(interaction_data['date'][6:8])
         interaction_meta="\t\t|\t".join(['Date: ' + my_date + "\t" + my_time,
-            'Study Iteration: ' + iteration])
+            'Study Iteration: ' + substudy])
         doc_obj.add_paragraph(interaction_meta)
         doc_obj.add_paragraph(interaction_data['abstract'][0:char_limit] + '...')
         resource=doc_obj.add_paragraph('Interaction Resource: ')
@@ -173,17 +173,17 @@ def _create_reference(interaction_guid, iteration, doc_obj, conf, char_limit=500
     else:
         print('Something went wrong obtaining the interaction data for [' + interaction_guid + ']')
 
-def _create_references(iteration_list, doc_obj, conf):
+def _create_references(doc_obj, substudy_list, conf):
     section_title=doc_obj.add_paragraph('References') # Create the References section
     section_title.style=doc_obj.styles['Title']
-    for iteration in iteration_list:
-        if iteration == 'state' or iteration == 'totalInteractions' or iteration == 'totalIterations':
-            continue
-        for interaction in iteration_list[iteration]['interactions']:
-            interaction_guid=iteration_list[iteration]['interactions'][interaction]['guid']
-            _create_reference(interaction_guid, iteration, doc_obj, conf)
+    for substudy in substudy_list:
+        for interaction in substudy_list[substudy]['interactions']:
+            interaction_guid=substudy_list[substudy]['interactions'][interaction]['GUID']
+            _create_reference(interaction_guid, substudy, doc_obj, conf)
 
-def _create_key_theme(doc_obj, themes):
+
+
+def _create_key_theme(doc_obj, themes, include_fortune=False):
     theme='summary_theme'
     theme_name='Summary Theme'
     doc_obj.add_heading(theme_name, level=2)
@@ -198,8 +198,9 @@ def _create_key_theme(doc_obj, themes):
     my_themes=themes[theme]
     for my_theme in my_themes:
         my_theme_name='Detailed Theme: ' + my_theme
-        doc_obj.add_heading(my_theme_name, level=2)
-        doc_obj.add_paragraph('Definition: ' + my_themes[my_theme]['name'] + ' [system generated]')
+        doc_obj.add_heading(my_theme_name, level=3)
+        doc_obj.add_paragraph('Definition: ' + my_themes[my_theme]['description'] + ' [system generated]')
+        if include_fortune: doc_obj.add_paragraph('Fortune: ' + my_themes[my_theme]['name'] + ' [system generated]')
         doc_obj.add_paragraph('Tags: ' + " | ".join(my_themes[my_theme]['tags'].keys()))
 
 
@@ -227,9 +228,9 @@ def report(study, conf):
     _create_header(d, conf) # Create the doc header
     _create_footer(d, conf) # Create the doc footer
     _create_summary(d, study['document'], conf) # Create the intro, opportunity and actions sections
-    #_create_references( study['iterations'], d, conf) # Create references sections
-    _create_key_themes(d, study['substudies'])
     
+    _create_key_themes(d, study['substudies'])
+    _create_references(d, study['substudies'], conf) # Create references sections
 
     # d=report_summary(study, format, doc=d)
     # d=report_references(study, format, doc=d)
