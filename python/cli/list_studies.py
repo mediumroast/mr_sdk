@@ -1,6 +1,9 @@
 #!/bin/env python3
 
-import sys, pprint, argparse
+import sys
+import pprint
+import argparse
+import json
 
 from mediumroast.api.high_level import Auth as authenticate
 from mediumroast.api.high_level import Studies as study
@@ -41,7 +44,14 @@ def parse_cli_args(
         "--get_themes",
         help="Get all themes and their quotes for an individual study",
         type=str,
-        dest="get_themes"
+        dest="get_themes",
+    )
+    parser.add_argument(
+        "--pretty_output",
+        help="Specify if the STDOUT format is pretty printed or not",
+        dest="pretty_output",
+        action='store_true',
+        default=False,
     )
     parser.add_argument(
         "--get_by_guid", help="Get study object by GUID", type=str, dest="by_guid"
@@ -60,7 +70,7 @@ def parse_cli_args(
 
 
 if __name__ == "__main__":
-    printer = pprint.PrettyPrinter()
+    printer = pprint.PrettyPrinter(indent=1, compact=False)
     my_args = parse_cli_args()
 
     auth_ctl = authenticate(
@@ -88,7 +98,11 @@ if __name__ == "__main__":
         success, resp = study_ctl.get_all()
 
     if success:
-        printer.pprint(resp)
+        if my_args.pretty_output:
+            printer.pprint(resp)
+        else:
+            print(json.dumps(resp))
+
     else:
         print("CLI ERROR: This is a generic error message, as something went wrong.")
         sys.exit(-1)
