@@ -227,15 +227,23 @@ def _create_subsection(doc_obj, start_text, body_text, indent, font_size, to_bol
     body_run.font.size = Pt(font_size)
     if to_italics: body_run.font.italic = to_italics
 
+def _create_intro(doc_obj, intro_name, intro_body, heading_level=2):
+    doc_obj.add_heading(intro_name, level=heading_level)
+    doc_obj.add_paragraph(intro_body)
+
+
 def _create_key_theme(doc_obj, themes, quotes, conf, include_fortune=True):
     
     ### Define the summary theme
-    theme = 'summary_theme'
-    theme_name = 'Summary Theme'
-    doc_obj.add_heading(theme_name, level=2)
-    doc_obj.add_paragraph(conf['themes']['summary_intro'].replace("\n", " "))
+    _create_intro(doc_obj, 
+        'Summary Theme', 
+        conf['themes']['summary_intro'].replace("\n", " "))
+    #theme_name = 'Summary Theme'
+    #doc_obj.add_heading(theme_name, level=2)
+    #doc_obj.add_paragraph(conf['themes']['summary_intro'].replace("\n", " "))
 
     ## Create the definition
+    theme = 'summary_theme'
     _create_subsection(doc_obj, 
             'Definition: ', 
             themes[theme]['description'], 
@@ -268,25 +276,50 @@ def _create_key_theme(doc_obj, themes, quotes, conf, include_fortune=True):
         quotes['summary'], 
         int(conf['themes']['indent']), 
         font_size = int(conf['themes']['font_size']))
-    #for doc in quotes['summary']:
-    #    for quote in quotes['summary'][doc]['quotes']:
-    #        doc_obj.add_paragraph(quote, style='List Bullet')
 
+    ### Add the discrete/detailed themes
     theme = 'discrete_themes'
-    theme_name = 'Detailed Themes'
-    doc_obj.add_heading(theme_name, level=2)
-    doc_obj.add_paragraph(conf['themes']['discrete_intro'].replace("\n", " "))
+    
+    ## Create the starting paragraph
+    _create_intro(doc_obj, 
+        'Detailed Themes', 
+        conf['themes']['discrete_intro'].replace("\n", " "))
+    #doc_obj.add_heading(theme_name, level=2)
+    #doc_obj.add_paragraph(conf['themes']['discrete_intro'].replace("\n", " "))
+    
+    ## Add in the individual themes and their quotes
     my_themes = themes[theme]
     for my_theme in my_themes:
-        my_theme_name = 'Detailed Theme: ' + my_theme
+
+        # Put in the theme identifier
+        my_theme_name = 'Detailed Theme Identifier: ' + my_theme
         doc_obj.add_heading(my_theme_name, level=3)
-        doc_obj.add_paragraph(
-            'Definition: ' + my_themes[my_theme]['description'])
+        
+        # Add the description
+        _create_subsection(doc_obj, 
+            'Definition: ', 
+            my_themes[my_theme]['description'], 
+            int(conf['themes']['indent']), 
+            font_size = int(conf['themes']['font_size']),
+            to_bold = True)
+
+        # Include the fortune if the setting is true
         if include_fortune:
-            doc_obj.add_paragraph(
-                'Fortune: ' + my_themes[my_theme]['fortune'] + ' [system generated]')
-        doc_obj.add_paragraph(
-            'Tags: ' + " | ".join(my_themes[my_theme]['tags'].keys()))
+            _create_subsection(doc_obj, 
+                'Fortune: ', 
+                my_themes[my_theme]['fortune'][0].upper() + my_themes[my_theme]['fortune'][1:] + ' [system generated]', 
+                int(conf['themes']['indent']), 
+                font_size = int(conf['themes']['font_size']),
+                to_bold = True)
+
+        # Add the tags
+        _create_subsection(doc_obj, 
+            'Tags: ', 
+            " | ".join(my_themes[my_theme]['tags'].keys()), 
+            int(conf['themes']['indent']), 
+            font_size = int(conf['themes']['font_size']),
+            to_bold = True,
+            to_italics = True)
     
     doc_obj.add_page_break()
 
