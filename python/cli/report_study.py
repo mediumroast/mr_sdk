@@ -300,8 +300,10 @@ def _create_key_theme(doc_obj, themes, quotes, conf, include_fortune=True):
     for my_theme in my_themes:
 
         # Put in the theme identifier
-        my_theme_name = 'Detailed Theme Identifier: ' + my_theme
-        doc_obj.add_heading(my_theme_name, level=3)
+        _create_intro(doc_obj, 
+            'Detailed Theme Identifier: ' + my_theme, 
+            conf['themes']['discrete_theme_intro'].replace("\n", " "),
+            heading_level=3)
         
         # Add the description
         _create_subsection(doc_obj, 
@@ -336,12 +338,21 @@ def _create_key_theme(doc_obj, themes, quotes, conf, include_fortune=True):
             for interaction in quotes[quotes_loc][my_theme]:
                 doc_obj.add_heading(get_interaction_name(interaction), level=5)
                 the_quotes = quotes[quotes_loc][my_theme][interaction]['quotes']
-                if not the_quotes: continue # Skip over blank quotes
+                # Explain that the system was not able to find a relevant quote
+                if not the_quotes: the_quotes=['mediumroast.io was unable to find a relevant quote or text snippet for this theme.'] 
                 for my_quote in the_quotes:
                     _create_quote(doc_obj, 
                         my_quote[0], 
                         int(conf['themes']['indent']), 
                         font_size = int(conf['themes']['font_size']))
+                
+                _create_subsection(doc_obj, 
+                    'Frequency: ', 
+                    str(quotes[quotes_loc][my_theme][interaction]['frequency']), 
+                    int(conf['themes']['indent']), 
+                    font_size = int(conf['themes']['font_size']),
+                    to_bold = True,
+                    to_italics = True)
     
     doc_obj.add_page_break()
 
@@ -401,7 +412,8 @@ if __name__ == "__main__":
             'font_size': configurator['THEME_FORMAT']['font_size'],
             'intro': configurator['THEME_FORMAT']['key_theme_intro'],
             'summary_intro': configurator['THEME_FORMAT']['summary_theme_intro'],
-            'discrete_intro': configurator['THEME_FORMAT']['discrete_theme_intro'],
+            'discrete_intro': configurator['THEME_FORMAT']['discrete_themes_intro'],
+            'discrete_theme_intro': configurator['THEME_FORMAT']['discrete_theme_intro'],
             'indent': configurator['THEME_FORMAT']['indent'],
         }
     }
