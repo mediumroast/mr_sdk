@@ -186,7 +186,7 @@ def _create_reference(interaction_guid, substudy, doc_obj, conf, char_limit=500)
         my_date = str(interaction_data['date'][0:4]) + '-' + str(interaction_data['date'][4:6]) + '-' \
             + str(interaction_data['date'][6:8])
         interaction_meta = "\t\t|\t".join(['Date: ' + my_date + "\t" + my_time,
-                                           'Study Iteration: ' + substudy])
+                                           'Sub-Study Identifier: ' + substudy])
         doc_obj.add_paragraph(interaction_meta)
         doc_obj.add_paragraph(
             interaction_data['abstract'][0:char_limit] + '...')
@@ -246,7 +246,7 @@ def _create_key_themes(doc_obj, substudies, substudy_excludes):
     for substudy in substudies:
         if substudy in substudy_excludes:
             continue
-        doc_obj.add_heading(substudies[substudy]['description'], 1)
+        doc_obj.add_heading('Sub-Study Identifier: ' + substudy + ' — ' + substudies[substudy]['description'], 0)
         _create_key_theme(
             doc_obj, substudies[substudy]['keyThemes'], substudies[substudy]['keyThemeQuotes'])
 
