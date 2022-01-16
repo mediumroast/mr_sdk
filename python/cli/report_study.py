@@ -339,7 +339,7 @@ def _create_key_theme(doc_obj, themes, quotes, conf, include_fortune=True):
                 doc_obj.add_heading(get_interaction_name(interaction), level=5)
                 the_quotes = quotes[quotes_loc][my_theme][interaction]['quotes']
                 # Explain that the system was not able to find a relevant quote
-                if not the_quotes: the_quotes=['mediumroast.io was unable to find a relevant quote or text snippet for this theme.'] 
+                if not the_quotes: the_quotes=[['mediumroast.io was unable to find a relevant quote or text snippet for this theme.']]
                 for my_quote in the_quotes:
                     _create_quote(doc_obj, 
                         my_quote[0], 
