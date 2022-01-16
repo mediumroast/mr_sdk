@@ -208,6 +208,16 @@ def _create_references(doc_obj, substudy_list, conf):
             _create_reference(interaction_guid, substudy, doc_obj, conf)
 
 
+def _create_subsection(doc_obj, start_text, body_text, indent, font_size, to_bold=False, color=None):
+    para = doc_obj.add_paragraph()
+    para.paragraph_format.left_indent = Pt(indent)
+    start_run = para.add_run(start_text)
+    start_run.font.bold = to_bold
+    start_run.font.size = Pt(font_size)
+    body_run=para.add_run(body_text)
+    body_run.font.size = Pt(font_size)
+    if color: body_run.font.color = color
+
 def _create_key_theme(doc_obj, themes, quotes, conf, include_fortune=True):
     
     ### Define the summary theme
@@ -220,16 +230,30 @@ def _create_key_theme(doc_obj, themes, quotes, conf, include_fortune=True):
     definition.paragraph_format.left_indent = Pt(int(conf['themes']['indent']))
 
     ## Determine if we should include the theme fortune or not
-    if include_fortune:
-        fortune=doc_obj.add_paragraph(
-            'Fortune: ' + themes[theme]['fortune'] + ' [system generated]')
-        fortune.paragraph_format.left_indent = Pt(int(conf['themes']['indent']))
+    _create_subsection(doc_obj, 
+        'Fortune: ', 
+        themes[theme]['fortune'] + ' [system generated]', 
+        int(conf['themes']['indent']), 
+        font_size = int(conf['themes']['font_size']),
+        to_bold = True)
+
+    #start_text = 'Fortune: '
+    #indent = int(conf['themes']['indent'])
+    #body_text = themes[theme]['fortune'] + ' [system generated]'
+    #if include_fortune:
+    #    fortune=doc_obj.add_paragraph()
+    #    fortune.paragraph_format.left_indent = Pt(indent)
+    #    start_run=fortune.add_run(start_text)
+    #    start_run.font.bold = True
+    #    fortune.add_run(body_text)
     
     ## Create the tags
     tags = doc_obj.add_paragraph('Tags: ' + " | ".join(themes[theme]['tags'].keys()))
     tags.paragraph_format.left_indent = Pt(int(conf['themes']['indent']))
     
     ## Create the quotes
+    subsection_name = 'Theme Quotes'
+    doc_obj.add_heading(subsection_name, level=3)
     for doc in quotes['summary']:
         for quote in quotes['summary'][doc]['quotes']:
             doc_obj.add_paragraph(quote, style='List Bullet')
@@ -305,7 +329,7 @@ if __name__ == "__main__":
         'confidentiality': configurator['DEFAULT']['confidential_notice'],
         'themes': {
             'tag_font_color': configurator['THEME_FORMAT']['tag_font_color'],
-            'tag_font_size': configurator['THEME_FORMAT']['tag_font_size'],
+            'font_size': configurator['THEME_FORMAT']['font_size'],
             'intro': configurator['THEME_FORMAT']['key_theme_intro'],
             'summary_intro': configurator['THEME_FORMAT']['summary_theme_intro'],
             'discrete_intro': configurator['THEME_FORMAT']['discrete_theme_intro'],
