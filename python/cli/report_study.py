@@ -208,16 +208,28 @@ def _create_references(doc_obj, substudy_list, conf):
             _create_reference(interaction_guid, substudy, doc_obj, conf)
 
 
-def _create_key_theme(doc_obj, themes, quotes, include_fortune=True):
+def _create_key_theme(doc_obj, themes, quotes, conf, include_fortune=True):
+    
+    ### Define the summary theme
     theme = 'summary_theme'
     theme_name = 'Summary Theme'
     doc_obj.add_heading(theme_name, level=2)
-    doc_obj.add_paragraph(
+    doc_obj.add_paragraph(conf['themes']['summary_intro'])
+    definition=doc_obj.add_paragraph(
         'Definition: ' + themes[theme]['description'] + ' [system generated]')
+    definition.paragraph_format.left_indent = Pt(int(conf['themes']['indent']))
+
+    ## Determine if we should include the theme fortune or not
     if include_fortune:
-        doc_obj.add_paragraph(
+        fortune=doc_obj.add_paragraph(
             'Fortune: ' + themes[theme]['fortune'] + ' [system generated]')
-    doc_obj.add_paragraph('Tags: ' + " | ".join(themes[theme]['tags'].keys()))
+        fortune.paragraph_format.left_indent = Pt(int(conf['themes']['indent']))
+    
+    ## Create the tags
+    tags = doc_obj.add_paragraph('Tags: ' + " | ".join(themes[theme]['tags'].keys()))
+    tags.paragraph_format.left_indent = Pt(int(conf['themes']['indent']))
+    
+    ## Create the quotes
     for doc in quotes['summary']:
         for quote in quotes['summary'][doc]['quotes']:
             doc_obj.add_paragraph(quote, style='List Bullet')
@@ -225,12 +237,13 @@ def _create_key_theme(doc_obj, themes, quotes, include_fortune=True):
     theme = 'discrete_themes'
     theme_name = 'Detailed Themes'
     doc_obj.add_heading(theme_name, level=2)
+    doc_obj.add_paragraph(conf['themes']['discrete_intro'])
     my_themes = themes[theme]
     for my_theme in my_themes:
         my_theme_name = 'Detailed Theme: ' + my_theme
         doc_obj.add_heading(my_theme_name, level=3)
         doc_obj.add_paragraph(
-            'Definition: ' + my_themes[my_theme]['description'] + ' [system generated]')
+            'Definition: ' + my_themes[my_theme]['description'])
         if include_fortune:
             doc_obj.add_paragraph(
                 'Fortune: ' + my_themes[my_theme]['fortune'] + ' [system generated]')
@@ -239,16 +252,17 @@ def _create_key_theme(doc_obj, themes, quotes, include_fortune=True):
     doc_obj.add_page_break()
 
 
-def _create_key_themes(doc_obj, substudies, substudy_excludes):
+def _create_key_themes(doc_obj, substudies, substudy_excludes, conf):
     section_title = doc_obj.add_paragraph(
         'Key Themes by Sub-Study')  # Create the References section
     section_title.style = doc_obj.styles['Title']
+    doc_obj.add_paragraph(conf['themes']['intro'])
     for substudy in substudies:
         if substudy in substudy_excludes:
             continue
         doc_obj.add_heading('Sub-Study Identifier: ' + substudy + ' — ' + substudies[substudy]['description'], 1)
         _create_key_theme(
-            doc_obj, substudies[substudy]['keyThemes'], substudies[substudy]['keyThemeQuotes'])
+            doc_obj, substudies[substudy]['keyThemes'], substudies[substudy]['keyThemeQuotes'], conf)
 
 
 def report(study, conf, substudy_excludes):
@@ -268,7 +282,7 @@ def report(study, conf, substudy_excludes):
     ### Key Themes
     ## Key Themes Summary Table
     ## Detailed Key Themes
-    _create_key_themes(d, study['substudies'], substudy_excludes)
+    _create_key_themes(d, study['substudies'], substudy_excludes, conf)
     
     ### References
     _create_references(d, study['substudies'], conf)
@@ -292,6 +306,10 @@ if __name__ == "__main__":
         'themes': {
             'tag_font_color': configurator['THEME_FORMAT']['tag_font_color'],
             'tag_font_size': configurator['THEME_FORMAT']['tag_font_size'],
+            'intro': configurator['THEME_FORMAT']['key_theme_intro'],
+            'summary_intro': configurator['THEME_FORMAT']['summary_theme_intro'],
+            'discrete_intro': configurator['THEME_FORMAT']['discrete_theme_intro'],
+            'indent': configurator['THEME_FORMAT']['indent'],
         }
     }
 
