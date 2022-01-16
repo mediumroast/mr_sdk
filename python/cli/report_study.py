@@ -214,9 +214,9 @@ def _create_key_theme(doc_obj, themes, quotes, conf, include_fortune=True):
     theme = 'summary_theme'
     theme_name = 'Summary Theme'
     doc_obj.add_heading(theme_name, level=2)
-    doc_obj.add_paragraph(conf['themes']['summary_intro'])
+    doc_obj.add_paragraph(conf['themes']['summary_intro'].replace("\n", " "))
     definition=doc_obj.add_paragraph(
-        'Definition: ' + themes[theme]['description'] + ' [system generated]')
+        'Definition: ' + themes[theme]['description'])
     definition.paragraph_format.left_indent = Pt(int(conf['themes']['indent']))
 
     ## Determine if we should include the theme fortune or not
@@ -237,7 +237,7 @@ def _create_key_theme(doc_obj, themes, quotes, conf, include_fortune=True):
     theme = 'discrete_themes'
     theme_name = 'Detailed Themes'
     doc_obj.add_heading(theme_name, level=2)
-    doc_obj.add_paragraph(conf['themes']['discrete_intro'])
+    doc_obj.add_paragraph(conf['themes']['discrete_intro'].replace("\n", " "))
     my_themes = themes[theme]
     for my_theme in my_themes:
         my_theme_name = 'Detailed Theme: ' + my_theme
@@ -256,7 +256,7 @@ def _create_key_themes(doc_obj, substudies, substudy_excludes, conf):
     section_title = doc_obj.add_paragraph(
         'Key Themes by Sub-Study')  # Create the References section
     section_title.style = doc_obj.styles['Title']
-    doc_obj.add_paragraph(conf['themes']['intro'])
+    doc_obj.add_paragraph(conf['themes']['intro'].replace("\n", " "))
     for substudy in substudies:
         if substudy in substudy_excludes:
             continue
