@@ -208,6 +208,14 @@ def _create_references(doc_obj, substudy_list, conf):
             _create_reference(interaction_guid, substudy, doc_obj, conf)
 
 
+def _create_quotes(doc_obj, quotes, indent, font_size, location='quotes'):
+    for quote in quotes:
+        my_quote = quotes[quote][location]
+        my_para = doc_obj.add_paragraph(style='List Bullet')
+        my_para.paragraph_format.left_indent = indent
+        my_bullet = my_para.add_run(my_quote)
+        my_bullet.font.size = font_size
+
 def _create_subsection(doc_obj, start_text, body_text, indent, font_size, to_bold=False, to_italics=False):
     para = doc_obj.add_paragraph()
     para.paragraph_format.left_indent = Pt(indent)
@@ -244,8 +252,6 @@ def _create_key_theme(doc_obj, themes, quotes, conf, include_fortune=True):
             to_bold = True)
     
     ## Create the tags
-    tags = doc_obj.add_paragraph('Tags: ' + " | ".join(themes[theme]['tags'].keys()))
-    tags.paragraph_format.left_indent = Pt(int(conf['themes']['indent']))
     _create_subsection(doc_obj, 
             'Tags: ', 
             " | ".join(themes[theme]['tags'].keys()), 
@@ -257,9 +263,13 @@ def _create_key_theme(doc_obj, themes, quotes, conf, include_fortune=True):
     ## Create the quotes
     subsection_name = 'Theme Quotes'
     doc_obj.add_heading(subsection_name, level=3)
-    for doc in quotes['summary']:
-        for quote in quotes['summary'][doc]['quotes']:
-            doc_obj.add_paragraph(quote, style='List Bullet')
+    _create_quotes(doc_obj, 
+        quotes['summary'], 
+        int(conf['themes']['indent']), 
+        font_size = int(conf['themes']['font_size']))
+    #for doc in quotes['summary']:
+    #    for quote in quotes['summary'][doc]['quotes']:
+    #        doc_obj.add_paragraph(quote, style='List Bullet')
 
     theme = 'discrete_themes'
     theme_name = 'Detailed Themes'
@@ -276,6 +286,7 @@ def _create_key_theme(doc_obj, themes, quotes, conf, include_fortune=True):
                 'Fortune: ' + my_themes[my_theme]['fortune'] + ' [system generated]')
         doc_obj.add_paragraph(
             'Tags: ' + " | ".join(my_themes[my_theme]['tags'].keys()))
+    
     doc_obj.add_page_break()
 
 
