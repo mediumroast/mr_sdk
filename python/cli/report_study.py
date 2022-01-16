@@ -13,7 +13,7 @@ from mediumroast.api.high_level import Auth as authenticate
 from mediumroast.api.high_level import Studies as study
 from mediumroast.api.high_level import Interactions as interaction
 
-
+### General utilities
 def parse_cli_args(program_name='report_study', desc='A mediumroast.io utility that generates a Microsoft Word formatted report for a study.'):
     parser = argparse.ArgumentParser(prog=program_name, description=desc)
     parser.add_argument('--exclude_substudies', help="The names for the substudies to exclude in a comma separated list",
@@ -37,6 +37,11 @@ def read_config(conf_file='./reports.ini'):
     c.read(conf_file)
     return c
 
+def get_interaction_name(guid):
+    """Get the interaction name by the GUID
+    """
+    interaction_ctl = interaction(credential)
+    return interaction_ctl.get_name_by_guid(guid)[1]['interactionName']
 
 def _create_header(doc_obj, conf, font_size=7):
     date_string = f'{datetime.now():%Y-%m-%d %H:%M}'
@@ -207,6 +212,13 @@ def _create_references(doc_obj, substudy_list, conf):
             interaction_guid = substudy_list[substudy]['interactions'][interaction]['GUID']
             _create_reference(interaction_guid, substudy, doc_obj, conf)
 
+def _create_quote(doc_obj, quote, indent, font_size):
+    my_quote = quote
+    my_para = doc_obj.add_paragraph(style='List Bullet')
+    my_para.paragraph_format.left_indent = Pt(1.5 * indent)
+    my_bullet = my_para.add_run(my_quote)
+    my_bullet.font.size = Pt(font_size)
+    my_para.paragraph_format.space_after = Pt(3)
 
 def _create_quotes(doc_obj, quotes, indent, font_size, location='quotes'):
     for quote in quotes:
@@ -238,9 +250,6 @@ def _create_key_theme(doc_obj, themes, quotes, conf, include_fortune=True):
     _create_intro(doc_obj, 
         'Summary Theme', 
         conf['themes']['summary_intro'].replace("\n", " "))
-    #theme_name = 'Summary Theme'
-    #doc_obj.add_heading(theme_name, level=2)
-    #doc_obj.add_paragraph(conf['themes']['summary_intro'].replace("\n", " "))
 
     ## Create the definition
     theme = 'summary_theme'
@@ -278,17 +287,16 @@ def _create_key_theme(doc_obj, themes, quotes, conf, include_fortune=True):
         font_size = int(conf['themes']['font_size']))
 
     ### Add the discrete/detailed themes
-    theme = 'discrete_themes'
+    theme_loc = 'discrete_themes'
+    quotes_loc = 'discrete'
     
     ## Create the starting paragraph
     _create_intro(doc_obj, 
         'Detailed Themes', 
         conf['themes']['discrete_intro'].replace("\n", " "))
-    #doc_obj.add_heading(theme_name, level=2)
-    #doc_obj.add_paragraph(conf['themes']['discrete_intro'].replace("\n", " "))
     
     ## Add in the individual themes and their quotes
-    my_themes = themes[theme]
+    my_themes = themes[theme_loc]
     for my_theme in my_themes:
 
         # Put in the theme identifier
@@ -320,6 +328,20 @@ def _create_key_theme(doc_obj, themes, quotes, conf, include_fortune=True):
             font_size = int(conf['themes']['font_size']),
             to_bold = True,
             to_italics = True)
+
+        # Pull in the quotes
+        subsection_name = 'Theme Quotes by Interaction'
+        doc_obj.add_heading(subsection_name, level=4)
+        if my_theme in quotes[quotes_loc]:
+            for interaction in quotes[quotes_loc][my_theme]:
+                doc_obj.add_heading(get_interaction_name(interaction), level=5)
+                the_quotes = quotes[quotes_loc][my_theme][interaction]['quotes']
+                if not the_quotes: continue # Skip over blank quotes
+                for my_quote in the_quotes:
+                    _create_quote(doc_obj, 
+                        my_quote[0], 
+                        int(conf['themes']['indent']), 
+                        font_size = int(conf['themes']['font_size']))
     
     doc_obj.add_page_break()
 
