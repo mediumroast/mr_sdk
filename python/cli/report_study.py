@@ -246,7 +246,7 @@ def _create_key_themes(doc_obj, substudies, substudy_excludes):
     for substudy in substudies:
         if substudy in substudy_excludes:
             continue
-        doc_obj.add_heading('Sub-Study Identifier: ' + substudy + ' — ' + substudies[substudy]['description'], 0)
+        doc_obj.add_heading('Sub-Study Identifier: ' + substudy + ' — ' + substudies[substudy]['description'], 1)
         _create_key_theme(
             doc_obj, substudies[substudy]['keyThemes'], substudies[substudy]['keyThemeQuotes'])
 
