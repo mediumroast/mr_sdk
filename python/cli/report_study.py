@@ -212,9 +212,10 @@ def _create_quotes(doc_obj, quotes, indent, font_size, location='quotes'):
     for quote in quotes:
         my_quote = quotes[quote][location]
         my_para = doc_obj.add_paragraph(style='List Bullet')
-        my_para.paragraph_format.left_indent = Pt(indent)
+        my_para.paragraph_format.left_indent = Pt(1.5 * indent)
         my_bullet = my_para.add_run(my_quote)
         my_bullet.font.size = Pt(font_size)
+        my_para.paragraph_format.space_after = Pt(3)
 
 def _create_subsection(doc_obj, start_text, body_text, indent, font_size, to_bold=False, to_italics=False):
     para = doc_obj.add_paragraph()
