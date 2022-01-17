@@ -380,16 +380,14 @@ def change_orientation(doc_obj):
 
     return new_section
 
-def _create_row(the_row, id, type, tags, freq, snip, src):
+def _create_row(the_row, id, type,freq, snip, src):
     ID = 0
     TYPE = 1 
-    TAGS = 2
-    FREQ = 3
-    SNIP = 4
+    FREQ = 2
+    SNIP = 3
     SRC = 5
     the_row[ID].text = str(id)
     the_row[TYPE].text = str(type)
-    the_row[TAGS].text = str(tags)
     the_row[FREQ].text = str(freq)
     the_row[SNIP].text = str(snip)
     the_row[SRC].text = str(src)
@@ -414,25 +412,26 @@ def _create_summary_theme_tables(doc_obj, substudies, substudy_excludes, conf):
     for substudy in substudies:
         if substudy in substudy_excludes:
             continue
+        doc_obj.add_heading('Sub-Study Identifier: ' + substudy + ' — ' + substudies[substudy]['description'], 1)
         my_table = doc_obj.add_table(rows=1, cols=6)
         header_row = my_table.rows[0].cells
         header_row[0].text = 'Identifier'
         header_row[1].text = 'Type'
-        header_row[2].text = 'Tags'
-        header_row[3].text = 'Frequency'
-        header_row[4].text = 'Snippet'
-        header_row[5].text = 'Source'
+        header_row[2].text = 'Frequency'
+        header_row[3].text = 'Snippet'
+        header_row[4].text = 'Source'
         my_row = my_table.add_row().cells
 
         ## Process the summary theme
         my_theme = 'Summary Theme'
         my_type = 'Summary'
-        my_tags = " | ".join(substudies[substudy]['keyThemes']['summary_theme']['tags'].keys())
         my_frequency = 'N/A'
         my_interaction = list(substudies[substudy]['keyThemeQuotes']['summary'].keys())[0]
         my_snippet = substudies[substudy]['keyThemeQuotes']['summary'][my_interaction]['quotes'][0]
         my_source = get_interaction_name(my_interaction)
-        _create_row(my_row, my_theme, my_type, my_tags, my_frequency, my_snippet, my_source)
+        _create_row(my_row, my_theme, my_type, my_frequency, my_snippet, my_source)
+
+        doc_obj.add_page_break()
 
     change_orientation(doc_obj) # Flip to portrait mode
 
