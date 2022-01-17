@@ -8,6 +8,7 @@ import docx
 from docx import Document
 from docx.shared import Pt
 from docx.enum.dml import MSO_THEME_COLOR_INDEX
+from docx.enum.section import WD_ORIENT, WD_SECTION
 from datetime import datetime
 from mediumroast.api.high_level import Auth as authenticate
 from mediumroast.api.high_level import Studies as study
@@ -359,7 +360,7 @@ def _create_key_theme(doc_obj, themes, quotes, conf, include_fortune=True):
 
 def _create_key_themes(doc_obj, substudies, substudy_excludes, conf):
     section_title = doc_obj.add_paragraph(
-        'Key Themes by Sub-Study')  # Create the References section
+        'Key Themes by Sub-Study')  # Create the Themes section
     section_title.style = doc_obj.styles['Title']
     doc_obj.add_paragraph(conf['themes']['intro'].replace("\n", " "))
     for substudy in substudies:
@@ -368,6 +369,73 @@ def _create_key_themes(doc_obj, substudies, substudy_excludes, conf):
         doc_obj.add_heading('Sub-Study Identifier: ' + substudy + ' — ' + substudies[substudy]['description'], 1)
         _create_key_theme(
             doc_obj, substudies[substudy]['keyThemes'], substudies[substudy]['keyThemeQuotes'], conf)
+
+def change_orientation(doc_obj):
+    current_section = doc_obj.sections[-1]
+    new_width, new_height = current_section.page_height, current_section.page_width
+    new_section = doc_obj.add_section(WD_SECTION.NEW_PAGE)
+    new_section.orientation = WD_ORIENT.LANDSCAPE
+    new_section.page_width = new_width
+    new_section.page_height = new_height
+
+    return new_section
+
+def _create_row(the_row, id, type, tags, freq, snip, src):
+    ID = 0
+    TYPE = 1 
+    TAGS = 2
+    FREQ = 3
+    SNIP = 4
+    SRC = 5
+    the_row[ID].text = str(id)
+    the_row[TYPE].text = str(type)
+    the_row[TAGS].text = str(tags)
+    the_row[FREQ].text = str(freq)
+    the_row[SNIP].text = str(snip)
+    the_row[SRC].text = str(src)
+
+
+def _create_rows():
+    """
+    For summary
+    create single row
+
+    For discrete
+        foreach theme
+            create single row 
+    """
+    pass
+
+def _create_summary_theme_tables(doc_obj, substudies, substudy_excludes, conf):
+    section_title = doc_obj.add_paragraph(
+        'Key Theme Summary Tables')  # Create the References section
+    section_title.style = doc_obj.styles['Title']
+    for substudy in substudies:
+        change_orientation(doc_obj) # Flip to landscape mode
+        if substudy in substudy_excludes:
+            continue
+        my_table = doc_obj.add_table(rows=1, cols=6)
+        header_row = my_table.rows[0].cells
+        header_row[0].text = 'Identifier'
+        header_row[1].text = 'Type'
+        header_row[2].text = 'Tags'
+        header_row[3].text = 'Frequency'
+        header_row[4].text = 'Snippet'
+        header_row[5].text = 'Source'
+        my_row = my_table.add_row().cells
+
+        ## Process the summary theme
+        my_theme = substudies[substudy]['keyThemes']['summary_theme']
+        my_type = 'Summary'
+        my_tags = " | ".join(substudies[substudy]['keyThemes']['summary_theme']['tags'].keys())
+        my_frequency = 'N/A'
+        my_interaction = list(substudies[substudy]['keyThemeQuotes']['summary'].keys())[0]
+        my_snippet = substudies[substudy]['keyThemeQuotes']['summary'][my_interaction]['quotes'][0]
+        my_source = get_interaction_name(my_interaction)
+        _create_row(my_row, my_theme, my_type, my_tags, my_frequency, my_snippet, my_source)
+
+
+
 
 
 def report(study, conf, substudy_excludes):
@@ -386,6 +454,8 @@ def report(study, conf, substudy_excludes):
 
     ### Key Themes
     ## Key Themes Summary Table
+    _create_summary_theme_tables(d, study['substudies'], substudy_excludes, conf)
+    
     ## Detailed Key Themes
     _create_key_themes(d, study['substudies'], substudy_excludes, conf)
     
