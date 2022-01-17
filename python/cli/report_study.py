@@ -18,7 +18,7 @@ from mediumroast.api.high_level import Interactions as interaction
 def parse_cli_args(program_name='report_study', desc='A mediumroast.io utility that generates a Microsoft Word formatted report for a study.'):
     parser = argparse.ArgumentParser(prog=program_name, description=desc)
     parser.add_argument('--exclude_substudies', help="The names for the substudies to exclude in a comma separated list",
-                        type=str, dest='exclude_substudies')
+                        type=str, dest='exclude_substudies', default=None)
     parser.add_argument('--rest_url', help="The URL of the target REST server",
                         type=str, dest='rest_url', default='http://mr-01:3000')
     parser.add_argument('--guid', help="The GUID for the study to be reported on.",
@@ -358,7 +358,7 @@ def _create_key_theme(doc_obj, themes, quotes, conf, include_fortune=True):
     doc_obj.add_page_break()
 
 
-def _create_key_themes(doc_obj, substudies, substudy_excludes, conf):
+def _create_key_themes(doc_obj, substudies, conf, substudy_excludes=list()):
     section_title = doc_obj.add_paragraph(
         'Key Themes by Sub-Study')  # Create the Themes section
     section_title.style = doc_obj.styles['Title']
@@ -406,7 +406,7 @@ def _create_rows():
     """
     pass
 
-def _create_summary_theme_tables(doc_obj, substudies, substudy_excludes, conf):
+def _create_summary_theme_tables(doc_obj, substudies, conf, substudy_excludes=list()):
     change_orientation(doc_obj) # Flip to landscape mode
     my_widths = [Inches(1.5), Inches(0.75), Inches(0.75), Inches(1.5), Inches(3.5)]
     section_title = doc_obj.add_paragraph(
@@ -479,10 +479,10 @@ def report(study, conf, substudy_excludes):
 
     ### Key Themes
     ## Key Themes Summary Table
-    _create_summary_theme_tables(d, study['substudies'], substudy_excludes, conf)
+    _create_summary_theme_tables(d, study['substudies'], conf, substudy_excludes)
     
     ## Detailed Key Themes
-    _create_key_themes(d, study['substudies'], substudy_excludes, conf)
+    _create_key_themes(d, study['substudies'], conf, substudy_excludes)
     
     ### References
     _create_references(d, study['substudies'], conf)
@@ -516,7 +516,7 @@ if __name__ == "__main__":
     auth_ctl = authenticate(
         user_name=my_args.user, secret=my_args.secret, rest_server_url=my_args.rest_url)
     credential = auth_ctl.login()
-    substudy_excludes = my_args.exclude_substudies.split(',')
+    substudy_excludes = my_args.exclude_substudies.split(',') if my_args.exclude_substudies else list()
     study_ctl = study(credential)
     success, study_obj = study_ctl.get_by_guid(my_args.guid)
     if success:
