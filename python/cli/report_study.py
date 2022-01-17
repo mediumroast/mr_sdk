@@ -6,7 +6,7 @@ import configparser
 import docx
 
 from docx import Document
-from docx.shared import Pt
+from docx.shared import Pt, Inches
 from docx.enum.dml import MSO_THEME_COLOR_INDEX
 from docx.enum.section import WD_ORIENT, WD_SECTION
 from datetime import datetime
@@ -380,7 +380,7 @@ def change_orientation(doc_obj):
 
     return new_section
 
-def _create_row(the_row, id, type,freq, src, snip):
+def _create_row(the_row, id, type,freq, src, snip, widths=None):
     ID = 0
     TYPE = 1 
     FREQ = 2
@@ -391,6 +391,9 @@ def _create_row(the_row, id, type,freq, src, snip):
     the_row[FREQ].text = str(freq)
     the_row[SNIP].text = str(snip)
     the_row[SRC].text = str(src)
+    if widths:
+        for width in range(0,4):
+            the_row[width].width = widths[width]
 
 
 def _create_rows():
@@ -406,6 +409,7 @@ def _create_rows():
 
 def _create_summary_theme_tables(doc_obj, substudies, substudy_excludes, conf):
     change_orientation(doc_obj) # Flip to landscape mode
+    my_widths = [Inches(1.5), Inches(0.75), Inches(0.75), Inches(1.5), Inches(3.5)]
     section_title = doc_obj.add_paragraph(
         'Key Theme Summary Tables')  # Create the References section
     section_title.style = doc_obj.styles['Title']
@@ -430,7 +434,7 @@ def _create_summary_theme_tables(doc_obj, substudies, substudy_excludes, conf):
         my_interaction = list(substudies[substudy]['keyThemeQuotes']['summary'].keys())[0]
         my_snippet = substudies[substudy]['keyThemeQuotes']['summary'][my_interaction]['quotes'][0]
         my_source = get_interaction_name(my_interaction)
-        _create_row(my_row, my_theme, my_type, my_frequency, my_source, my_snippet)
+        _create_row(my_row, my_theme, my_type, my_frequency, my_source, my_snippet, widths=my_widths)
 
         doc_obj.add_page_break()
 
