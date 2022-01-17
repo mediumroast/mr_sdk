@@ -413,7 +413,7 @@ def _create_summary_theme_tables(doc_obj, substudies, substudy_excludes, conf):
         if substudy in substudy_excludes:
             continue
         doc_obj.add_heading('Sub-Study Identifier: ' + substudy + ' — ' + substudies[substudy]['description'], 1)
-        my_table = doc_obj.add_table(rows=1, cols=6)
+        my_table = doc_obj.add_table(rows=1, cols=5)
         my_table.style = 'Colorful Grid'
         header_row = my_table.rows[0].cells
         header_row[0].text = 'Identifier'
