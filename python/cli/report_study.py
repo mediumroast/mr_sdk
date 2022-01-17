@@ -387,13 +387,16 @@ def _create_row(the_row, id, type,freq, src, snip, widths=None):
     SNIP = 4
     SRC = 3
     the_row[ID].text = str(id)
+    the_row[ID].width = widths[ID]
     the_row[TYPE].text = str(type)
+    the_row[ID].width = widths[TYPE]
     the_row[FREQ].text = str(freq)
+    the_row[ID].width = widths[FREQ]
     the_row[SNIP].text = str(snip)
+    the_row[ID].width = widths[SNIP]
     the_row[SRC].text = str(src)
-    if widths:
-        for width in range(0,4):
-            the_row[width].width = widths[width]
+    the_row[ID].width = widths[SRC]
+
 
 
 def _create_rows():
