@@ -407,11 +407,11 @@ def _create_rows():
     pass
 
 def _create_summary_theme_tables(doc_obj, substudies, substudy_excludes, conf):
+    change_orientation(doc_obj) # Flip to landscape mode
     section_title = doc_obj.add_paragraph(
         'Key Theme Summary Tables')  # Create the References section
     section_title.style = doc_obj.styles['Title']
     for substudy in substudies:
-        change_orientation(doc_obj) # Flip to landscape mode
         if substudy in substudy_excludes:
             continue
         my_table = doc_obj.add_table(rows=1, cols=6)
@@ -425,7 +425,7 @@ def _create_summary_theme_tables(doc_obj, substudies, substudy_excludes, conf):
         my_row = my_table.add_row().cells
 
         ## Process the summary theme
-        my_theme = substudies[substudy]['keyThemes']['summary_theme']
+        my_theme = 'Summary Theme'
         my_type = 'Summary'
         my_tags = " | ".join(substudies[substudy]['keyThemes']['summary_theme']['tags'].keys())
         my_frequency = 'N/A'
@@ -433,6 +433,8 @@ def _create_summary_theme_tables(doc_obj, substudies, substudy_excludes, conf):
         my_snippet = substudies[substudy]['keyThemeQuotes']['summary'][my_interaction]['quotes'][0]
         my_source = get_interaction_name(my_interaction)
         _create_row(my_row, my_theme, my_type, my_tags, my_frequency, my_snippet, my_source)
+
+    change_orientation(doc_obj) # Flip to portrait mode
 
 
 
