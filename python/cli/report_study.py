@@ -414,6 +414,7 @@ def _create_summary_theme_tables(doc_obj, substudies, substudy_excludes, conf):
             continue
         doc_obj.add_heading('Sub-Study Identifier: ' + substudy + ' — ' + substudies[substudy]['description'], 1)
         my_table = doc_obj.add_table(rows=1, cols=6)
+        my_table.style = 'Dark List'
         header_row = my_table.rows[0].cells
         header_row[0].text = 'Identifier'
         header_row[1].text = 'Type'
