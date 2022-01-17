@@ -380,12 +380,12 @@ def change_orientation(doc_obj):
 
     return new_section
 
-def _create_row(the_row, id, type,freq, snip, src):
+def _create_row(the_row, id, type,freq, src, snip):
     ID = 0
     TYPE = 1 
     FREQ = 2
-    SNIP = 3
-    SRC = 5
+    SNIP = 4
+    SRC = 3
     the_row[ID].text = str(id)
     the_row[TYPE].text = str(type)
     the_row[FREQ].text = str(freq)
@@ -419,8 +419,8 @@ def _create_summary_theme_tables(doc_obj, substudies, substudy_excludes, conf):
         header_row[0].text = 'Identifier'
         header_row[1].text = 'Type'
         header_row[2].text = 'Frequency'
-        header_row[3].text = 'Snippet'
-        header_row[4].text = 'Source'
+        header_row[3].text = 'Source'
+        header_row[4].text = 'Snippet'
         my_row = my_table.add_row().cells
 
         ## Process the summary theme
@@ -430,7 +430,7 @@ def _create_summary_theme_tables(doc_obj, substudies, substudy_excludes, conf):
         my_interaction = list(substudies[substudy]['keyThemeQuotes']['summary'].keys())[0]
         my_snippet = substudies[substudy]['keyThemeQuotes']['summary'][my_interaction]['quotes'][0]
         my_source = get_interaction_name(my_interaction)
-        _create_row(my_row, my_theme, my_type, my_frequency, my_snippet, my_source)
+        _create_row(my_row, my_theme, my_type, my_frequency, my_source, my_snippet)
 
         doc_obj.add_page_break()
 
