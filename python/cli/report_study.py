@@ -444,6 +444,7 @@ def _create_summary_theme_tables(doc_obj, substudies, substudy_excludes, conf):
         my_type = 'Detailed'
         for my_theme in my_themes:
             if my_theme in my_quotes:
+                my_row = my_table.add_row().cells
                 my_interaction = list(my_quotes[my_theme].keys())[0]
                 my_source = get_interaction_name(my_interaction)
                 the_quotes = my_quotes[my_theme][my_interaction]['quotes']
