@@ -380,22 +380,18 @@ def change_orientation(doc_obj):
 
     return new_section
 
-def _create_row(the_row, id, type,freq, src, snip, widths=None):
+def _create_row(the_row, id, type,freq, src, snip):
     ID = 0
     TYPE = 1 
     FREQ = 2
     SNIP = 4
     SRC = 3
     the_row[ID].text = str(id)
-    the_row[ID].width = widths[ID]
     the_row[TYPE].text = str(type)
-    the_row[ID].width = widths[TYPE]
     the_row[FREQ].text = str(freq)
-    the_row[ID].width = widths[FREQ]
     the_row[SNIP].text = str(snip)
-    the_row[ID].width = widths[SNIP]
     the_row[SRC].text = str(src)
-    the_row[ID].width = widths[SRC]
+
 
 
 
@@ -437,7 +433,26 @@ def _create_summary_theme_tables(doc_obj, substudies, substudy_excludes, conf):
         my_interaction = list(substudies[substudy]['keyThemeQuotes']['summary'].keys())[0]
         my_snippet = substudies[substudy]['keyThemeQuotes']['summary'][my_interaction]['quotes'][0]
         my_source = get_interaction_name(my_interaction)
-        _create_row(my_row, my_theme, my_type, my_frequency, my_source, my_snippet, widths=my_widths)
+        _create_row(my_row, my_theme, my_type, my_frequency, my_source, my_snippet)
+
+        ## Process the discrete themes
+        theme_loc = 'discrete_themes'
+        quotes_loc = 'discrete'
+        ## Add in the individual themes and their quotes
+        my_themes = substudies[substudy]['keyThemes'][theme_loc]
+        my_quotes = substudies[substudy]['keyThemeQuotes'][quotes_loc]
+        my_type = 'Detailed'
+        for my_theme in my_themes:
+            if my_theme in my_quotes:
+                my_interaction = list(my_quotes[my_theme].keys())[0]
+                my_source = get_interaction_name(my_interaction)
+                the_quotes = my_quotes[my_theme][my_interaction]['quotes']
+                # Explain that the system was not able to find a relevant quote
+                if not the_quotes: the_quotes=[['mediumroast.io was unable to find a relevant quote or text snippet for this theme.']]
+                my_snippet = the_quotes[0][0]
+                my_frequency = my_themes[my_theme]['frequency']
+                _create_row(my_row, my_theme, my_type, my_frequency, my_source, my_snippet)
+
 
         doc_obj.add_page_break()
 
