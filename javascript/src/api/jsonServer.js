@@ -3,28 +3,36 @@ import axios from "axios"
 
 
 // Private functions
-function _getObj(target, meth = 'get', server = "http://mr-01:3000", head = { 'Accept': 'application/json' }) {
-    axios({
-        method: meth,
-        url: server + target,
-        headers: head
-    }).then(response => {
-        const output = {'status': true, 'data': response.data}
-        return output
-    }).catch(error => {
-        const output = {'status': false, 'data': error}
-        return output
-    })
+const getObj = async(target, server = "http://mr-01:3000", head = { 'Accept': 'application/json' }) => {
+    const myURL = server + target
+    try {
+        const resp = await axios.get(myURL)
+        return (true, resp.data)
+    } catch (err) {
+        console.error(err)
+        return (false, err)
+    }
 }
 
 // Public functions
 
 // Studies
-const getAllStudies = () => {
+// Get all information about all studies
+const getAllStudies = async () => {
     const restTarget = "/studies"
-    const results =  _getObj(restTarget)
-    console.log(results.data)
-    return results
+    return getObj(restTarget)
+}
+
+// Get all information about a single study using the study's name
+const getStudyByName = async (name) => {
+    const restTarget = '/studies?studyName=' + name
+    return getObj(restTarget)
+}
+
+// Get all information about a single study using the study's GUID
+const getStudyByGUID = async (guid) => {
+    const restTarget = '/studies?GUID=' + guid
+    return getObj(restTarget)
 }
 
 export default getAllStudies

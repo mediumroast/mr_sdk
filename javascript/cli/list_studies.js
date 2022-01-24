@@ -14,5 +14,5 @@ import getAllStudies from '../src/api/jsonServer.js'
     console.log(output)
  }) */
 
- const results = getAllStudies()
+ const results = await getAllStudies()
  console.log(results)
