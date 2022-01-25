@@ -2,7 +2,7 @@
 
 // Import required modules
 import chalk from "chalk"
-import getAllStudies from '../src/api/jsonServer.js'
+import getAll from '../src/api/jsonServer.js'
 
 // Make a RESTful call to the jsonserver
 /* getAllStudies().then(response => {
@@ -14,5 +14,5 @@ import getAllStudies from '../src/api/jsonServer.js'
     console.log(output)
  }) */
 
- const results = await getAllStudies()
+ const results = await getAll()
  console.log(results)
