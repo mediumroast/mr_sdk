@@ -39,5 +39,8 @@
     "dist",
     "src",
     "cli"
-  ]
+  ],
+  "dependencies": {
+    "commander": "^8.3.0"
+  }
 }

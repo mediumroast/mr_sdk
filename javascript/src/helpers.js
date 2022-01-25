@@ -22,8 +22,8 @@ class Utils {
     }
 
     // HTTP Puts
-    async putObj(target, payload, server = "http://mr-01:3000", head = {'Accept': 'application/json'}) {
-        const myURL = server + target
+    async putObj(target, payload, head = {'Accept': 'application/json'}) {
+        const myURL = this.server + target
         try {
             const resp = await axios.put(url = myURL, data = payload, {headers: head})
             return (true, resp.data)
@@ -34,8 +34,8 @@ class Utils {
     }
 
     // HTTP Patches
-    async patchObj(target, payload, server = "http://mr-01:3000", head = {'Accept': 'application/json'}) {
-        const myURL = server + target
+    async patchObj(target, payload, head = {'Accept': 'application/json'}) {
+        const myURL = this.server + target
         try {
             const resp = await axios.patch(url = myURL, data = payload, {headers: head})
             return (true, resp.data)
@@ -46,8 +46,8 @@ class Utils {
     }
 
     // HTTP Deletes
-    async deleteObj(target, payload, server = "http://mr-01:3000", head = {'Accept': 'application/json'}) {
-        const myURL = server + target
+    async deleteObj(target, payload, head = {'Accept': 'application/json'}) {
+        const myURL = this.server + target
         try {
             const resp = await axios.delete(url = myURL, {headers: head})
             return (true, resp.data)
