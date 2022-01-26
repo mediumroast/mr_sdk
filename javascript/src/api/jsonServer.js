@@ -71,6 +71,20 @@ class MRObject {
         const response = await this.util.getObj(restTarget)
         return {'GUID': response.data.GUID, 'studyName': response.data.studyName}
     }
+
+    // TODO implement patch and put functions to add and update resources
+    // NOTE highLevel should implement methods that do things like affect all
+    //      objects in a class.
+    //
+    // NOTE As we are thinking about the test suite for this module we'd need to
+    //      follow the approach of implementing:
+    //          1. put, read, check
+    //          2. patch, read, check
+    //          3. delete, read, check
+    //      This would be done by specifying the min object for insertion.  We will
+    //      also need to take care of which kind of backend is added.  When we start
+    //      to create tests the backend server needs to be operable, and this doc needs
+    //      to be moved to the right location.
 }
 
 // Studies implementation of the MRObject base class
@@ -107,11 +121,12 @@ class InteractionsJSON extends MRObject {
 }
 
 // Users implementation of the MRObject base class
+// TODO consider if this will be a separate standalone class
 class UsersJSON extends MRObject {
     constructor(server, resource = '/users') {
         super(resource, server)
     }
 }
 
-
+// Export classes for consumers
 export default (StudiesJSON, InteractionsJSON, CompaniesJSON, UsersJSON)

@@ -39,6 +39,7 @@ class Studies {
     }
 
     // For all studies filter in only the substudies and return
+    // TODO if this is a base class then this method will move out
     async getAllSubstudies () {
         return this.controller.getAllSubstudies()
     }
