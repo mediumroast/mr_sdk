@@ -9,7 +9,10 @@
     "pretest": "npm run build"
   },
   "bin": {
-    "list_studies": "cli/list_studies.js"
+    "list_studies": "cli/list_studies.js",
+    "list_companies": "cli/list_companies.js",
+    "list_interactions": "cli/list_interactions.js",
+    "list_users": "cli/list_users.js"
   },
   "type": "module",
   "keywords": [

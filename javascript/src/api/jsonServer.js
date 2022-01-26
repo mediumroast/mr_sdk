@@ -2,8 +2,8 @@
 import Utils from '../helpers.js'
 
 // Study methods
-class Studies {
-    constructor (resource = '/studies', server = 'http://mr-01:3000') {
+class MRObject {
+    constructor (resource, server = 'http://mr-01:3000') {
         this.resource = resource
         this.server = server
         this.util = new Utils(server = this.server)
@@ -23,8 +23,6 @@ class Studies {
         }
         return filteredList
     }
-
-    // TODO Consider how to make the above a base case and then Studies et al become subclasses
 
     // Get only Names for all studies
     async getAllNames () {
@@ -49,32 +47,71 @@ class Studies {
     }
 
     // Get all information about a single study using the study's name
-    async getByName (name) {
-        const restTarget = this.resource + '?studyName=' + name
+    async getByName (name, subResource = '?studyName=') {
+        const restTarget = this.resource + subResource + name
         return this.util.getObj(restTarget)
     }
 
     // Get all information about a single study using the study's GUID
-    async getByGUID (guid) {
-        const restTarget = this.resource + '?GUID=' + guid
+    async getByGUID (guid, subResource = '?GUID=') {
+        const restTarget = this.resource + subResource + guid
         return this.util.getObj(restTarget)
     }
 
     // Using the study GUID return the name
-    async getNameByGUID (guid) {
-        const restTarget = this.resource + '?GUID=' + guid
+    async getNameByGUID (guid, subResource = '?GUID=') {
+        const restTarget = this.resource + subResource + guid
         const response = await this.util.getObj(restTarget)
         return {'studyName': response.data.studyName, 'GUID': response.data.GUID}
     }
 
     // Using the study name return the GUID
-    async getGUIDByName (name) {
-        const restTarget = this.resource + '?studyName=' + name
+    async getGUIDByName (name, subResource = '?studyName=') {
+        const restTarget = this.resource + subResource + name
         const response = await this.util.getObj(restTarget)
         return {'GUID': response.data.GUID, 'studyName': response.data.studyName}
     }
 }
 
+// Studies implementation of the MRObject base class
+class StudiesJSON extends MRObject {
+    constructor(server, resource = '/studies') {
+        super(resource, server)
+    }
+
+    // For all studies filter in only the substudies and return
+    async getAllSubstudies () {
+        const response = await this.util.getObj(this.resource)
+        let filteredList = Array()
+        for (const study in response) {
+            let entry = {}
+            entry[response[study].studyName] = response[study].substudies
+            filteredList.push(entry)
+        }
+        return filteredList
+    }
+}
+
+// Companies implementation of the MRObject base class
+class CompaniesJSON extends MRObject {
+    constructor(server, resource = '/companies') {
+        super(resource, server)
+    }
+}
+
+// Interactions implementation of the MRObject base class
+class InteractionsJSON extends MRObject {
+    constructor(server, resource = '/interactions') {
+        super(resource, server)
+    }
+}
+
+// Users implementation of the MRObject base class
+class UsersJSON extends MRObject {
+    constructor(server, resource = '/users') {
+        super(resource, server)
+    }
+}
 
 
-export default Studies
+export default (StudiesJSON, InteractionsJSON, CompaniesJSON, UsersJSON)
