@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Import required modules
-import Studies from '../src/api/highLevel.js'
+import {Studies} from '../src/api/highLevel.js'
 import program from 'commander'
 
 // Parse the cli options
@@ -30,22 +30,22 @@ const byNameResource = '?studyName='
 const opts = parseCLIArgs()
 const serverType = opts.server_type // TODO eventually augment with the CLI config file
 const mrServer = opts.server // TODO eventually augment with the CLI config file
-const studiesControl = new Studies(mrServer, serverType)
+const control = new Studies(mrServer, serverType)
 let results = null
 if (opts.get_guids) {
-   results = await studiesControl.getAllGUIDs()
+   results = await control.getAllGUIDs()
 } else if (opts.get_names) {
-   results = await studiesControl.getAllNames()
+   results = await control.getAllNames()
 } else if (opts.get_map) {
-   results = await studiesControl.getNamesAndGUIDs()
+   results = await control.getNamesAndGUIDs()
 } else if (opts.get_by_guid) {
-   results = await studiesControl.getByGUID(opts.get_by_guid)
+   results = await control.getByGUID(opts.get_by_guid)
 } else if (opts.get_by_name) {
-   results = await studiesControl.getByName(opts.get_by_name, byNameResource)
+   results = await control.getByName(opts.get_by_name, byNameResource)
 } else if (opts.get_substudies) {
-   results = await studiesControl.getAllSubstudies()
+   results = await control.getAllSubstudies()
 } else {
-   results = await studiesControl.getAll()
+   results = await control.getAll()
 }
 
 console.log(results)

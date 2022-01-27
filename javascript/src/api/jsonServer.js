@@ -2,7 +2,7 @@
 import Utils from '../helpers.js'
 
 // Study methods
-class MRObject {
+class MRObjectJSON {
     constructor (resource, server = 'http://mr-01:3000') {
         this.resource = resource
         this.server = server
@@ -88,7 +88,7 @@ class MRObject {
 }
 
 // Studies implementation of the MRObject base class
-class StudiesJSON extends MRObject {
+class StudiesJSON extends MRObjectJSON {
     constructor(server, resource = '/studies') {
         super(resource, server)
     }
@@ -107,14 +107,14 @@ class StudiesJSON extends MRObject {
 }
 
 // Companies implementation of the MRObject base class
-class CompaniesJSON extends MRObject {
+class CompaniesJSON extends MRObjectJSON {
     constructor(server, resource = '/companies') {
         super(resource, server)
     }
 }
 
 // Interactions implementation of the MRObject base class
-class InteractionsJSON extends MRObject {
+class InteractionsJSON extends MRObjectJSON {
     constructor(server, resource = '/interactions') {
         super(resource, server)
     }
@@ -122,11 +122,12 @@ class InteractionsJSON extends MRObject {
 
 // Users implementation of the MRObject base class
 // TODO consider if this will be a separate standalone class
-class UsersJSON extends MRObject {
+class UsersJSON extends MRObjectJSON {
     constructor(server, resource = '/users') {
         super(resource, server)
     }
 }
 
 // Export classes for consumers
-export default (StudiesJSON, InteractionsJSON, CompaniesJSON, UsersJSON)
+export default StudiesJSON
+export {StudiesJSON, InteractionsJSON, CompaniesJSON, UsersJSON}

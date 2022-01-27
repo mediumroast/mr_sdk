@@ -1,5 +1,5 @@
 // Import required modules
-import StudiesJSON from './jsonServer.js' 
+import { StudiesJSON, CompaniesJSON, InteractionsJSON, UsersJSON } from './jsonServer.js'
 
 
 // TODO Consider a class/subclass relationship with Studies and baseobj
@@ -8,63 +8,101 @@ import StudiesJSON from './jsonServer.js'
 //      Some experimentation is needed to determine the best approach for code
 //      minimization.  The simplicity of passing in the controller would be
 //      significant.
-class Studies {
-    constructor (server, serverType) {
-        this.server = server
-        this.serverType = serverType
-        this.controller = null
-        if (this.serverType == 'json') {
-            this.controller = new StudiesJSON(this.server)
-        }
+class MRObject {
+    constructor(controller) {
+        this.controller = controller
     }
 
-    // Get all information about all studies
-    async getAll () {
+    // Get all information about all objects
+    async getAll() {
         return this.controller.getAll()
     }
 
-    // Get only GUIDs for all studies
-    async getAllGUIDs () {
+    // Get only GUIDs for all objects
+    async getAllGUIDs() {
         return this.controller.getAllGUIDs()
     }
 
-    // Get only Names for all studies
-    async getAllNames () {
+    // Get only Names for all objects
+    async getAllNames() {
         return this.controller.getAllNames()
     }
 
-    // Get only Names -> GUIDs mappings for all studies
-    async getNamesAndGUIDs () {
+    // Get only Names -> GUIDs mappings for all objects
+    async getNamesAndGUIDs() {
         return this.controller.getNamesAndGUIDs()
     }
 
-    // For all studies filter in only the substudies and return
-    // TODO if this is a base class then this method will move out
-    async getAllSubstudies () {
-        return this.controller.getAllSubstudies()
-    }
-
-    // Get all information about a single study using the study's name
-    async getByName (name, subResource = '?studyName=') {
+    // Get all information about a single object using the object's name
+    async getByName(name, subResource = '?studyName=') {
         return this.controller.getByName(name, subResource)
     }
 
-    // Get all information about a single study using the study's GUID
-    async getByGUID (guid, subResource = '?GUID=') {
+    // Get all information about a single object using the objects's GUID
+    async getByGUID(guid, subResource = '?GUID=') {
         return this.controller.getByGUID(guid, subResource)
     }
 
-    // Using the study GUID return the name
-    async getNameByGUID (guid, subResource = '?GUID=') {
+    // Using the object GUID return the name
+    async getNameByGUID(guid, subResource = '?GUID=') {
         return this.controller.getByGUID(guid, subResource)
     }
 
-    // Using the study name return the GUID
-    async getGUIDByName (name, subResource = '?studyName=') {
+    // Using the object name return the GUID
+    async getGUIDByName(name, subResource = '?studyName=') {
         return this.controller.getByName(name, subResource)
     }
 
 }
 
+// Create the studies subclass
+class Studies extends MRObject {
+    constructor(server, serverType) {
+        let controller = null
+        if (serverType == 'json') {
+            controller = new StudiesJSON(server)
+        }
+        super(controller)
+    }
+
+    // For all studies filter in only the substudies and return
+    async getAllSubstudies() {
+        return this.controller.getAllSubstudies()
+    }
+}
+
+// Create the companies subclass
+class Companies extends MRObject {
+    constructor(server, serverType) {
+        let controller = null
+        if (serverType == 'json') {
+            controller = new CompaniesJSON(server)
+        }
+        super(controller)
+    }
+}
+
+// Create the interactions subclass
+class Interactions extends MRObject {
+    constructor(server, serverType) {
+        let controller = null
+        if (serverType == 'json') {
+            controller = new InteractionsJSON(server)
+        }
+        super(controller)
+    }
+}
+
+// Create the interactions subclass
+class Users extends MRObject {
+    constructor(server, serverType) {
+        let controller = null
+        if (serverType == 'json') {
+            controller = new UsersJSON(server)
+        }
+        super(controller)
+    }
+}
 
 export default Studies
+export { Studies, Companies, Interactions, Users }
