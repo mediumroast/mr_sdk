@@ -130,3 +130,5 @@ dmypy.json
 
 #MacOS excludes
 *.DS_Store
+python/cli/~$ffeine_Customer_Insights_study_report.docx
+python/mediumroast/api/.json_server.py.swp

@@ -48,6 +48,9 @@ class Transform:
         # Set debug to true or false
         self.debug=debug
 
+        # Specify what to skip when processing sections in the conf file
+        self.to_skip=r"^description|groups|security_scope|substudies|substudy_definition|substudy_type"
+
     def _transform_study (self, study_name, extended_rewrite=False):
         """Internal method to rewrite or augment key aspects of a study object as per definitions in the configuration file."""
         
@@ -145,7 +148,7 @@ class Transform:
         """Helper method for _get_keytheme_quotes to obtain, parse, format and return the quotes"""
         quotes={}
         many_quotes=re.compile(separator) # For the case when there are more than 1 quote per theme
-        to_skip=re.compile('^description|groups|security_scope|substudies|substudy_definition', re.IGNORECASE)
+        to_skip=re.compile(self.to_skip, re.IGNORECASE)
         for idx in list(self.rules[section]):
             if to_skip.match(idx): continue
             if many_quotes.search(self.rules[section][idx]): # More than 1 quote
@@ -168,7 +171,7 @@ class Transform:
     def _frequencies_helper(self, section, separator=',', sub_separator='|'):
         """Helper method for _get_keytheme_frequencies to obtain, parse, format and return the frequencies."""
         frequencies={}
-        to_skip=re.compile('^description|groups|security_scope|substudies|substudy_definition', re.IGNORECASE)
+        to_skip=re.compile(self.to_skip, re.IGNORECASE)
         for idx in list(self.rules[section]):
             if to_skip.match(idx): continue
             for set in self.rules[section][idx].split(separator):
@@ -186,7 +189,7 @@ class Transform:
     def _themes_helper(self, section, separator='|'):
         """Helper method for _get_keythemes to obtain, parse, format and return the themes."""
         themes=dict()
-        to_skip=re.compile('^description|groups|security_scope|substudies|substudy_definition', re.IGNORECASE)
+        to_skip=re.compile(self.to_skip, re.IGNORECASE)
         for idx in list(self.rules[section]):
             if to_skip.match(idx): continue
             theme=self.rules[section][idx].split(separator)
@@ -208,7 +211,7 @@ class Transform:
     def _questions_helper(self, section, separator='|'):
         """Helper method for _get_questions to obtain, parse, format and return a question."""
         questions=dict()
-        to_skip=re.compile('^description|groups|security_scope|substudies|substudy_definition', re.IGNORECASE)
+        to_skip=re.compile(self.to_skip, re.IGNORECASE)
         for idx in list(self.rules[section]):
             if to_skip.match(idx): continue
             question=self.rules[section][idx].split(separator)
@@ -229,7 +232,7 @@ class Transform:
     def _noises_helper(self, section):
         """Helper method for _get_noises to obtain, parse, format and return the noises."""
         noises=dict()
-        to_skip=re.compile('^description|groups|security_scope|substudies|substudy_definition', re.IGNORECASE)
+        to_skip=re.compile(self.to_skip, re.IGNORECASE)
         for idx in list(self.rules[section]):
             if to_skip.match(idx): continue
             noise=self.rules[section][idx]
@@ -242,17 +245,23 @@ class Transform:
         noises=self._noises_helper(section) if self.rules.has_section(section) else dict()
         return noises
 
+    def _get_substudy_type(self, study_name, substudy):
+        section=self._reformat_name(study_name) + '_Substudy_Types'
+        substudy_type=self.rules.get(section, substudy) if self.rules.has_option(section, substudy) else self.rules.get('DEFAULT', 'substudy_type')
+        return substudy_type
+
     def _make_substudies(self, study, interaction_xform):
         theme_state=False # Define the default state of a substudy's theme; NOTE: should assign only after we detect if there are more than system assigned default themes
         final_substudies=dict() # Where we will store the final structure to be returned
         config_pre=self._reformat_name(study['studyName']) + '_Substudy_'
-
+        
         # Process each substudy
         for substudy in study['substudies'].keys():
             definition=self.rules.get(config_pre + 'Definitions', substudy) if self.rules.has_section(config_pre + 'Definitions') else self.rules.get('DEFAULT', 'substudy_definition')
             name, description=definition.split('|')
             guid=self.util.hash_it(name + description) # For now set the GUID to be the combo of name and description, may be overidden by the DB in the future.
             final_substudies[substudy]={
+                'type': self._get_substudy_type(study['studyName'], substudy),
                 'totalInteractions': 0, # Set this sum to 0
                 'totalQuestions': 0, # Set this sum to 0
                 'totalThemes': 0, # Set this sum to 0
@@ -263,9 +272,7 @@ class Transform:
                 'interactions': self._get_interactions(study['linkedInteractions'], substudy, interaction_xform), # This needs to be reworked to get the substudy interactions
                 'questions': self._get_questions(study['studyName'], substudy),
                 'keyThemes': self._get_themes(study['studyName'], substudy),
-                'keyTags': dict(),
                 'keyThemeQuotes': self._get_theme_quotes(study['studyName'], substudy),
-                'keyThemeFrequencies': self._get_theme_frequencies(study['studyName'], substudy)
             }
             final_substudies[substudy]['totalInteractions']=self.util.total_item(final_substudies[substudy]['interactions'])
             final_substudies[substudy]['totalQuestions']=self.util.total_item(final_substudies[substudy]['questions'])

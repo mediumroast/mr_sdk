@@ -105,8 +105,26 @@ class Studies:
             filtered_objs.append(
                 {"studyName": my_obj['studyName'],
                 "GUID": my_obj['GUID'],
+                "linkedCompanies": my_obj['linkedCompanies'],
                 "substudies": my_obj['substudies']}
             )
+        return filtered_objs
+
+    def get_themes_by_guid(self, guid):
+        my_url='/studies?GUID=' + guid
+        my_obj=self.calls.get_obj(my_url)[0]
+        my_substudies=my_obj['substudies']
+        filtered_objs={
+            'GUID': my_obj['GUID'],
+            'studyName': my_obj['studyName']
+        }
+        for substudy in my_substudies:
+            filtered_objs={
+                substudy: {
+                    'themes': my_substudies[substudy]['keyThemes'],
+                    'quotes': my_substudies[substudy]['keyThemeQuotes']
+                }
+            }
         return filtered_objs
 
     def get_unthemed_substudies(self):
