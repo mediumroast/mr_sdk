@@ -2,7 +2,8 @@
   "name": "mediumroast",
   "version": "0.7.5",
   "description": "An API binding and toolset for the mediumroast.io.",
-  "main": "src/api/highLevel.js",
+  "main": "src/api/highLevel",
+  "typings": "dist/index",
   "scripts": {
     "test": "node test/spec",
     "build": "rollup -c",
