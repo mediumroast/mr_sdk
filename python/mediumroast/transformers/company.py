@@ -76,7 +76,7 @@ class Transform:
         recent10kURL=self.rules.get('recent10kURLs', company_name) if self.rules.has_option('recent10kURLs', company_name) else self.rules.get('DEFAULT', 'recent10kURL')
         recent10qURL=self.rules.get('recent10qURLs', company_name) if self.rules.has_option('recent10qURLs', company_name) else self.rules.get('DEFAULT', 'recent10qURL')
         phone=self.rules.get('phones', company_name) if self.rules.has_option('phones', company_name) else self.rules.get('DEFAULT', 'phone')
-        streetAddress=self.rules.get('streetAddresss', company_name) if self.rules.has_option('streetAddresss', company_name) else self.rules.get('DEFAULT', 'streetAddress')
+        streetAddress=self.rules.get('streetAddresses', company_name) if self.rules.has_option('streetAddresses', company_name) else self.rules.get('DEFAULT', 'streetAddress')
         zipPostal=self.rules.get('zipPostals', company_name) if self.rules.has_option('zipPostals', company_name) else self.rules.get('DEFAULT', 'zipPostal')
         
         # Should we want to have inputs totally worked through the configuration file we can set up the rewrite logic to look for
