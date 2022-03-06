@@ -4,7 +4,7 @@ __date__    = '2021-August-31'
 __copyright__ = "Copyright 2021 mediumroast.io. All rights reserved."
 
 from os import sep # TODO validate if we need sep from os if not remove this line
-import sys, re
+import sys, re, datetime
 sys.path.append('../')
 
 from mediumroast.helpers import utilities
@@ -254,6 +254,14 @@ class Transform:
         theme_state=False # Define the default state of a substudy's theme; NOTE: should assign only after we detect if there are more than system assigned default themes
         final_substudies=dict() # Where we will store the final structure to be returned
         config_pre=self._reformat_name(study['studyName']) + '_Substudy_'
+
+    def _get_date (self):
+        my_date = datetime.date.today()
+        return my_date.year + my_date.month + my_date.day
+    
+    def _get_time (self):
+        my_date = datetime.time
+        return my_date.hour + my_date.minute
         
         # Process each substudy
         for substudy in study['substudies'].keys():
@@ -261,6 +269,8 @@ class Transform:
             name, description=definition.split('|')
             guid=self.util.hash_it(name + description) # For now set the GUID to be the combo of name and description, may be overidden by the DB in the future.
             final_substudies[substudy]={
+                'date': self._get_date(),
+                'time': self._get_time(),
                 'type': self._get_substudy_type(study['studyName'], substudy),
                 'totalInteractions': 0, # Set this sum to 0
                 'totalQuestions': 0, # Set this sum to 0
@@ -332,6 +342,7 @@ class Transform:
                     "document": self._get_document(study_obj['name']),
                     "public": study_obj['public'],
                     "groups": study_obj['groups']
+                    ### TODO Notes could be transformed into the opportunity or similar
                 }
             else:
                 tmp_objects[object[self.RAW_STUDY_NAME]]["linkedCompanies"][company_name]=company_id

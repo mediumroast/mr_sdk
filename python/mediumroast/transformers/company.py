@@ -3,7 +3,7 @@ __author__  = "Michael Hay"
 __date__    = '2021-August-31'
 __copyright__ = "Copyright 2021 mediumroast.io. All rights reserved."
 
-import sys
+import sys, re
 sys.path.append('../')
 
 from mediumroast.helpers import utilities
@@ -63,7 +63,7 @@ class Transform:
         # Specify what to skip when processing sections in the conf file
         self.to_skip=r"^description|groups|security_scope|substudies|substudy_definition|substudy_type"
 
-    def _transform_company (self, company_name, extended_rewrite=False):
+    def _transform_company (self, company_name, extended_rewrite=True):
         """Internal method to rewrite or augment key aspects of a company object as per definitions in the configuration file."""
         
         # Add the items which are either rewritten or not present in the file_name metadata.
@@ -124,80 +124,115 @@ class Transform:
                     'zipPostal': zipPostal}
 
     # TODO Delete this method as it is deprecated
-    def get_name (self, company_name):
-        """Lookup a company's name from the configuration file and return it.
+    # def get_name (self, company_name):
+    #     """Lookup a company's name from the configuration file and return it.
 
-        As appropriate return the proper name of the company in question.  This is a helper function
-        to be used as needed during the transformation process.
+    #     As appropriate return the proper name of the company in question.  This is a helper function
+    #     to be used as needed during the transformation process.
 
-        Args:
-            company_name (str): The company name which aligns to the name within the configuration file.
+    #     Args:
+    #         company_name (str): The company name which aligns to the name within the configuration file.
 
-        Returns:
-            string: A reformatted name of the company
+    #     Returns:
+    #         string: A reformatted name of the company
 
-        Notes:
-            This initial implementation doesn't really do anything since we assume the company name is correct.
-        """
-        return company_name
+    #     Notes:
+    #         This initial implementation doesn't really do anything since we assume the company name is correct.
+    #     """
+    #     return company_name
 
-    # TODO Delete this method as it is deprecated
-    def get_description (self, company_name):
-        """Lookup a company description from the configuration file and return it.
+    # # TODO Delete this method as it is deprecated
+    # def get_description (self, company_name):
+    #     """Lookup a company description from the configuration file and return it.
 
-        As appropriate return a long form description of the company in question.  This is a helper function
-        to be used as needed during the transformation process.
+    #     As appropriate return a long form description of the company in question.  This is a helper function
+    #     to be used as needed during the transformation process.
 
-        Args:
-            company_name (str): The company name which aligns to the name within the configuration file.
+    #     Args:
+    #         company_name (str): The company name which aligns to the name within the configuration file.
 
-        Returns:
-            string: A textual description from the configuration file OR if none is present the default.
-        """
-        if self.rules.descriptions.get (company_name): 
-            return self.rules.descriptions[company_name]
-        else: 
-            return self.rules.DEFAULT.description
-
-    # TODO Delete this method as it is deprecated
-    def get_industry (self, company_name):
-        """Lookup a company industry from the configuration file and return it.
-
-        As appropriate return the full industry of the company in question.  This is a helper function
-        to be used as needed during the transformation process.
-
-        Args:
-            company_name (str): The company name which aligns to the name within the configuration file.
-
-        Returns:
-            string: A textual representation of the company's industry from the configuration file OR if none is present the default.
-        """
-        if self.rules.industries.get (company_name): 
-            return self.rules.industries[company_name]
-        else: 
-            return self.rules.DEFAULT.industry
+    #     Returns:
+    #         string: A textual description from the configuration file OR if none is present the default.
+    #     """
+    #     if self.rules.descriptions.get (company_name): 
+    #         return self.rules.descriptions[company_name]
+    #     else: 
+    #         return self.rules.DEFAULT.description
 
     # TODO Delete this method as it is deprecated
-    def make_id (self, company_name, file_output=True):
-        """Create an identifier for the company 
+    # def get_industry (self, company_name):
+    #     """Lookup a company industry from the configuration file and return it.
 
-        Create a identifier for the company_name which is either 'NULL_GUID' or a GUID generated by hashing
-        the company name with the company description.  The latter is only done when the output is to a JSON
-        file.  In the implementation with the backend we should revisit this logic to see if it is enven necessary
-        or perhaps the backend handles all of this.
+    #     As appropriate return the full industry of the company in question.  This is a helper function
+    #     to be used as needed during the transformation process.
 
-        Args:
-            company_name (str): The company name which aligns to the name within the configuration file.
-            file_output (bool): A switch for determining if we're storing the output in a file or not
+    #     Args:
+    #         company_name (str): The company name which aligns to the name within the configuration file.
 
-        Returns:
-            string: A textual representation of the company's ID
-        """
-        description=self.get_description(company_name)
-        id='NULL_GUID'
-        if file_output: id=self.util.hash_it(company_name + description) 
-        return id
- 
+    #     Returns:
+    #         string: A textual representation of the company's industry from the configuration file OR if none is present the default.
+    #     """
+    #     if self.rules.industries.get (company_name): 
+    #         return self.rules.industries[company_name]
+    #     else: 
+    #         return self.rules.DEFAULT.industry
+
+    # TODO Delete this method as it is deprecated
+    # def make_id (self, company_name, file_output=True):
+        # """Create an identifier for the company 
+
+        # Create a identifier for the company_name which is either 'NULL_GUID' or a GUID generated by hashing
+        # the company name with the company description.  The latter is only done when the output is to a JSON
+        # file.  In the implementation with the backend we should revisit this logic to see if it is enven necessary
+        # or perhaps the backend handles all of this.
+
+        # Args:
+        #     company_name (str): The company name which aligns to the name within the configuration file.
+        #     file_output (bool): A switch for determining if we're storing the output in a file or not
+
+        # Returns:
+        #     string: A textual representation of the company's ID
+        # """
+        # description=self.get_description(company_name)
+        # id='NULL_GUID'
+    #     if file_output: id=self.util.hash_it(company_name + description) 
+    #     return id
+    
+    #############################################################################################
+    # All methods to create a company's document which include:
+    #   - Introduction
+    #   - Purpose
+    #   - Actions
+    ############################################################################################# 
+    # Transform either default or study specific document elements into the proper data structure
+    def _document_helper(self, section, seperator='_'):
+        intro='Introduction'
+        prps='Purpose'
+        acts='Action'
+        document={
+            intro: '',
+            prps: {},
+            acts: {}
+        }
+        introduction=re.compile('^Introduction', re.IGNORECASE)
+        purpose=re.compile('^Purpose', re.IGNORECASE)
+        actions=re.compile('^Action_', re.IGNORECASE)
+        for idx in list(self.rules[section]):
+            if introduction.match(idx): 
+                document[intro]=self.rules[section][idx]
+            elif purpose.match(idx):
+                document[prps]=self.rules[section][idx]
+            elif actions.match(idx):
+                item_type=idx.split(seperator)[1]
+                if item_type == 'Text': document['Action']['text']=self.rules[section][idx]
+                else: document['Action'][item_type]=self.rules[section][idx]
+        return document
+
+    def _get_document (self, company_name, default='DEFAULT_PRFAQ'):
+        """Internal method to rewrite or augment key aspects of a study object as per definitions in the configuration file."""
+        section=self._reformat_name(company_name) + '_PRFAQ'
+        document=self._document_helper(section) if self.rules.has_section(section) else self._document_helper(default)
+        return document 
 
     def create_objects (self, raw_objects, file_output=True):
         """Create company objects from a raw list of input data.
@@ -259,6 +294,8 @@ class Transform:
                     "linkedInteractions": {interaction_name: interaction_id},
                     "longitude": long_lat[0],
                     "latitude": long_lat[1],
+                    "document": self._get_document(company_obj['name']),
+                    ### TODO Notes could be transformed into the opportunity or similar
                     "notes": self.util.make_note(obj_type='Company Object: [' + company_obj['name'] + ']')
                 }
             else:
