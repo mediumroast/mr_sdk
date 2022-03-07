@@ -110,7 +110,9 @@ class Transform:
                 'countries', company_name) else self.rules.get('DEFAULT', 'country')
             streetAddress = self.rules.get('streetAddresses', company_name) if self.rules.has_option(
                 'streetAddresses', company_name) else self.rules.get('DEFAULT', 'streetAddress')
-
+            logo = self.rules.get('logos', company_name) if self.rules.has_option(
+                'logos', company_name) else self.rules.get('DEFAULT', 'logo')
+ 
             return {'name': company_name,
                     'role': role,
                     'industry': industry,
@@ -128,6 +130,7 @@ class Transform:
                     'region': region,
                     'phone': phone,
                     'streetAddress': streetAddress,
+                    'logo': logo,
                     'zipPostal': zipPostal}
         else:
             return {'name': company_name,
@@ -211,15 +214,12 @@ class Transform:
         # Temp storage for objects
         tmp_objects = {}
 
-        print('We made it here')
-
         for object in raw_objects:
 
             # Perform basic transformation of company data based upon data in the configuration file
             company_obj = self._transform_company(
                 object[self.RAW_COMPANY_NAME])
 
-            print(company_obj)
 
             # Capture the right study_name and then fetch the study's ID
             study_name = study_xform.get_name(object[self.RAW_STUDY_NAME])
@@ -239,12 +239,14 @@ class Transform:
                     "industry": company_obj['industry'],
                     "role": company_obj['role'],
                     "url": company_obj['url'],
+                    "logo": company_obj['logo'],
                     "streetAddress": company_obj['streetAddress'],
                     "city": object[self.CITY],
                     "stateProvince": object[self.STATE_PROVINCE],
                     "country": object[self.COUNTRY],
                     "region": object[self.REGION],
                     "phone": company_obj['phone'],
+                    "description": company_obj['description'],
                     "simpleDesc": company_obj['description'],
                     "cik": company_obj['cik'],
                     "stockSymbol": company_obj['stockSymbol'],
