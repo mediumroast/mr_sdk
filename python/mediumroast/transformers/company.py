@@ -188,6 +188,7 @@ class Transform:
         section = self._reformat_name(company_name) + '_PRFAQ'
         document = self._document_helper(section) if self.rules.has_section(
             section) else self._document_helper(default)
+        print(document)
         for doc_section in document:
             my_text = document[doc_section]
             my_text = my_text.strip()
