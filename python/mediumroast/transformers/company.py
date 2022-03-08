@@ -190,7 +190,7 @@ class Transform:
             section) else self._document_helper(default)
         for doc_section in document.keys():
             my_text = document[doc_section]
-            print ('Doc section>>> ',doc_section)
+            print ('Doc text>>> ', my_text)
             my_text = my_text.strip()
             my_text = my_text.replace('\n', ' ')
             my_text = my_text.replace('$COMPANY$', company_name)
