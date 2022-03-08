@@ -196,7 +196,7 @@ class Transform:
             section) else self._document_helper(default)
         for doc_section in document.keys():
             my_text = document[doc_section]
-            if type(my_text) == 'dict':
+            if type(my_text) is dict:
                 for entry in my_text:
                     local_text = my_text[entry]
                     local_text = self._replace_company(local_text, company_name)
