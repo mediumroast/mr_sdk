@@ -183,6 +183,12 @@ class Transform:
                     document['Action'][item_type] = self.rules[section][idx]
         return document
 
+    def _replace_company(self, text, company_name):
+        text = text.strip()
+        text = text.replace('\n', ' ')
+        text = text.replace('$COMPANY$', company_name)
+        return text
+
     def _get_document(self, company_name, default='DEFAULT_PRFAQ'):
         """Internal method to rewrite or augment key aspects of a study object as per definitions in the configuration file."""
         section = self._reformat_name(company_name) + '_PRFAQ'
@@ -190,10 +196,14 @@ class Transform:
             section) else self._document_helper(default)
         for doc_section in document.keys():
             my_text = document[doc_section]
-            print ('Doc text>>> ', my_text)
-            my_text = my_text.strip()
-            my_text = my_text.replace('\n', ' ')
-            my_text = my_text.replace('$COMPANY$', company_name)
+            if type(my_text) == 'dict':
+                for entry in my_text:
+                    local_text = my_text[entry]
+                    local_text = self._replace_company(local_text, company_name)
+                    my_text[entry] = local_text
+            else:
+                my_text = self._replace_company(my_text, company_name)
+            
             document[doc_section] = my_text
         return document
 
