@@ -188,9 +188,9 @@ class Transform:
         section = self._reformat_name(company_name) + '_PRFAQ'
         document = self._document_helper(section) if self.rules.has_section(
             section) else self._document_helper(default)
-        print(document)
-        for doc_section in document:
+        for doc_section in document.keys():
             my_text = document[doc_section]
+            print ('Doc section>>> ',doc_section)
             my_text = my_text.strip()
             my_text = my_text.replace('\n', ' ')
             my_text = my_text.replace('$COMPANY$', company_name)
