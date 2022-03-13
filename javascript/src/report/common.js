@@ -9,11 +9,12 @@ class Utilities {
     }
 
     // Initialize and return the document object with the default set
-    initDoc (title, description, creator = 'mediumroast.io', ) {
+    initDoc (title, creator = 'mediumroast.io', description = 'A report snapshot of company data for: ') {
         return new docx.Document({
-            creator: creator,
-            title: title,
-            description: description,
+            creator: creator + ' barista robot',
+            company: creator,
+            title: title + ' Company Report',
+            description: description + title,
             sections: [],
             styles: {
                 default: {

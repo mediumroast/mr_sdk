@@ -99,17 +99,22 @@ const interactions = filterInteractions(await interactionCtl.getAll(), opts.guid
 //  \ \_\ \ \_\  \ \_\ \_\  \ \_\  \ \_\\"\_\     \ \_____\  \ \_____\  \ \_\ 
 //   \/_/  \/_/   \/_/\/_/   \/_/   \/_/ \/_/      \/_____/   \/_____/   \/_/ 
 
-const outputFile = outputDir + '/' + company.companyName 
+const outputFile = outputDir + '/' + company[0].companyName 
 const outputDocFileName = outputFile + '.docx'
 const doc = docCtl.initDoc(
-    company.companyName, 
-    company.description
+    company[0].companyName
 )
 
 doc.sections=[{
-    //properties: {},
+    properties: {
+        type: docx.SectionType.CONTINUOUS,
+    },
     children: [
-        new docx.Paragraph({text: company.companyName})
+         new docx.Paragraph({
+            children: [
+                new docx.TextRun("company[0].companyName")
+            ]
+        })
     ]
 }]
 
