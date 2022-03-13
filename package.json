@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "configparser": "^0.3.9",
+    "docx": "^7.3.0"
+  }
+}

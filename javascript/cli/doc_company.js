@@ -73,7 +73,7 @@ config.hasKey('DEFAULT', 'working_dir') ? workDir = config.get('DEFAULT', 'worki
 
 // Set the output directory
 let outputDir = null
-config.hasKey('DEFAULT', 'output_directory') ? outputDir = process.env.HOME + '/' + config.get('DEFAULT', 'output_directory') : outputDir = process.env.HOME + '/' + opts.output_dir
+config.hasKey('DEFAULT', 'output_dir') ? outputDir = process.env.HOME + '/' + config.get('DEFAULT', 'output_dir') : outputDir = process.env.HOME + '/' + opts.output_dir
 
 // Determine if we need to create a zip package or not
 let createZIP = null
@@ -106,13 +106,9 @@ const doc = docCtl.initDoc(
 )
 
 doc.sections=[{
-    properties: {},
+    //properties: {},
     children: [
-        new docx.Paragraph({
-            children: [
-                new docx.TextRun(company.companyName)
-            ]
-        })
+        new docx.Paragraph({text: company.companyName})
     ]
 }]
 
@@ -120,7 +116,7 @@ doc.sections=[{
 if (createZIP) {
     const outputPackage = outputFile + '.zip'
 } else {
-    Packer.toBuffer(doc).then((buffer) => {
-        fs.writeFileSync(outputDocFileName, buffer);
+    docx.Packer.toBuffer(doc).then((buffer) => {
+        fs.writeFileSync(outputDocFileName, buffer)
     });
 }

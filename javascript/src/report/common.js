@@ -14,6 +14,7 @@ class Utilities {
             creator: creator,
             title: title,
             description: description,
+            sections: [],
             styles: {
                 default: {
                     heading1: {
