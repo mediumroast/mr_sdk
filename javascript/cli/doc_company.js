@@ -75,6 +75,7 @@ config.hasKey('DEFAULT', 'working_dir') ? workDir = config.get('DEFAULT', 'worki
 let outputDir = null
 config.hasKey('DEFAULT', 'output_dir') ? outputDir = process.env.HOME + '/' + config.get('DEFAULT', 'output_dir') : outputDir = process.env.HOME + '/' + opts.output_dir
 
+
 // Determine if we need to create a zip package or not
 let createZIP = null
 opts.zip ? createZIP = true : createZIP = false
