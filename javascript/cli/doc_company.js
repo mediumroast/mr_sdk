@@ -101,7 +101,7 @@ const interactions = filterInteractions(await interactionCtl.getAll(), opts.guid
 
 const outputFile = outputDir + '/' + company[0].companyName 
 const outputDocFileName = outputFile + '.docx'
-const doc = docCtl.initDoc(
+let doc = docCtl.initDoc(
     company[0].companyName
 )
 
