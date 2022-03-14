@@ -3,6 +3,7 @@
 // Import required modules
 import { Companies, Interactions } from '../src/api/highLevel.js'
 //import { Reports as IntReports } from '../src/report/interactions.js'
+import Firmographics from '../src/report/company.js'
 import Utilities from '../src/report/common.js'
 import program from 'commander'
 import ConfigParser from 'configparser'
@@ -29,6 +30,7 @@ function parseCLIArgs() {
         .option('-z --zip_package', 'Create a zip package with interactions')
         .option('-s --server <server>', 'Specify the server URL', 'http://mr-01:3000')
         .option('-t --server_type <type>', 'Specify the server type as [json || mr_server]', 'json')
+        .option('-a --author_company <type>', 'Specify the company the report is for')
         .option('-c --config_file <file>', 'Path to the configuration file', '.mr_config')
     program.parse(process.argv)
     const options = program.opts()
@@ -75,6 +77,10 @@ config.hasKey('DEFAULT', 'working_dir') ? workDir = config.get('DEFAULT', 'worki
 let outputDir = null
 config.hasKey('DEFAULT', 'output_dir') ? outputDir = process.env.HOME + '/' + config.get('DEFAULT', 'output_dir') : outputDir = process.env.HOME + '/' + opts.output_dir
 
+// Set the author company
+let authorCompany = null
+config.hasKey('DEFAULT', 'company') ? authorCompany = config.get('DEFAULT', 'company') : outputDir = opts.author_company
+
 
 // Determine if we need to create a zip package or not
 let createZIP = null
@@ -101,22 +107,27 @@ const interactions = filterInteractions(await interactionCtl.getAll(), opts.guid
 
 const outputFile = outputDir + '/' + company[0].companyName 
 const outputDocFileName = outputFile + '.docx'
-let doc = docCtl.initDoc(
-    company[0].companyName
-)
 
-doc.sections=[{
-    properties: {
-        type: docx.SectionType.CONTINUOUS,
-    },
-    children: [
-         new docx.Paragraph({
-            children: [
-                new docx.TextRun("company[0].companyName")
-            ]
-        })
-    ]
-}]
+
+// Set key properties for the document
+const creator = 'mediumroast.io barista robot'
+const title = company[0].companyName + ' Company Report'
+const description = 'A report snapshot including firmographics and interactions for: ' 
+    + company[0].companyName
+
+// Get the first page for the company that includes firmographics
+const companyData = new Firmographics(company)
+
+let doc = new docx.Document ({
+    creator: creator,
+    company: authorCompany,
+    title: title,
+    description: description,
+    sections: [{
+        properties: {},
+        children: companyData.companyDoc,
+    }],
+})
 
 // If needed create the zip package
 if (createZIP) {

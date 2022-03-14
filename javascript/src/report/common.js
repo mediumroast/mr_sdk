@@ -16,48 +16,48 @@ class Utilities {
             title: title + ' Company Report',
             description: description + title,
             sections: [],
-            styles: {
-                default: {
-                    heading1: {
-                        run: {
-                            size: 2 * this.size,
-                            bold: true,
-                            font: this.font,
-                        },
-                        paragraph: {
-                            spacing: {
-                                after: 120,
-                            },
-                        },
-                    },
-                    heading2: {
-                        run: {
-                            size: 1.5 * this.size,
-                            bold: true,
-                            font: this.font,
-                        },
-                        paragraph: {
-                            spacing: {
-                                before: 240,
-                                after: 120,
-                            },
-                        },
-                    },
-                    heading3: {
-                        run: {
-                            size: 1.2 * this.size,
-                            bold: true,
-                            font: this.font,
-                        },
-                        paragraph: {
-                            spacing: {
-                                before: 240,
-                                after: 120,
-                            },
-                        },
-                    },
-                }
-            }
+            // styles: {
+            //     default: {
+            //         heading1: {
+            //             run: {
+            //                 size: 2 * this.size,
+            //                 bold: true,
+            //                 font: this.font,
+            //             },
+            //             paragraph: {
+            //                 spacing: {
+            //                     after: 120,
+            //                 },
+            //             },
+            //         },
+            //         heading2: {
+            //             run: {
+            //                 size: 1.5 * this.size,
+            //                 bold: true,
+            //                 font: this.font,
+            //             },
+            //             paragraph: {
+            //                 spacing: {
+            //                     before: 240,
+            //                     after: 120,
+            //                 },
+            //             },
+            //         },
+            //         heading3: {
+            //             run: {
+            //                 size: 1.2 * this.size,
+            //                 bold: true,
+            //                 font: this.font,
+            //             },
+            //             paragraph: {
+            //                 spacing: {
+            //                     before: 240,
+            //                     after: 120,
+            //                 },
+            //             },
+            //         },
+            //     }
+            // }
         })
 
     }
