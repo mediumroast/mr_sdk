@@ -23,6 +23,83 @@ class Firmographics {
         this.companyDoc = this.doc()
     }
 
+    // Define the CIK and link it to an EDGAR search if available
+    stockSymbolRow () {
+        if (this.company.stockSymbol === 'Unknown') {
+            return this.basicRow('Stock Symbol', this.company.stockSymbol)
+        } else {
+            const baseURL = 'https://www.bing.com/search?q='
+            const myURL = new docx.ExternalHyperlink({
+                children: [
+                    new docx.TextRun({
+                        text: `${this.company.stockSymbol}`,
+                        style: 'Hyperlink'
+                    })
+                ],
+                link: baseURL + this.company.cik
+            })
+            return new docx.TableRow({
+                children: [
+                    new docx.TableCell({
+                        width: {
+                            size: 20,
+                            type: docx.WidthType.PERCENTAGE
+                        },
+                        children: [new docx.Paragraph('Stock Symbol')]
+                    }),
+                    new docx.TableCell({
+                        width: {
+                            size: 80,
+                            type: docx.WidthType.PERCENTAGE
+                        },
+                        children: [new docx.Paragraph({
+                            children: [myURL]
+                        })]
+                    })
+                ]
+            })
+        }
+    }
+
+    // Define the CIK and link it to an EDGAR search if available
+    cikRow () {
+        if (this.company.cik === 'Unknown') {
+            return this.basicRow('CIK', this.company.cik)
+        } else {
+            const baseURL = 'https://www.sec.gov/edgar/search/#/ciks='
+            const cikURL = new docx.ExternalHyperlink({
+                children: [
+                    new docx.TextRun({
+                        text: `${this.company.cik}`,
+                        style: 'Hyperlink'
+                    })
+                ],
+                link: baseURL + this.company.cik
+            })
+            return new docx.TableRow({
+                children: [
+                    new docx.TableCell({
+                        width: {
+                            size: 20,
+                            type: docx.WidthType.PERCENTAGE
+                        },
+                        children: [new docx.Paragraph('CIK')]
+                    }),
+                    new docx.TableCell({
+                        width: {
+                            size: 80,
+                            type: docx.WidthType.PERCENTAGE
+                        },
+                        children: [new docx.Paragraph({
+                            children: [cikURL]
+                        })]
+                    })
+                ]
+            })
+        }
+    }
+
+    // Define the address and link it to Google maps
     addressRow() {
         // Set the base URL for Google Maps
         const addressBits = [
@@ -142,16 +219,19 @@ class Firmographics {
                 this.basicRow('Name', this.company.companyName),
                 this.basicRow('Description', this.company.description),
                 this.urlRow(),
+                this.basicRow('Role', this.company.role),
                 this.basicRow('Industry', this.company.industry),
                 this.addressRow(),
                 this.basicRow('Region', this.region),
                 this.basicRow('Phone', this.company.phone),
                 this.basicRow('Type', this.companyType),
-                this.basicRow('Stock Symbol', this.company.stockSymbol),
-                this.basicRow('CIK', this.company.cik),
+                // TODO consider generating a urlRow function instead of it being unique per tyep
+                this.stockSymbolRow(),
+                this.cikRow(),
                 this.basicRow('No. Interactions', String(this.company.totalInteractions)),
                 this.basicRow('No. Studies', String(this.company.totalStudies)),
-                //TODO Add URLs for current interaction and study
+                // TODO Add Rows and maybe URLs for current interaction and study
+                // NOTE this requires the URL for the mr_backend
             ],
             width: {
                 size: 100,
@@ -162,6 +242,7 @@ class Firmographics {
         return myTable
     }
 
+    // For a section of prose create a paragraph
     makeParagraph (paragraph) {
         return new docx.Paragraph({
             children: [
@@ -172,6 +253,7 @@ class Firmographics {
         })
     }
 
+    // Create a title of heading style 1
     makeTitle(title) {
         return new docx.Paragraph({
             text: title,
