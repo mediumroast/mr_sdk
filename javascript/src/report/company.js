@@ -29,35 +29,7 @@ class Firmographics {
             return this.basicRow('Stock Symbol', this.company.stockSymbol)
         } else {
             const baseURL = 'https://www.bing.com/search?q='
-            const myURL = new docx.ExternalHyperlink({
-                children: [
-                    new docx.TextRun({
-                        text: `${this.company.stockSymbol}`,
-                        style: 'Hyperlink'
-                    })
-                ],
-                link: baseURL + this.company.cik
-            })
-            return new docx.TableRow({
-                children: [
-                    new docx.TableCell({
-                        width: {
-                            size: 20,
-                            type: docx.WidthType.PERCENTAGE
-                        },
-                        children: [new docx.Paragraph('Stock Symbol')]
-                    }),
-                    new docx.TableCell({
-                        width: {
-                            size: 80,
-                            type: docx.WidthType.PERCENTAGE
-                        },
-                        children: [new docx.Paragraph({
-                            children: [myURL]
-                        })]
-                    })
-                ]
-            })
+            return this.urlRow('Stock Symbol', this.company.stockSymbol, baseURL + this.company.stockSymbol)
         }
     }
 
@@ -67,103 +39,21 @@ class Firmographics {
             return this.basicRow('CIK', this.company.cik)
         } else {
             const baseURL = 'https://www.sec.gov/edgar/search/#/ciks='
-            const cikURL = new docx.ExternalHyperlink({
-                children: [
-                    new docx.TextRun({
-                        text: `${this.company.cik}`,
-                        style: 'Hyperlink'
-                    })
-                ],
-                link: baseURL + this.company.cik
-            })
-            return new docx.TableRow({
-                children: [
-                    new docx.TableCell({
-                        width: {
-                            size: 20,
-                            type: docx.WidthType.PERCENTAGE
-                        },
-                        children: [new docx.Paragraph('CIK')]
-                    }),
-                    new docx.TableCell({
-                        width: {
-                            size: 80,
-                            type: docx.WidthType.PERCENTAGE
-                        },
-                        children: [new docx.Paragraph({
-                            children: [cikURL]
-                        })]
-                    })
-                ]
-            })
+            return this.urlRow('CIK', this.company.cik, baseURL + this.company.cik)
         }
-    }
-
-    // Define the address and link it to Google maps
-    addressRow() {
-        // Set the base URL for Google Maps
-        const addressBits = [
-            this.company.streetAddress, 
-            this.company.city, 
-            this.company.stateProvince, 
-            this.company.zipPostal, 
-            this.company.country
-        ]
-        let baseURL = 'https://www.google.com/maps/place/'
-        let search = ""
-        for (const element in addressBits) {
-            let tmpString = addressBits[element]
-            tmpString = tmpString.replace(' ', '+')
-            search+='+' + tmpString
-        }
-
-        const addressString = addressBits[0] + ', ' +
-            addressBits[1] + ', ' + addressBits[2] + ' ' + addressBits[3] + ', ' +
-            addressBits[4]
-
-        const mapURL = new docx.ExternalHyperlink({
-            children: [
-                new docx.TextRun({
-                    text: `${addressString}`,
-                    style: 'Hyperlink'
-                })
-            ],
-            link: baseURL + encodeURIComponent(search)
-        })
-
-        return new docx.TableRow({
-            children: [
-                new docx.TableCell({
-                    width: {
-                        size: 20,
-                        type: docx.WidthType.PERCENTAGE
-                    },
-                    children: [new docx.Paragraph('Location')]
-                }),
-                new docx.TableCell({
-                    width: {
-                        size: 80,
-                        type: docx.WidthType.PERCENTAGE
-                    },
-                    children: [new docx.Paragraph({
-                        children: [mapURL]
-                    })]
-                })
-            ]
-        })
     }
 
     // Create the website row
-    urlRow() {
-        // define the link to the company's website
-        const companyURL = new docx.ExternalHyperlink({
+    urlRow(category, name, link) {
+        // define the link to the target URL
+        const myUrl = new docx.ExternalHyperlink({
             children: [
                 new docx.TextRun({
-                    text: `${this.company.url}`,
+                    text: name,
                     style: 'Hyperlink'
                 })
             ],
-            link: this.company.url
+            link: link
         })
 
         // return the row
@@ -174,14 +64,14 @@ class Firmographics {
                         size: 20,
                         type: docx.WidthType.PERCENTAGE
                     },
-                    children: [new docx.Paragraph('Website')]
+                    children: [new docx.Paragraph(category)]
                 }),
                 new docx.TableCell({
                     width: {
                         size: 80,
                         type: docx.WidthType.PERCENTAGE
                     },
-                    children: [new docx.Paragraph({children:[companyURL]})]
+                    children: [new docx.Paragraph({children:[myUrl]})]
                 })
             ]
         })
@@ -212,20 +102,40 @@ class Firmographics {
 
     // Create the table for the doc
     docTable() {
-        // define the blank table
+        // Define the address string
+        const addressBits = [
+            this.company.streetAddress, 
+            this.company.city, 
+            this.company.stateProvince, 
+            this.company.zipPostal, 
+            this.company.country
+        ]
+        const addressBaseUrl = 'https://www.google.com/maps/place/'
+        let addressSearch = ""
+        for (const element in addressBits) {
+            let tmpString = addressBits[element]
+            tmpString = tmpString.replace(' ', '+')
+            addressSearch+='+' + tmpString
+        }
+        const addressUrl = addressBaseUrl + encodeURIComponent(addressSearch)
+        const addressString = addressBits[0] + ', ' +
+            addressBits[1] + ', ' + addressBits[2] + ' ' + addressBits[3] + ', ' +
+            addressBits[4]
+
+
+        // define the table with firmographics
         const myTable = new docx.Table({
             columnWidths: [20, 80],
             rows: [
                 this.basicRow('Name', this.company.companyName),
                 this.basicRow('Description', this.company.description),
-                this.urlRow(),
+                this.urlRow('Website', this.company.url, this.company.url),
                 this.basicRow('Role', this.company.role),
                 this.basicRow('Industry', this.company.industry),
-                this.addressRow(),
+                this.urlRow('Location', addressString, addressUrl),
                 this.basicRow('Region', this.region),
                 this.basicRow('Phone', this.company.phone),
                 this.basicRow('Type', this.companyType),
-                // TODO consider generating a urlRow function instead of it being unique per tyep
                 this.stockSymbolRow(),
                 this.cikRow(),
                 this.basicRow('No. Interactions', String(this.company.totalInteractions)),
@@ -261,14 +171,32 @@ class Firmographics {
         })
     }
 
+    makeActions () {
+        // TODO inherit bullet and numbering styles in doc_company
+        let actionArray = []
+        for (const action in this.company.document.Action) {
+            if (action === 'text') { continue }
+            const protoAction = this.company.document.Action[action]
+            const [actionTect, actionStatus] = protoAction.split('|')
+            // TODO make paragraph of level 1
+            // TODO make paragraph of level 2
+            // TODO append paragraphs to array
+        }
+        return actionArray
+    }
+
     // Generate a page with all company firmographics 
     doc() {
-
+        // NOTE it is likely we will need to create the array up to actions, add the actions, and
+        // then add the the table
+        console.log(this.company.document.Action)
         return [
             this.makeTitle('Introduction'), // Intro title
-            this.makeParagraph(this.company.document.Introduction), // Introduction for the document
+            this.makeParagraph(this.company.document.Introduction), // Introduction paragraph
             this.makeTitle('Purpose'), // Intro title
-            this.makeParagraph(this.company.document.Purpose), // Introduction for the document
+            this.makeParagraph(this.company.document.Purpose), // Purpose paragraph
+            this.makeTitle('Actions'), // Actions title
+            this.makeParagraph(this.company.document.Action.text),
             // TODO unpack actions
             this.makeTitle('Firmographics'), // Firmographics title 
             this.docTable() // Table containing firmographics
