@@ -90,9 +90,10 @@ opts.zip ? createZIP = true : createZIP = false
 const companyCtl = new Companies(mrServer, serverType)
 const interactionCtl = new Interactions(mrServer, serverType)
 const docCtl = new Utilities(
-    config.get('document_notices', 'copyright'),
     config.get('document_settings', 'font_type'),
-    parseInt(config.get('document_settings', 'font_size'))
+    parseInt(config.get('document_settings', 'font_size')),
+    parseInt(config.get('document_settings', 'title_font_size')),
+    config.get('document_settings', 'title_font_color')
 )
 
 // Get the company in question and all interactions
@@ -116,13 +117,15 @@ const description = 'A report snapshot including firmographics and interactions 
     + company[0].companyName
 
 // Get the first page for the company that includes firmographics
-const companyData = new Firmographics(company)
+const companyData = new Firmographics(company, interactions)
 
 let doc = new docx.Document ({
     creator: creator,
     company: authorCompany,
     title: title,
     description: description,
+    styles: {default: docCtl.styling.default},
+    numbering: docCtl.styling.numbering,
     sections: [{
         properties: {},
         children: companyData.companyDoc,

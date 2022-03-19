@@ -2,34 +2,39 @@
 import docx from 'docx'
 
 class Utilities {
-    constructor (copyright, font, size) {
-        this.copyright = copyright
+    constructor (font, fontSize, titleFontSize, titleFontColor) {
         this.font = font
-        this.size = size
+        this.size = fontSize
+        this.titleFontSize = titleFontSize
+        this.titleFontColor = titleFontColor
         this.styling = this.initStyles()
     }
 
     // Initialize the common styles for the doc
     initStyles () {
+        const hangingSpace = 0.18
         return {
                 default: {
                     heading1: {
                         run: {
-                            size: 2 * this.size,
+                            size: this.titleFontSize,
                             bold: true,
                             font: this.font,
+                            color: this.titleFontColor
                         },
                         paragraph: {
                             spacing: {
-                                after: 120,
+                                before: 50,
+                                after: 100,
                             },
                         },
                     },
                     heading2: {
                         run: {
-                            size: 1.5 * this.size,
+                            size: 0.75 * this.titleFontSize,
                             bold: true,
                             font: this.font,
+                            color: this.titleFontColor
                         },
                         paragraph: {
                             spacing: {
@@ -40,9 +45,10 @@ class Utilities {
                     },
                     heading3: {
                         run: {
-                            size: 1.2 * this.size,
+                            size: 0.8 * this.titleFontSize,
                             bold: true,
                             font: this.font,
+                            color: this.titleFontColor
                         },
                         paragraph: {
                             spacing: {
@@ -51,7 +57,30 @@ class Utilities {
                             },
                         },
                     },
+                    listParagraph: {
+                        run: {
+                            font: this.font,
+                            size: 1.5 * this.size,
+                        },
+                    },
+                    paragraph: {
+                        font: this.font,
+                        size: this.size,
+                    }
                 },
+                paragraphStyles: [
+                    {
+                        id: "mrNormal",
+                        name: "MediumRoast Normal",
+                        basedOn: "Normal",
+                        next: "Normal",
+                        quickFormat: true,
+                        run: {
+                            font: this.font,
+                            size: this.size,
+                        },
+                    },
+                ],
                 numbering: {
                     config: [
                         {
@@ -59,45 +88,62 @@ class Utilities {
                             levels: [
                                 {
                                     level: 0,
-                                    format: LevelFormat.UPPER_ROMAN,
-                                    text: "%1",
-                                    alignment: AlignmentType.START,
+                                    format: docx.LevelFormat.DECIMAL,
+                                    text: "%1.",
+                                    alignment: docx.AlignmentType.START,
                                     style: {
                                         paragraph: {
-                                            indent: { left: convertInchesToTwip(0.5), hanging: convertInchesToTwip(0.18) },
+                                            indent: { 
+                                                left: docx.convertInchesToTwip(0.25), 
+                                                hanging: docx.convertInchesToTwip(hangingSpace) 
+                                            },
+                                            spacing: {
+                                                before: 75
+                                            }
                                         },
                                     },
                                 },
                                 {
                                     level: 1,
-                                    format: LevelFormat.DECIMAL,
+                                    format: docx.LevelFormat.LOWER_LETTER,
                                     text: "%2.",
-                                    alignment: AlignmentType.START,
+                                    alignment: docx.AlignmentType.START,
                                     style: {
                                         paragraph: {
-                                            indent: { left: convertInchesToTwip(1), hanging: convertInchesToTwip(0.68) },
+                                            indent: { left: docx.convertInchesToTwip(0.50), hanging: docx.convertInchesToTwip(hangingSpace) },
                                         },
                                     },
                                 },
                                 {
                                     level: 2,
-                                    format: LevelFormat.LOWER_LETTER,
-                                    text: "%3)",
-                                    alignment: AlignmentType.START,
+                                    format: docx.LevelFormat.LOWER_ROMAN,
+                                    text: "%3.",
+                                    alignment: docx.AlignmentType.START,
                                     style: {
                                         paragraph: {
-                                            indent: { left: convertInchesToTwip(1.5), hanging: convertInchesToTwip(1.18) },
+                                            indent: { left: docx.convertInchesToTwip(0.75), hanging: docx.convertInchesToTwip(hangingSpace) },
                                         },
                                     },
                                 },
                                 {
                                     level: 3,
-                                    format: LevelFormat.UPPER_LETTER,
-                                    text: "%4)",
-                                    alignment: AlignmentType.START,
+                                    format: docx.LevelFormat.UPPER_LETTER,
+                                    text: "%4.",
+                                    alignment: docx.AlignmentType.START,
                                     style: {
                                         paragraph: {
-                                            indent: { left: 2880, hanging: 2420 },
+                                            indent: { left: docx.convertInchesToTwip(1.0), hanging: docx.convertInchesToTwip(hangingSpace) },
+                                        },
+                                    },
+                                },
+                                {
+                                    level: 4,
+                                    format: docx.LevelFormat.UPPER_ROMAN,
+                                    text: "%5.",
+                                    alignment: docx.AlignmentType.START,
+                                    style: {
+                                        paragraph: {
+                                            indent: { left: docx.convertInchesToTwip(1.25), hanging: docx.convertInchesToTwip(hangingSpace) },
                                         },
                                     },
                                 },
@@ -108,56 +154,56 @@ class Utilities {
                             levels: [
                                 {
                                     level: 0,
-                                    format: LevelFormat.BULLET,
+                                    format: docx.LevelFormat.BULLET,
                                     text: "\u1F60",
-                                    alignment: AlignmentType.LEFT,
+                                    alignment: docx.AlignmentType.LEFT,
                                     style: {
                                         paragraph: {
-                                            indent: { left: convertInchesToTwip(0.5), hanging: convertInchesToTwip(0.25) },
+                                            indent: { left: docx.convertInchesToTwip(0.5), hanging: docx.convertInchesToTwip(0.25) },
                                         },
                                     },
                                 },
                                 {
                                     level: 1,
-                                    format: LevelFormat.BULLET,
+                                    format: docx.LevelFormat.BULLET,
                                     text: "\u00A5",
-                                    alignment: AlignmentType.LEFT,
+                                    alignment: docx.AlignmentType.LEFT,
                                     style: {
                                         paragraph: {
-                                            indent: { left: convertInchesToTwip(1), hanging: convertInchesToTwip(0.25) },
+                                            indent: { left: docx.convertInchesToTwip(1), hanging: docx.convertInchesToTwip(0.25) },
                                         },
                                     },
                                 },
                                 {
                                     level: 2,
-                                    format: LevelFormat.BULLET,
+                                    format: docx.LevelFormat.BULLET,
                                     text: "\u273F",
-                                    alignment: AlignmentType.LEFT,
+                                    alignment: docx.AlignmentType.LEFT,
                                     style: {
                                         paragraph: {
-                                            indent: { left: 2160, hanging: convertInchesToTwip(0.25) },
+                                            indent: { left: 2160, hanging: docx.convertInchesToTwip(0.25) },
                                         },
                                     },
                                 },
                                 {
                                     level: 3,
-                                    format: LevelFormat.BULLET,
+                                    format: docx.LevelFormat.BULLET,
                                     text: "\u267A",
-                                    alignment: AlignmentType.LEFT,
+                                    alignment: docx.AlignmentType.LEFT,
                                     style: {
                                         paragraph: {
-                                            indent: { left: 2880, hanging: convertInchesToTwip(0.25) },
+                                            indent: { left: 2880, hanging: docx.convertInchesToTwip(0.25) },
                                         },
                                     },
                                 },
                                 {
                                     level: 4,
-                                    format: LevelFormat.BULLET,
+                                    format: docx.LevelFormat.BULLET,
                                     text: "\u2603",
-                                    alignment: AlignmentType.LEFT,
+                                    alignment: docx.AlignmentType.LEFT,
                                     style: {
                                         paragraph: {
-                                            indent: { left: 3600, hanging: convertInchesToTwip(0.25) },
+                                            indent: { left: 3600, hanging: docx.convertInchesToTwip(0.25) },
                                         },
                                     },
                                 },

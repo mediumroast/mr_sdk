@@ -1,11 +1,11 @@
 // Import required modules
-
 import docx from 'docx'
+import References from './interactions'
 
 class Firmographics {
     // Consider a switch between HTML and DOCX
     // NOTE This may not be needed for the HTML version more thinking needed
-    constructor(company) {
+    constructor(company, interactions) {
         // Decode the regions
         const regions = {
             AMER: 'Americas',
@@ -20,6 +20,10 @@ class Firmographics {
 
         this.company = company[0]
         this.region = regions[company[0].region]
+        this.font = 'Avenir Next' // We need to pass this in from the config file
+        this.fontSize = 10 // We need to pass this in from the config file
+        this.fontFactor = 1.5
+        this.interactions = interactions
         this.companyDoc = this.doc()
     }
 
@@ -50,7 +54,9 @@ class Firmographics {
             children: [
                 new docx.TextRun({
                     text: name,
-                    style: 'Hyperlink'
+                    style: 'Hyperlink',
+                    font: this.font,
+                    size: this.fontFactor * this.fontSize
                 })
             ],
             link: link
@@ -64,7 +70,7 @@ class Firmographics {
                         size: 20,
                         type: docx.WidthType.PERCENTAGE
                     },
-                    children: [new docx.Paragraph(category)]
+                    children: [this.makeParagraph(category, this.fontFactor * this.fontSize, true)]
                 }),
                 new docx.TableCell({
                     width: {
@@ -87,14 +93,14 @@ class Firmographics {
                         size: 20,
                         type: docx.WidthType.PERCENTAGE
                     },
-                    children: [new docx.Paragraph(name)]
+                    children: [this.makeParagraph(name, this.fontFactor * this.fontSize, true)]
                 }),
                 new docx.TableCell({
                     width: {
                         size: 80,
                         type: docx.WidthType.PERCENTAGE
                     },
-                    children: [new docx.Paragraph(data)]
+                    children: [this.makeParagraph(data, this.fontFactor * this.fontSize)]
                 })
             ]
         })
@@ -122,6 +128,11 @@ class Firmographics {
             addressBits[1] + ', ' + addressBits[2] + ' ' + addressBits[3] + ', ' +
             addressBits[4]
 
+        const patentString = this.company.companyName + ' Patent Search'
+        const patentURL = 'https://patents.google.com/?assignee=' + this.company.companyName
+
+        const newsString = this.company.companyName + ' Company News'
+        const newsURL = 'https://news.google.com/search?q=' + this.company.companyName
 
         // define the table with firmographics
         const myTable = new docx.Table({
@@ -132,6 +143,8 @@ class Firmographics {
                 this.urlRow('Website', this.company.url, this.company.url),
                 this.basicRow('Role', this.company.role),
                 this.basicRow('Industry', this.company.industry),
+                this.urlRow('Patents', patentString, patentURL),
+                this.urlRow('News', newsString, newsURL),
                 this.urlRow('Location', addressString, addressUrl),
                 this.basicRow('Region', this.region),
                 this.basicRow('Phone', this.company.phone),
@@ -153,11 +166,14 @@ class Firmographics {
     }
 
     // For a section of prose create a paragraph
-    makeParagraph (paragraph) {
+    makeParagraph (paragraph, size, bold) {
         return new docx.Paragraph({
             children: [
                 new docx.TextRun({
                     text: paragraph,
+                    font: this.font,
+                    size: size ? size : 20,
+                    bold: bold ? bold : false 
                 })
             ]
         })
@@ -177,30 +193,59 @@ class Firmographics {
         for (const action in this.company.document.Action) {
             if (action === 'text') { continue }
             const protoAction = this.company.document.Action[action]
-            const [actionTect, actionStatus] = protoAction.split('|')
-            // TODO make paragraph of level 1
-            // TODO make paragraph of level 2
-            // TODO append paragraphs to array
+            const [actionText, actionStatus] = protoAction.split('|')
+            // console.log(actionText, actionStatus)
+            actionArray.push(
+                new docx.Paragraph({
+                    text: actionText,
+                    numbering: {
+                        reference: 'number-styles',
+                        level: 0
+                    }
+                }),
+                new docx.Paragraph({
+                    text: actionStatus,
+                    numbering: {
+                        reference: 'number-styles',
+                        level: 1
+                    }
+                })
+            )
         }
+        // console.log(actionArray)
         return actionArray
+    }
+
+    // Create a page break
+    pageBreak() {
+        return new docx.Paragraph({
+            children: [
+                new docx.PageBreak()
+            ]
+        })
     }
 
     // Generate a page with all company firmographics 
     doc() {
-        // NOTE it is likely we will need to create the array up to actions, add the actions, and
-        // then add the the table
-        console.log(this.company.document.Action)
-        return [
-            this.makeTitle('Introduction'), // Intro title
+        const refCtl = new References(
+            this.interactions, 
+            this.company.companyName,
+            'company')
+        const myReferences = refCtl.makeDocx()
+        return [].concat(
+            [this.makeTitle('Introduction'), // Intro title
             this.makeParagraph(this.company.document.Introduction), // Introduction paragraph
             this.makeTitle('Purpose'), // Intro title
             this.makeParagraph(this.company.document.Purpose), // Purpose paragraph
             this.makeTitle('Actions'), // Actions title
-            this.makeParagraph(this.company.document.Action.text),
-            // TODO unpack actions
+            this.makeParagraph(this.company.document.Action.text)],
+            ...this.makeActions(),
+            [this.pageBreak(), // Add a page break
             this.makeTitle('Firmographics'), // Firmographics title 
-            this.docTable() // Table containing firmographics
-        ]
+            this.docTable(), // Table containing firmographics
+            this.pageBreak(),
+            this.makeTitle('References')]
+        )
     }
 
 

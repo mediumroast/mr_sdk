@@ -1,14 +1,16 @@
 // Import required modules
+import docx from 'docx'
 
 
-
-class Reports {
-    constructor(interactions, objectName, objectType, characterLimit = 500, title = 'References') {
+class References {
+    constructor(interactions, objectName, objectType, characterLimit = 500) {
 
         // NOTE creation of a ZIP package is something we likely need some workspace for
         //      since the documents should be downloaded and then archived.  Therefore,
         //      the CLI is a likely place to do this for now.  Suspect for the web_ui
         //      we will need some server side logic to make this happen.
+
+        // TODO enable the baseURL to be either native or replaced
         
         this.interactions = interactions
         this.characterLimit = characterLimit
@@ -16,10 +18,9 @@ class Reports {
             'It includes key metadata from each interaction associated to the object ' + objectName +
             '.  If this report document is produced as a package, instead of standalone, then the' + 'hyperlinks are active and will link to documents on the local folder after the ' +
             'package is opened.'
-        this.title = title
         this.objectName = objectName
         this.objectType = objectType
-        // TODO call createRefs
+        this.protoDoc = this.createRefs()
     }
 
     // Create the entire section as a proto document to be fed to a format like docx, ..., html.
@@ -70,14 +71,18 @@ class Reports {
     }
 
     // Return the proto document as a docx formatted section
-    makeDocx(protoDoc) {
-
+    makeDocx() {
+        let finaldoc = []
+        for (const myReference in this.protoDoc) {
+            console.log(myReference)
+        }
+        return finaldoc
     }
 
     // Return the proto document as a html formatted section
-    makeHtml(protoDoc) {
-
+    makeHtml() {
+        return false
     }
 }
 
-export default Reports
+export default References
