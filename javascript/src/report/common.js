@@ -1,6 +1,9 @@
 // Import modules
 import docx from 'docx'
 
+// TODO Move common functions like paragraphs and titles into this module.
+//      These need to be set up either for both HTML and DOCX
+
 class Utilities {
     constructor (font, fontSize, titleFontSize, titleFontColor) {
         this.font = font

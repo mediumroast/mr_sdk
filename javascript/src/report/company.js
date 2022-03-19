@@ -1,6 +1,6 @@
 // Import required modules
 import docx from 'docx'
-import References from './interactions'
+import References from './interactions.js'
 
 class Firmographics {
     // Consider a switch between HTML and DOCX
@@ -244,7 +244,8 @@ class Firmographics {
             this.makeTitle('Firmographics'), // Firmographics title 
             this.docTable(), // Table containing firmographics
             this.pageBreak(),
-            this.makeTitle('References')]
+            this.makeTitle('References')],
+            ...myReferences
         )
     }
 

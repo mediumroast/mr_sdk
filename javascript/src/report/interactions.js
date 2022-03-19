@@ -15,24 +15,25 @@ class References {
         this.interactions = interactions
         this.characterLimit = characterLimit
         this.introduction = 'The mediumroast.io system has automatically generated this section.' +
-            'It includes key metadata from each interaction associated to the object ' + objectName +
-            '.  If this report document is produced as a package, instead of standalone, then the' + 'hyperlinks are active and will link to documents on the local folder after the ' +
-            'package is opened.'
+            ' It includes key metadata from each interaction associated to the object ' + objectName +
+            '.  If this report document is produced as a package, instead of standalone, then the' + ' hyperlinks are active and will link to documents on the local folder after the' +
+            ' package is opened.'
         this.objectName = objectName
         this.objectType = objectType
+        this.font = 'Avenir Next' // We need to pass this in from the config file
+        this.fontSize = 10 // We need to pass this in from the config file
         this.protoDoc = this.createRefs()
     }
 
     // Create the entire section as a proto document to be fed to a format like docx, ..., html.
     createRefs() {
         let protoDoc = {
-            title: this.title,
             intro: this.introduction,
             references: {}
         }
         for (const item in this.interactions) {
             // NOTE this might be wrong could be we need this.interactions[item]
-            protoDoc.references[item.interactionName] = self.createRef(item)
+            protoDoc.references[this.interactions[item].interactionName] = this.createRef(this.interactions[item])
         }
         return protoDoc
     }
@@ -45,11 +46,11 @@ class References {
 
         // Decode the date
         const myDate = interaction[dateKey]
-        const [year, month, day] = [myDate.substring(0, 4), myDate.substring(5, 6), myDate.substring(7, 8)]
+        const [year, month, day] = [myDate.substring(0, 4), myDate.substring(4, 6), myDate.substring(6, 8)]
 
         // Decode the time
         const myTime = interaction[timeKey]
-        const [hour, min] = [myTime.substr(0, 2), myTime.substr(3, 4)]
+        const [hour, min] = [myTime.substr(0, 2), myTime.substr(2, 4)]
 
         // Detect the repository type and replace it with http
         const repoType = interaction.url.split('://')[0]
@@ -57,7 +58,7 @@ class References {
 
         // Create the reference
         let reference = {
-            type: interaction.type,
+            type: interaction.interactionType, // TODO There is a bug here in the ingestion
             abstract: interaction.abstract.substr(0, this.characterLimit) + '...',
             date: year + '-' + month + '-' + day,
             time: hour + ':' + min,
@@ -70,11 +71,76 @@ class References {
         return reference
     }
 
+    // Create a paragraph
+    makeParagraph (paragraph, size, bold) {
+        return new docx.Paragraph({
+            children: [
+                new docx.TextRun({
+                    text: paragraph,
+                    font: this.font,
+                    size: size ? size : 20,
+                    bold: bold ? bold : false, 
+                })
+            ]
+        })
+    }
+
+    // Create a title of heading style 2
+    makeTitle(title) {
+        return new docx.Paragraph({
+            text: title,
+            heading: docx.HeadingLevel.HEADING_2
+        })
+    }
+
+    // Create a text run
+    makeTextrun(text) {
+        return new docx.TextRun({
+            text: text,
+            font: this.font,
+            size: 1.5 * this.fontSize,
+        })
+    }
+
+    makeURL(name, link) {
+        return new docx.ExternalHyperlink({
+            children: [
+                new docx.TextRun({
+                    text: name,
+                    style: 'Hyperlink',
+                    font: this.font,
+                    size: 1.5 * this.fontSize
+                })
+            ],
+            link: link
+        })
+    }
+
     // Return the proto document as a docx formatted section
     makeDocx() {
-        let finaldoc = []
-        for (const myReference in this.protoDoc) {
-            console.log(myReference)
+        let finaldoc = [this.makeParagraph(this.protoDoc.intro)]
+        for (const myReference in this.protoDoc.references) {
+            // console.log(this.protoDoc[myReference])
+            finaldoc.push(this.makeTitle(myReference))
+            finaldoc.push(this.makeParagraph(
+                this.protoDoc.references[myReference].abstract,
+                1.5 * this.fontSize))
+            const permaLink = this.makeURL(
+                'Document link', 
+                this.protoDoc.references[myReference].url)
+
+            finaldoc.push(
+                new docx.Paragraph({
+                    children:[
+                        this.makeTextrun('[ '),
+                        permaLink,
+                        this.makeTextrun(' | Date: ' + this.protoDoc.references[myReference].date + ' | '), 
+                        this.makeTextrun('Time: ' + this.protoDoc.references[myReference].time + ' | '), 
+                        this.makeTextrun('Type: ' + this.protoDoc.references[myReference].type),
+                        this.makeTextrun(' ]'),
+                    ]
+                })
+            )
         }
         return finaldoc
     }
