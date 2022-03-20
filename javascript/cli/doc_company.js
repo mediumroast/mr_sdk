@@ -9,6 +9,8 @@ import program from 'commander'
 import ConfigParser from 'configparser'
 import * as fs from "fs"
 import docx from 'docx'
+import AWS from 'aws-sdk'
+// import zip from 'adm-zip'
 
 
 //  ______   __  __     __   __     ______     ______   __     ______     __   __     ______    
@@ -81,10 +83,19 @@ config.hasKey('DEFAULT', 'output_dir') ? outputDir = process.env.HOME + '/' + co
 let authorCompany = null
 config.hasKey('DEFAULT', 'company') ? authorCompany = config.get('DEFAULT', 'company') : outputDir = opts.author_company
 
+// Set up the S3 credentials and download protocol
+const s3Server = config.get('s3_credentials', 'server')
+const s3User = config.get('s3_credentials', 'user')
+const s3APIkey = config.get('s3_credentials', 'api_key')
+const s3Source = config.get('s3_credentials', 'source')
+const s3Region = config.get('s3_credentials', 'region')
+const s3Protocol = 's3'
+const localProtocol = 'file'
+const httpProtocol = 'http'
 
 // Determine if we need to create a zip package or not
 let createZIP = null
-opts.zip ? createZIP = true : createZIP = false
+opts.zip_package ? createZIP = true : createZIP = false
 
 // Set up the control objects
 const companyCtl = new Companies(mrServer, serverType)
@@ -95,10 +106,42 @@ const docCtl = new Utilities(
     parseInt(config.get('document_settings', 'title_font_size')),
     config.get('document_settings', 'title_font_color')
 )
+const s3Ctl = new AWS.S3({
+    accessKeyId: s3User ,
+    secretAccessKey: s3APIkey ,
+    endpoint: s3Server ,
+    s3ForcePathStyle: true, // needed with minio?
+    signatureVersion: 'v4',
+    region: s3Region // S3 won't work without the region setting
+}) 
 
 // Get the company in question and all interactions
 const company = await companyCtl.getByGUID(opts.guid)
 const interactions = filterInteractions(await interactionCtl.getAll(), opts.guid)
+
+// simple function for safe directory creation
+function safeMakedir(name) {
+    try {
+        if (!fs.existsSync(name)) {
+          fs.mkdirSync(name)
+        }
+    } catch (err) {
+        console.error(err)
+    }
+}
+
+// create a ZIP package
+// NOTE Grumble grumble, this ZIPs oddly. After files written, incomplete directories, etc.
+// function createZipArchive(outputFile, sourceDirectory) {
+//     try {
+//       const zipPackage = new zip();
+//       zipPackage.addLocalFolder(sourceDirectory);
+//       zipPackage.writeZip(outputFile);
+//       console.log(`Created ${outputFile} successfully`);
+//     } catch (e) {
+//       console.log(`Something went wrong. ${e}`);
+//     }
+// }
 
 //  __    __     ______     __     __   __        ______     __         __    
 // /\ "-./  \   /\  __ \   /\ \   /\ "-.\ \      /\  ___\   /\ \       /\ \   
@@ -117,7 +160,7 @@ const description = 'A report snapshot including firmographics and interactions 
     + company[0].companyName
 
 // Get the first page for the company that includes firmographics
-const companyData = new Firmographics(company, interactions)
+const companyData = new Firmographics(company, interactions, 'Interactions/')
 
 let doc = new docx.Document ({
     creator: creator,
@@ -135,8 +178,36 @@ let doc = new docx.Document ({
 // If needed create the zip package
 if (createZIP) {
     const outputPackage = outputFile + '.zip'
+    const fileName = 'Company Report.docx'
+    const interactionsDir = 'Interactions/'
+    
+    // As needed create the working directory
+    const workingDirectory = workDir + '/' + company[0].companyName + '/'
+    safeMakedir(workingDirectory)
+    safeMakedir(workingDirectory + interactionsDir)
+
+    // Download the objects
+    for (const interaction in interactions) {
+        const objWithPath = interactions[interaction].url.split('://').pop()
+        const myObj = objWithPath.split('/').pop()
+        const myParams = {Bucket: s3Source, Key: myObj}
+        const myFile = fs.createWriteStream(workingDirectory + interactionsDir + myObj)
+        s3Ctl.getObject(myParams).
+            on('httpData', function(chunk) { myFile.write(chunk) }).
+            on('httpDone', function() { myFile.end() }).
+            send()
+    }
+
+    // Write the report to the working directory
+    docx.Packer.toBuffer(doc).then((buffer) => {
+        fs.writeFileSync(workingDirectory + fileName, buffer)
+    })
+
+    // Create the zip package
+    // createZipArchive(outputPackage, workDir + '/' + company[0].companyName)
+    
 } else {
     docx.Packer.toBuffer(doc).then((buffer) => {
         fs.writeFileSync(outputDocFileName, buffer)
-    });
+    })
 }

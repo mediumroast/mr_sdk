@@ -46,7 +46,9 @@
     "cli"
   ],
   "dependencies": {
-    "commander": "^8.3.0",
-    "axios": "^0.25.0"
+    "adm-zip": "^0.5.9",
+    "aws-sdk": "^2.1096.0",
+    "axios": "^0.25.0",
+    "commander": "^8.3.0"
   }
 }

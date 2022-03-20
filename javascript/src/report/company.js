@@ -5,7 +5,7 @@ import References from './interactions.js'
 class Firmographics {
     // Consider a switch between HTML and DOCX
     // NOTE This may not be needed for the HTML version more thinking needed
-    constructor(company, interactions) {
+    constructor(company, interactions, protocol) {
         // Decode the regions
         const regions = {
             AMER: 'Americas',
@@ -24,6 +24,7 @@ class Firmographics {
         this.fontSize = 10 // We need to pass this in from the config file
         this.fontFactor = 1.5
         this.interactions = interactions
+        this.protocol = protocol ? protocol : false
         this.companyDoc = this.doc()
     }
 
@@ -230,7 +231,8 @@ class Firmographics {
         const refCtl = new References(
             this.interactions, 
             this.company.companyName,
-            'company')
+            'company',
+            this.protocol)
         const myReferences = refCtl.makeDocx()
         return [].concat(
             [this.makeTitle('Introduction'), // Intro title

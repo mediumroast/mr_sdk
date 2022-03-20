@@ -3,7 +3,7 @@ import docx from 'docx'
 
 
 class References {
-    constructor(interactions, objectName, objectType, characterLimit = 500) {
+    constructor(interactions, objectName, objectType, protocol, characterLimit = 500) {
 
         // NOTE creation of a ZIP package is something we likely need some workspace for
         //      since the documents should be downloaded and then archived.  Therefore,
@@ -22,6 +22,7 @@ class References {
         this.objectType = objectType
         this.font = 'Avenir Next' // We need to pass this in from the config file
         this.fontSize = 10 // We need to pass this in from the config file
+        this.protocol = protocol
         this.protoDoc = this.createRefs()
     }
 
@@ -53,8 +54,10 @@ class References {
         const [hour, min] = [myTime.substr(0, 2), myTime.substr(2, 4)]
 
         // Detect the repository type and replace it with http
+        // NOTE This is setup to create a local package with source links in a local working directory
         const repoType = interaction.url.split('://')[0]
-        const myURL = interaction.url.replace(repoType, httpType)
+        let myURL = interaction.url.split('://').pop()
+        myURL = this.protocol + myURL.split('/').pop()
 
         // Create the reference
         let reference = {
