@@ -3,14 +3,12 @@ import docx from 'docx'
 
 
 class References {
-    constructor(interactions, objectName, objectType, protocol, characterLimit = 500) {
+    constructor(interactions, objectName, objectType, protocol, characterLimit = 1000) {
 
         // NOTE creation of a ZIP package is something we likely need some workspace for
         //      since the documents should be downloaded and then archived.  Therefore,
         //      the CLI is a likely place to do this for now.  Suspect for the web_ui
         //      we will need some server side logic to make this happen.
-
-        // TODO enable the baseURL to be either native or replaced
         
         this.interactions = interactions
         this.characterLimit = characterLimit
@@ -123,7 +121,6 @@ class References {
     makeDocx() {
         let finaldoc = [this.makeParagraph(this.protoDoc.intro)]
         for (const myReference in this.protoDoc.references) {
-            // console.log(this.protoDoc[myReference])
             finaldoc.push(this.makeTitle(myReference))
             finaldoc.push(this.makeParagraph(
                 this.protoDoc.references[myReference].abstract,

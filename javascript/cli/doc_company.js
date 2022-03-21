@@ -2,7 +2,6 @@
 
 // Import required modules
 import { Companies, Interactions } from '../src/api/highLevel.js'
-//import { Reports as IntReports } from '../src/report/interactions.js'
 import Firmographics from '../src/report/company.js'
 import Utilities from '../src/report/common.js'
 import program from 'commander'
