@@ -1,15 +1,15 @@
 // Import modules
 import docx from 'docx'
 
-// TODO Move common functions like paragraphs and titles into this module.
+// TODO Move common functions like paragraphs and texts into this module.
 //      These need to be set up either for both HTML and DOCX
 
 class Utilities {
-    constructor (font, fontSize, titleFontSize, titleFontColor) {
-        this.font = font
-        this.size = fontSize
-        this.titleFontSize = titleFontSize
-        this.titleFontColor = titleFontColor
+    constructor (font, fontSize, textFontSize, textFontColor) {
+        this.font = font ? font : 'Avenir Next'
+        this.size = fontSize ? fontSize : 10
+        this.textFontSize = textFontSize
+        this.textFontColor = textFontColor
         this.styling = this.initStyles()
     }
 
@@ -20,10 +20,10 @@ class Utilities {
                 default: {
                     heading1: {
                         run: {
-                            size: this.titleFontSize,
+                            size: this.textFontSize,
                             bold: true,
                             font: this.font,
-                            color: this.titleFontColor
+                            color: this.textFontColor
                         },
                         paragraph: {
                             spacing: {
@@ -34,10 +34,10 @@ class Utilities {
                     },
                     heading2: {
                         run: {
-                            size: 0.75 * this.titleFontSize,
+                            size: 0.75 * this.textFontSize,
                             bold: true,
                             font: this.font,
-                            color: this.titleFontColor
+                            color: this.textFontColor
                         },
                         paragraph: {
                             spacing: {
@@ -48,10 +48,10 @@ class Utilities {
                     },
                     heading3: {
                         run: {
-                            size: 0.8 * this.titleFontSize,
+                            size: 0.8 * this.textFontSize,
                             bold: true,
                             font: this.font,
-                            color: this.titleFontColor
+                            color: this.textFontColor
                         },
                         paragraph: {
                             spacing: {
@@ -214,6 +214,54 @@ class Utilities {
                         }
                     ]}
             }
+    }
+
+    // For a section of prose create a paragraph
+    makeParagraph (paragraph, size, bold, spaceAfter) {
+        return new docx.Paragraph({
+            children: [
+                new docx.TextRun({
+                    text: paragraph,
+                    font: this.font,
+                    size: size ? size : 20,
+                    bold: bold ? bold : false, 
+                    break: spaceAfter ? 1 : 0
+                })
+            ]
+        })
+    }
+
+    // Create a page break
+    pageBreak() {
+        return new docx.Paragraph({
+            children: [
+                new docx.PageBreak()
+            ]
+        })
+    }
+
+    // Create a text of heading style 1
+    makeHeading1(text) {
+        return new docx.Paragraph({
+            text: text,
+            heading: docx.HeadingLevel.HEADING_1
+        })
+    }
+
+    // Create a text of heading style 2
+    makeHeading2(text) {
+        return new docx.Paragraph({
+            text: text,
+            heading: docx.HeadingLevel.HEADING_2
+        })
+    }
+
+    // Create a text of heading style 2
+    makeHeading3(text) {
+        return new docx.Paragraph({
+            text: text,
+            heading: docx.HeadingLevel.HEADING_3
+        })
     }
 
 }

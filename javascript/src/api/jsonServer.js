@@ -47,7 +47,7 @@ class MRObjectJSON {
     }
 
     // Get all information about a single study using the study's name
-    async getByName (name, subResource = '?studyName=') {
+    async getByName (name, subResource) {
         const restTarget = this.resource + subResource + name
         return this.util.getObj(restTarget)
     }

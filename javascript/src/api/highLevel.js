@@ -80,6 +80,10 @@ export class Companies extends MRObject {
         }
         super(controller)
     }
+
+    async getByName(name, subResource='?companyName=') {
+        return this.controller.getByName(name, subResource)
+    }
 }
 
 // Create the interactions subclass

@@ -26,7 +26,7 @@ function parseCLIArgs() {
         .version('0.7.5')
         .description('A CLI to generate a document report for mediumroast.io Company objects.')
     program
-        .requiredOption('-n --name <name>', 'The GUID for the company to construct a report for.')
+        .requiredOption('-n --name <name>', 'The name of the company to construct a report for.')
         .option('-s --substudy <study_name:substudy_id>', 'The GUID for the substudy to include in the report.')
         .option('-r --report_dir <directory>', 'Directory to write the report to', 'Documents')
         .option('-w --work_dir <directory>', 'Directory to use for creating a ZIP package', '~/Documents')
@@ -152,7 +152,7 @@ const s3Ctl = new AWS.S3({
 
 // Get the company in question and all interactions
 const company = await companyCtl.getByName(opts.name)
-const interactions = filterObjects(await interactionCtl.getAll(), opts.guid)
+const interactions = filterObjects(await interactionCtl.getAll(), company[0].GUID)
 
 // Get the relevant study and substudy 
 const [studyName, substudyId] = opts.substudy.split(':')
@@ -226,7 +226,7 @@ const description = 'A report snapshot including firmographics and interactions 
     + company[0].companyName
 
 // Get the first page for the company that includes firmographics
-const companyData = new Firmographics(company, interactions, 'Interactions/')
+const companyData = new Firmographics(company, interactions, 'Interactions/', tags)
 
 let doc = new docx.Document ({
     creator: creator,

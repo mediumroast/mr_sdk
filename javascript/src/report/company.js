@@ -1,11 +1,12 @@
 // Import required modules
 import docx from 'docx'
 import References from './interactions.js'
+import KeyThemes from './themes.js'
 
 class Firmographics {
     // Consider a switch between HTML and DOCX
     // NOTE This may not be needed for the HTML version more thinking needed
-    constructor(company, interactions, protocol) {
+    constructor(company, interactions, protocol, themes) {
         // Decode the regions
         const regions = {
             AMER: 'Americas',
@@ -25,6 +26,7 @@ class Firmographics {
         this.fontFactor = 1.5
         this.interactions = interactions
         this.protocol = protocol ? protocol : false
+        this.themes = themes ? themes : false
         this.companyDoc = this.doc()
     }
 
@@ -213,7 +215,6 @@ class Firmographics {
                 })
             )
         }
-        // console.log(actionArray)
         return actionArray
     }
 
@@ -228,12 +229,22 @@ class Firmographics {
 
     // Generate a page with all company firmographics 
     doc() {
+
+        // Create the references from supplied interactions
         const refCtl = new References(
             this.interactions, 
             this.company.companyName,
             'company',
             this.protocol)
         const myReferences = refCtl.makeDocx()
+
+        // Create summary themes from supplied themes if needed
+        let myThemes = []
+        if (this.themes) {
+            const themeCtl = new KeyThemes('summary', this.themes)
+            myThemes = themeCtl.makeDocx()
+        }
+            
         return [].concat(
             [this.makeTitle('Introduction'), // Intro title
             this.makeParagraph(this.company.document.Introduction), // Introduction paragraph
@@ -245,6 +256,7 @@ class Firmographics {
             [this.pageBreak(), // Add a page break
             this.makeTitle('Firmographics'), // Firmographics title 
             this.docTable(), // Table containing firmographics
+            ...myThemes, // Section for the summary theme if available
             this.pageBreak(),
             this.makeTitle('References')],
             ...myReferences

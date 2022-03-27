@@ -14,7 +14,8 @@ class References {
         this.characterLimit = characterLimit
         this.introduction = 'The mediumroast.io system has automatically generated this section.' +
             ' It includes key metadata from each interaction associated to the object ' + objectName +
-            '.  If this report document is produced as a package, instead of standalone, then the' + ' hyperlinks are active and will link to documents on the local folder after the' +
+            '.  If this report document is produced as a package, instead of standalone, then the' + 
+            ' hyperlinks are active and will link to documents on the local folder after the' +
             ' package is opened.'
         this.objectName = objectName
         this.objectType = objectType
@@ -64,7 +65,8 @@ class References {
             date: year + '-' + month + '-' + day,
             time: hour + ':' + min,
             url: myURL,
-            repo: repoType
+            repo: repoType,
+            id: interaction.GUID
         }
         // Set the object type and name
         reference[this.objectType] = this.objectName
@@ -119,6 +121,7 @@ class References {
 
     // Return the proto document as a docx formatted section
     makeDocx() {
+        // TODO add if for anchoring a hyperlink to the interactions title
         let finaldoc = [this.makeParagraph(this.protoDoc.intro)]
         for (const myReference in this.protoDoc.references) {
             finaldoc.push(this.makeTitle(myReference))
