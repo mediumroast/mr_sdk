@@ -1,6 +1,9 @@
 {
   "dependencies": {
+    "box-plot": "^1.0.0",
     "configparser": "^0.3.9",
-    "docx": "^7.3.0"
+    "docx": "^7.3.0",
+    "median-average": "^1.0.1",
+    "num-sort": "^3.0.0"
   }
 }
