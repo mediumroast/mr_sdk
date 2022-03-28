@@ -161,9 +161,6 @@ const substudy = studies[0].substudies[substudyId]
 const ranges = boxPlot(Object.values(substudy.keyThemes.summary_theme.tags))
 const quotes = (substudy.keyThemeQuotes.summary)
 const tags = rankTags(substudy.keyThemes.summary_theme.tags, ranges)
-// console.log(ranges)
-// console.log(tags)
-// console.log(quotes)
 
 // simple function for safe directory creation
 function safeMakedir(name) {
@@ -226,7 +223,7 @@ const description = 'A report snapshot including firmographics and interactions 
     + company[0].companyName
 
 // Get the first page for the company that includes firmographics
-const companyData = new Firmographics(company, interactions, 'Interactions/', tags)
+const companyData = new Firmographics(company, interactions, 'Interactions/', tags, quotes)
 
 let doc = new docx.Document ({
     creator: creator,

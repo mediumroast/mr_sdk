@@ -6,7 +6,7 @@ import KeyThemes from './themes.js'
 class Firmographics {
     // Consider a switch between HTML and DOCX
     // NOTE This may not be needed for the HTML version more thinking needed
-    constructor(company, interactions, protocol, themes) {
+    constructor(company, interactions, protocol, themes, quotes) {
         // Decode the regions
         const regions = {
             AMER: 'Americas',
@@ -27,6 +27,7 @@ class Firmographics {
         this.interactions = interactions
         this.protocol = protocol ? protocol : false
         this.themes = themes ? themes : false
+        this.quotes = quotes ? quotes : false
         this.companyDoc = this.doc()
     }
 
@@ -241,7 +242,7 @@ class Firmographics {
         // Create summary themes from supplied themes if needed
         let myThemes = []
         if (this.themes) {
-            const themeCtl = new KeyThemes('summary', this.themes)
+            const themeCtl = new KeyThemes('summary', this.themes, this.quotes, this.interactions)
             myThemes = themeCtl.makeDocx()
         }
             

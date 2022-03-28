@@ -231,6 +231,16 @@ class Utilities {
         })
     }
 
+    // Create a text run
+    makeTextrun(text, spaceAfter) {
+        return new docx.TextRun({
+            text: text,
+            font: this.font,
+            size: 1.5 * this.size,
+            // break: spaceAfter ? spaceAfter : 1
+        })
+    }
+
     // Create a page break
     pageBreak() {
         return new docx.Paragraph({
@@ -264,6 +274,35 @@ class Utilities {
         })
     }
 
+    // Create an internal hyperlink
+    makeInternalHyperLink(text, link) {
+        return new docx.InternalHyperlink({
+            children: [
+                new docx.TextRun({
+                    text: text,
+                    style: 'Hyperlink',
+                    font: this.font,
+                    size: 1.5 * this.size
+                }),
+            ],
+            anchor: link
+        })
+    }
+
+    // Create an external hyperlink
+    makeExternalHyperLink(text, link) {
+        return new docx.ExternalHyperlink({
+            children: [
+                new docx.TextRun({
+                    text: text,
+                    style: 'Hyperlink',
+                    font: this.font,
+                    size: 1.5 * this.fontSize
+                })
+            ],
+            link: link
+        })
+    }
 }
 
 export default Utilities

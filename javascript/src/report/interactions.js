@@ -66,7 +66,7 @@ class References {
             time: hour + ':' + min,
             url: myURL,
             repo: repoType,
-            id: interaction.GUID
+            id: interaction.id
         }
         // Set the object type and name
         reference[this.objectType] = this.objectName
@@ -89,10 +89,17 @@ class References {
     }
 
     // Create a title of heading style 2
-    makeTitle(title) {
+    makeTitle(title, ident) {
         return new docx.Paragraph({
-            text: title,
-            heading: docx.HeadingLevel.HEADING_2
+            heading: docx.HeadingLevel.HEADING_2,
+            children: [
+                new docx.Bookmark({
+                    id: String(ident),
+                    children: [
+                        new docx.TextRun({text: title})
+                    ]
+                })
+            ]
         })
     }
 
@@ -121,10 +128,9 @@ class References {
 
     // Return the proto document as a docx formatted section
     makeDocx() {
-        // TODO add if for anchoring a hyperlink to the interactions title
         let finaldoc = [this.makeParagraph(this.protoDoc.intro)]
         for (const myReference in this.protoDoc.references) {
-            finaldoc.push(this.makeTitle(myReference))
+            finaldoc.push(this.makeTitle(myReference, this.protoDoc.id))
             finaldoc.push(this.makeParagraph(
                 this.protoDoc.references[myReference].abstract,
                 1.5 * this.fontSize))
