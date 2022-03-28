@@ -1,5 +1,6 @@
 // Import required modules
 import docx from 'docx'
+import Utilities from './common.js'
 
 
 class References {
@@ -23,6 +24,7 @@ class References {
         this.fontSize = 10 // We need to pass this in from the config file
         this.protocol = protocol
         this.protoDoc = this.createRefs()
+        this.util = new Utilities
     }
 
     // Create the entire section as a proto document to be fed to a format like docx, ..., html.
@@ -32,7 +34,6 @@ class References {
             references: {}
         }
         for (const item in this.interactions) {
-            // NOTE this might be wrong could be we need this.interactions[item]
             protoDoc.references[this.interactions[item].interactionName] = this.createRef(this.interactions[item])
         }
         return protoDoc
@@ -66,7 +67,7 @@ class References {
             time: hour + ':' + min,
             url: myURL,
             repo: repoType,
-            id: interaction.id
+            guid: interaction.GUID
         }
         // Set the object type and name
         reference[this.objectType] = this.objectName
@@ -91,15 +92,8 @@ class References {
     // Create a title of heading style 2
     makeTitle(title, ident) {
         return new docx.Paragraph({
-            heading: docx.HeadingLevel.HEADING_2,
-            children: [
-                new docx.Bookmark({
-                    id: String(ident),
-                    children: [
-                        new docx.TextRun({text: title})
-                    ]
-                })
-            ]
+            text: text,
+            heading: docx.HeadingLevel.HEADING_2
         })
     }
 
@@ -128,9 +122,12 @@ class References {
 
     // Return the proto document as a docx formatted section
     makeDocx() {
+        const excerptAnchor = this.util.makeInternalHyperLink('Summary Excerpts', 'summary_excerpts')
         let finaldoc = [this.makeParagraph(this.protoDoc.intro)]
+         
         for (const myReference in this.protoDoc.references) {
-            finaldoc.push(this.makeTitle(myReference, this.protoDoc.id))
+            // String(this.protoDoc.references[myReference].guid)
+            finaldoc.push(this.util.makeBookmark2(myReference, String(this.protoDoc.references[myReference].guid).substring(0,40)))
             finaldoc.push(this.makeParagraph(
                 this.protoDoc.references[myReference].abstract,
                 1.5 * this.fontSize))
@@ -145,7 +142,8 @@ class References {
                         permaLink,
                         this.makeTextrun(' | Date: ' + this.protoDoc.references[myReference].date + ' | '), 
                         this.makeTextrun('Time: ' + this.protoDoc.references[myReference].time + ' | '), 
-                        this.makeTextrun('Type: ' + this.protoDoc.references[myReference].type),
+                        this.makeTextrun('Type: ' + this.protoDoc.references[myReference].type + ' | '),
+                        excerptAnchor,
                         this.makeTextrun(' ]'),
                     ]
                 })

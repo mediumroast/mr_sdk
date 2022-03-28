@@ -86,13 +86,14 @@ class KeyThemes {
         for (const quote in quotes) {
             const myInteraction = this.getInteractionName(quote, interactions)
             myQuotes.push(
-                this.util.makeParagraph('"' + quotes[quote].quotes[0] + '"', this.fontFactor * this.fontSize, false, 1),
+                this.util.makeParagraph('"' + quotes[quote].quotes[0] + '"', this.fontFactor * this.fontSize, false, 0),
                 new docx.Paragraph({
                     children: [
-                        this.util.makeTextrun('[ Source: '),
-                        this.util.makeInternalHyperLink(myInteraction, String(quote)),
-                        this.util.makeTextrun(' ]')
-                    ]
+                        // String(quote)
+                        this.util.makeTextrun('Source: '),
+                        this.util.makeInternalHyperLink(myInteraction, String(quote).substring(0,40)),
+                        this.util.makeTextrun('', 2),
+                    ],
                 })
             )
         }
@@ -105,10 +106,10 @@ class KeyThemes {
             return [
                 this.util.pageBreak(),
                 this.util.makeHeading1('Summary Theme: Table and Excerpts'),
-                this.util.makeParagraph(this.introduction),
+                this.util.makeParagraph(this.introduction, 0),
                 this.util.makeHeading2('Summary Theme Table'),
                 this.summaryThemeTable(this.themes),
-                this.util.makeHeading2('Summary Theme Excerpts'),
+                this.util.makeBookmark2('Summary Theme Excerpts', 'summary_excerpts'),
                 ...excerpts
             ]
         } else {

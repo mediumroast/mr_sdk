@@ -225,7 +225,7 @@ class Utilities {
                     font: this.font,
                     size: size ? size : 20,
                     bold: bold ? bold : false, 
-                    break: spaceAfter ? 1 : 0
+                    break: spaceAfter ? spaceAfter : 0
                 })
             ]
         })
@@ -237,7 +237,7 @@ class Utilities {
             text: text,
             font: this.font,
             size: 1.5 * this.size,
-            // break: spaceAfter ? spaceAfter : 1
+            break: spaceAfter ? spaceAfter : 1
         })
     }
 
@@ -266,6 +266,20 @@ class Utilities {
         })
     }
 
+    makeBookmark2(text, ident) {
+        return new docx.Paragraph({
+            heading: docx.HeadingLevel.HEADING_2,
+            children: [
+                new docx.Bookmark({
+                    id: String(ident),
+                    children: [
+                        new docx.TextRun({text: text})
+                    ]
+                })
+            ]
+        })
+    }
+
     // Create a text of heading style 2
     makeHeading3(text) {
         return new docx.Paragraph({
@@ -282,10 +296,10 @@ class Utilities {
                     text: text,
                     style: 'Hyperlink',
                     font: this.font,
-                    size: 1.5 * this.size
+                    size: 1.5 * this.size,
                 }),
             ],
-            anchor: link
+            anchor: link,
         })
     }
 
