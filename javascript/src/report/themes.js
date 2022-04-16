@@ -89,8 +89,13 @@ class KeyThemes {
                 this.util.makeParagraph('"' + quotes[quote].quotes[0] + '"', this.fontFactor * this.fontSize, false, 0),
                 new docx.Paragraph({
                     children: [
-                        // String(quote)
                         this.util.makeTextrun('Source: '),
+                        // TODO open a GitHub issue for this behavior:
+                        //      A bookmark can only handle a substring from 0:40, and it will automatically
+                        //      truncate to that length.  However when there is an internal hyperlink there is
+                        //      no similar truncation.  This leads to the internal hyperlink having an incorrect
+                        //      reference.  
+                        // NOTE move the substring into the method to create an internal hyperlink
                         this.util.makeInternalHyperLink(myInteraction, String(quote).substring(0,40)),
                         this.util.makeTextrun('', 2),
                     ],
