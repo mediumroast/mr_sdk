@@ -1,5 +1,6 @@
 #!/usr/bin/python3
-import os, argparse, cmd, re, magic, pyfiglet, pdfx
+import os, argparse, cmd, re, magic, pyfiglet, pdfx, pydocx, datetime, spacy
+from pptx import Presentation
 
 def parse_cli_args(program_name='ingest', desc='A mediumroast.io example utility to ingest data into the backend.'):
     parser=argparse.ArgumentParser(prog=program_name, description=desc)
@@ -25,7 +26,8 @@ class IngestShell(cmd.Cmd):
             'copyright': "Copyright 2022 Mediumroast, Inc. All rights reserved.",
             'support email': 'help@mediumroast.io',
             'version': '1.0.0',
-            'folder': ""
+            'folder': "",
+            'max interactions': 5
         }
         super(IngestShell, self).__init__()
 
@@ -147,8 +149,7 @@ class IngestShell(cmd.Cmd):
         my_obj = {}
         for obj_topic in obj_script:
             default = 'Unknown'
-            print('Enter the '+ obj_type + '\'s ' + obj_topic + ' [Default: Unknown]?  ', end='')
-            answer = input().strip()
+            answer = input('Enter the '+ obj_type + '\'s ' + obj_topic + ' [Default: Unknown]?  ').strip()
             if not answer: answer = default
             my_obj[obj_script[obj_topic]] = answer # Set to the final structure for the API
         return my_obj
@@ -245,24 +246,117 @@ class IngestShell(cmd.Cmd):
     def _get_pdf_meta(self, item):
         pdf = pdfx.PDFx(self.env['folder'] + '/' + item)
         meta = pdf.get_metadata()
-        return meta
+        return meta, pdf.get_text()
+
+    def _get_docx_meta(self, item):
+        doc_metadata = {}
+        doc = pydocx.Document(self.env['folder'] + '/' + item)
+        properties = doc.core_properties
+        doc_metadata['CreateDate'] = properties.created
+        doc_metadata['type'] = properties.category
+        return doc_metadata
+
+    def _get_pptx_meta(self, item):
+        doc_metadata = {}
+        preso = Presentation(self.env['folder'] + '/' + item)
+        properties = preso.core_properties
+        doc_metadata['CreateDate'] = properties.created
+        doc_metadata['type'] = properties.category
+        return doc_metadata
+
+    def _setup_study(self, study_name):
+        """Script to define several default attributes for the discovered study
+        """
+        default = 'Unknown'
+        my_study = {}
+        my_script = {
+            'description': 'description',
+            'access privileges': 'public',
+            'accessible groups': 'groups',
+        }
+        print('\nStep 1: Define key attributes for the study.')
+        answer = input('\tname [default: ' + study_name + ']: ').strip()
+        if not answer: answer = study_name
+        my_study['studyName'] = answer
+        for attribute in my_script:
+            answer = input('\t' + attribute +': ').strip()
+            if not answer: answer = default
+            my_study[attribute] = answer
+        my_study['substudies'] = {}
+        return my_study
+
+
 
     def do_discover(self, sub_folder):
-        my_study = {'studyName': sub_folder}
+        # Setup the study
+        my_study = self._setup_study(sub_folder)
+
+        # Create empty interactions and companies
         my_interactions = []
         my_companies = []
+
+        # Create the nlp obj
+        nlp = spacy.load("en_core_web_lg")
+
+        # Capture the files which will be transformed into at least interactions
+        print ('\nStep 2: Discover interactions and companies associated to the study.')
         self.folder_data = self.filter_raw(os.listdir(self.env['folder'] + '/' + sub_folder))
+        if len(self.folder_data) <= self.env['max interactions']:
+            print ('\tIt appears there\'s ' + str(self.env['max interactions']) + ' or less target interactions, so the ingest tools will explore them with you one-by-one.')
+
+
         for item in self.folder_data:
-            doc_type = self.item_type(sub_folder + '/' + item)
-            if re.match(r'^PDF', doc_type):
-                my_meta = self._get_pdf_meta(sub_folder + '/' + item)
-                date = None
-                time = None
+            # Set the time to now as a default in case we cannot get inputs from the content
+            the_time = datetime.datetime.now()
+            date = the_time.strftime("%Y%m%d") # Format YYYYMM
+            time = the_time.strftime("%H%M") # Format HHMM
+
+            # Get the type of file system object to determine how to proceed
+
+            # We don't know the type until we check
+            doc_type = 'unknown' 
+
+            # Is this a directory?
+            if os.path.isdir(self.env['folder'] + '/' + sub_folder + '/' + item): doc_type = 'dir'
+
+            # Assumes the file type from the extension is unreliable uses libmagic instead
+            else: doc_type = self.item_type(sub_folder + '/' + item)
+
+            # Extract essential metadata from PDFs
+            if re.match(r'^PDF', doc_type, re.IGNORECASE):
+                print('\n', '-' * 40, ' ', item)
+                [my_meta,my_text] = self._get_pdf_meta(sub_folder + '/' + item)
+                doc = nlp(my_text)
                 if 'xap' in my_meta:
                     raw_date = my_meta['xap']['CreateDate']
                     [date, time] = raw_date.split('T')
                     date = date.replace('-', '')
                     time = ''.join(time.split('-')[0].split(':')[0:2])
+                for entities in doc.ents:
+                    if entities.label_ == 'ORG' or entities.label_ == 'PERSON':
+                        print(f"{entities.text:<25} {entities.label_:<15} {spacy.explain(entities.label_)}")
+
+            # Extract essential metadata from PPTX
+            elif re.match(r'^Microsoft PowerPoint', doc_type, re.IGNORECASE): 
+                my_meta = self._get_pptx_meta(sub_folder + '/' + item)
+                date = my_meta['CreateDate'].strftime("%Y%m%d")
+                time = my_meta['CreateDate'].strftime("%H%M")
+
+            # Extract essential metadata from DOCX
+            elif re.match(r'^Microsoft Word', doc_type, re.IGNORECASE):
+                my_meta = self._get_docx_meta(sub_folder + '/' + item)
+                date = my_meta['CreateDate'].strftime("%Y%m%d")
+                time = my_meta['CreateDate'].strftime("%H%M")
+
+            elif doc_type == 'dir':
+                pass
+                # TODO think about how to create a function from the above and recurse into subdirs
+                # TODO Set a flag to recurse only one level
+
+            # Fallback to not doing anything
+            else:
+                pass
+
             my_interaction = {
                 'interactionName': item.split('.')[0],
                 'time': time,
@@ -271,6 +365,7 @@ class IngestShell(cmd.Cmd):
             my_interactions.append(my_interaction)
 
         self.interactions+=my_interactions
+        self.studies = [my_study]
 
         
 
