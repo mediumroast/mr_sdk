@@ -1,6 +1,8 @@
 #!/usr/bin/python3
-import os, argparse, cmd, re, magic, pyfiglet, pdfx, pydocx, datetime, spacy
+import os, argparse, cmd, re, magic, pyfiglet, pdfx, pydocx, datetime, spacy, pprint
 from pptx import Presentation
+from transformers import AutoTokenizer, AutoModelForTokenClassification
+from transformers import pipeline
 
 def parse_cli_args(program_name='ingest', desc='A mediumroast.io example utility to ingest data into the backend.'):
     parser=argparse.ArgumentParser(prog=program_name, description=desc)
@@ -29,6 +31,7 @@ class IngestShell(cmd.Cmd):
             'folder': "",
             'max interactions': 5
         }
+        self.printer = pprint.PrettyPrinter(indent=4)
         super(IngestShell, self).__init__()
 
     #############################################################################
@@ -245,8 +248,8 @@ class IngestShell(cmd.Cmd):
 
     def _get_pdf_meta(self, item):
         pdf = pdfx.PDFx(self.env['folder'] + '/' + item)
-        meta = pdf.get_metadata()
-        return meta, pdf.get_text()
+        doc_meta = pdf.get_metadata()
+        return doc_meta, pdf.get_text()
 
     def _get_docx_meta(self, item):
         doc_metadata = {}
@@ -254,7 +257,10 @@ class IngestShell(cmd.Cmd):
         properties = doc.core_properties
         doc_metadata['CreateDate'] = properties.created
         doc_metadata['type'] = properties.category
-        return doc_metadata
+        fullText = []
+        for para in doc.paragraphs:
+            fullText.append(para.text)
+        return doc_metadata, '\n'.join(fullText)
 
     def _get_pptx_meta(self, item):
         doc_metadata = {}
@@ -284,6 +290,15 @@ class IngestShell(cmd.Cmd):
             my_study[attribute] = answer
         my_study['substudies'] = {}
         return my_study
+
+    def _print_entities(self, entities):
+        idx = 0
+        ENTITY_NAME = 0
+        ENTITY_TYPE = 1
+        ENTITY_DESC = 2
+        for entity in entities:
+            print('\t\t', str(idx) + '. ', 'Name: ' + entity[ENTITY_NAME], '[Type: ' + entity[ENTITY_TYPE], ' | Desc: ' + entity[ENTITY_DESC] + ']')
+            idx+=1
 
 
 
@@ -322,19 +337,24 @@ class IngestShell(cmd.Cmd):
             # Assumes the file type from the extension is unreliable uses libmagic instead
             else: doc_type = self.item_type(sub_folder + '/' + item)
 
+            # Print the overall status and next steps
+            print('\n\t\tInspecting', '>' * 2, item)
+            print('\t\tDetecting common metadata and named entities.')
+
+            entities = []
             # Extract essential metadata from PDFs
             if re.match(r'^PDF', doc_type, re.IGNORECASE):
-                print('\n', '-' * 40, ' ', item)
-                [my_meta,my_text] = self._get_pdf_meta(sub_folder + '/' + item)
+                [my_meta, my_text] = self._get_pdf_meta(sub_folder + '/' + item)
                 doc = nlp(my_text)
                 if 'xap' in my_meta:
                     raw_date = my_meta['xap']['CreateDate']
                     [date, time] = raw_date.split('T')
                     date = date.replace('-', '')
                     time = ''.join(time.split('-')[0].split(':')[0:2])
-                for entities in doc.ents:
-                    if entities.label_ == 'ORG' or entities.label_ == 'PERSON':
-                        print(f"{entities.text:<25} {entities.label_:<15} {spacy.explain(entities.label_)}")
+                for my_ent in doc.ents:
+                    my_text = re.sub(r'\n+', ' ', my_ent.text)
+                    entities.append([my_text, my_ent.label_, spacy.explain(my_ent.label_)])
+
 
             # Extract essential metadata from PPTX
             elif re.match(r'^Microsoft PowerPoint', doc_type, re.IGNORECASE): 
@@ -356,6 +376,10 @@ class IngestShell(cmd.Cmd):
             # Fallback to not doing anything
             else:
                 pass
+
+            self._print_entities(entities)
+            my_company = input('\n\t\tDo any entities represent the company associated to this item? If so specify the number of the entity. ').strip()
+            my_noise = input('\t\tShould we add these entities to the substudy associated to this interaction? [Y/n] ').strip()
 
             my_interaction = {
                 'interactionName': item.split('.')[0],
