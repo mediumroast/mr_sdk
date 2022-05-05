@@ -7,8 +7,7 @@ __author__ = "Michael Hay"
 __date__ = '2021-August-31'
 __copyright__ = "Copyright 2021 mediumroast.io. All rights reserved."
 
-import sys
-import re
+import sys, re
 sys.path.append('../')
 
 

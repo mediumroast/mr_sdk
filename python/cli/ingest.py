@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 import os, argparse, cmd, re, magic, pyfiglet, pdfx, pydocx, datetime, spacy, pprint
 from pptx import Presentation
-from transformers import AutoTokenizer, AutoModelForTokenClassification
-from transformers import pipeline
+
 
 def parse_cli_args(program_name='ingest', desc='A mediumroast.io example utility to ingest data into the backend.'):
     parser=argparse.ArgumentParser(prog=program_name, description=desc)
@@ -242,7 +241,8 @@ class IngestShell(cmd.Cmd):
     # Syntax: discover <sub_folder>
     # Argument: <sub_folder> is a child to the internally set folder in the 'env'
     # Core methods: 
-    #   discover Competition - creates a study called 'Competition', and tries to discover companies and interactions in 'Competition'
+    #   discover Competition - creates a study called 'Competition', and 
+    #       tries to discover companies and interactions in 'Competition'
     #
     #############################################################################
 
