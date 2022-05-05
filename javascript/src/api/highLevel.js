@@ -56,7 +56,7 @@ class MRObject {
 }
 
 // Create the studies subclass
-class Studies extends MRObject {
+export class Studies extends MRObject {
     constructor(server, serverType) {
         let controller = null
         if (serverType == 'json') {
@@ -72,7 +72,7 @@ class Studies extends MRObject {
 }
 
 // Create the companies subclass
-class Companies extends MRObject {
+export class Companies extends MRObject {
     constructor(server, serverType) {
         let controller = null
         if (serverType == 'json') {
@@ -80,10 +80,14 @@ class Companies extends MRObject {
         }
         super(controller)
     }
+
+    async getByName(name, subResource='?companyName=') {
+        return this.controller.getByName(name, subResource)
+    }
 }
 
 // Create the interactions subclass
-class Interactions extends MRObject {
+export class Interactions extends MRObject {
     constructor(server, serverType) {
         let controller = null
         if (serverType == 'json') {
@@ -94,7 +98,7 @@ class Interactions extends MRObject {
 }
 
 // Create the interactions subclass
-class Users extends MRObject {
+export class Users extends MRObject {
     constructor(server, serverType) {
         let controller = null
         if (serverType == 'json') {
@@ -102,7 +106,11 @@ class Users extends MRObject {
         }
         super(controller)
     }
+
+    async getUser (userName) {
+        return this.controller.getUser(userName)
+    }
 }
 
-export default Studies
-export { Studies, Companies, Interactions, Users }
+
+export default { Studies, Companies, Interactions, Users }

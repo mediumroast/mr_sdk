@@ -2,7 +2,7 @@
 import axios from "axios"
 
 class Utils {
-    constructor(user = 'dev', token = 'a_token_is_here', serverType = 'mr_json', server = 'http://mr-01:3000') {
+    constructor(user = 'dev', token = 'a_token_is_here', serverType = 'json', server = 'http://mr-01:3000') {
         this.userName = user
         this.userToken = token
         this.serverType = serverType

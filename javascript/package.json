@@ -2,7 +2,8 @@
   "name": "mediumroast",
   "version": "0.7.5",
   "description": "An API binding and toolset for the mediumroast.io.",
-  "main": "src/api/highLevel.js",
+  "main": "src/api/highLevel",
+  "typings": "dist/index",
   "scripts": {
     "test": "node test/spec",
     "build": "rollup -c",
@@ -12,7 +13,8 @@
     "list_studies": "cli/list_studies.js",
     "list_companies": "cli/list_companies.js",
     "list_interactions": "cli/list_interactions.js",
-    "list_users": "cli/list_users.js"
+    "list_users": "cli/list_users.js",
+    "doc_company": "cli/doc_company.js"
   },
   "type": "module",
   "keywords": [
@@ -44,7 +46,9 @@
     "cli"
   ],
   "dependencies": {
-    "commander": "^8.3.0",
-    "axios": "^0.25.0"
+    "adm-zip": "^0.5.9",
+    "aws-sdk": "^2.1096.0",
+    "axios": "^0.25.0",
+    "commander": "^8.3.0"
   }
 }

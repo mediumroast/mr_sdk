@@ -15,13 +15,11 @@ class rest_scaffold:
         resp_obj=requests.get(url)
         return resp_obj.json()
 
-    # NOTE this works for full object adds and replacements
     def put_obj(self, endpoint, obj):
         url=self.CRED['rest_url'] + endpoint
         resp_obj=requests.put(url, json=obj)
         return resp_obj.json(), resp_obj.status_code
 
-    # TODO This needs to be experimented with it will likely not work
     def patch_obj(self, endpoint, obj):
         url=self.CRED['rest_url'] + endpoint
         try: # Try to make the request

@@ -47,7 +47,7 @@ class MRObjectJSON {
     }
 
     // Get all information about a single study using the study's name
-    async getByName (name, subResource = '?studyName=') {
+    async getByName (name, subResource) {
         const restTarget = this.resource + subResource + name
         return this.util.getObj(restTarget)
     }
@@ -88,7 +88,7 @@ class MRObjectJSON {
 }
 
 // Studies implementation of the MRObject base class
-class StudiesJSON extends MRObjectJSON {
+export class StudiesJSON extends MRObjectJSON {
     constructor(server, resource = '/studies') {
         super(resource, server)
     }
@@ -107,14 +107,14 @@ class StudiesJSON extends MRObjectJSON {
 }
 
 // Companies implementation of the MRObject base class
-class CompaniesJSON extends MRObjectJSON {
+export class CompaniesJSON extends MRObjectJSON {
     constructor(server, resource = '/companies') {
         super(resource, server)
     }
 }
 
 // Interactions implementation of the MRObject base class
-class InteractionsJSON extends MRObjectJSON {
+export class InteractionsJSON extends MRObjectJSON {
     constructor(server, resource = '/interactions') {
         super(resource, server)
     }
@@ -122,12 +122,29 @@ class InteractionsJSON extends MRObjectJSON {
 
 // Users implementation of the MRObject base class
 // TODO consider if this will be a separate standalone class
-class UsersJSON extends MRObjectJSON {
+export class UsersJSON extends MRObjectJSON {
     constructor(server, resource = '/users') {
         super(resource, server)
+    }
+
+    // For all users return the requested user info
+    async getUser (userName) {
+
+        const response = await this.util.getObj(this.resource)
+        for (const user in response) {
+            
+            if (response[user].username == userName){
+                return {
+                    userName: response[user].username,
+                    token: response[user].password
+                }
+            } else {
+                continue
+            }
+        }
+        return filteredList
     }
 }
 
 // Export classes for consumers
-export default StudiesJSON
-export {StudiesJSON, InteractionsJSON, CompaniesJSON, UsersJSON}
+export default { StudiesJSON, InteractionsJSON, CompaniesJSON, UsersJSON }

@@ -23,6 +23,8 @@ def parse_cli_args(program_name='report_study', desc='A mediumroast.io utility t
                         type=str, dest='rest_url', default='http://mr-01:3000')
     parser.add_argument('--guid', help="The GUID for the study to be reported on.",
                         type=str, dest='guid', required=True)
+    parser.add_argument('--org', help="The organization name for the report.",
+                        type=str, dest='org', required=True)
     parser.add_argument('--user', help="User name",
                         type=str, dest='user', default='foo')
     parser.add_argument('--secret', help="Secret or password",
@@ -493,16 +495,17 @@ def report(study, conf, substudy_excludes):
 if __name__ == "__main__":
     my_args = parse_cli_args()
     configurator = read_config(conf_file=my_args.config_file)
+    my_org = my_args.org.upper()
 
     # Set default items from the configuration file for the report
     report_conf = {
-        'org': configurator['DEFAULT']['organization_name'],
-        'logo': configurator['DEFAULT']['logo_image'],
-        'font': configurator['DEFAULT']['font_type'],
-        'font_size': configurator['DEFAULT']['font_size'],
-        'font_measure': configurator['DEFAULT']['font_measure'],
-        'copyright': configurator['DEFAULT']['copyright_notice'],
-        'confidentiality': configurator['DEFAULT']['confidential_notice'],
+        'org': configurator[my_org]['organization_name'],
+        'logo': configurator[my_org]['logo_image'],
+        'font': configurator[my_org]['font_type'],
+        'font_size': configurator[my_org]['font_size'],
+        'font_measure': configurator[my_org]['font_measure'],
+        'copyright': configurator[my_org]['copyright_notice'],
+        'confidentiality': configurator[my_org]['confidential_notice'],
         'themes': {
             'font_size': configurator['THEME_FORMAT']['font_size'],
             'intro': configurator['THEME_FORMAT']['key_theme_intro'],

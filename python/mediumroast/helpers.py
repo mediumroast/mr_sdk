@@ -6,7 +6,7 @@ __copyright__ = "Copyright 2021 mediumroast.io. All rights reserved."
 
 from geopy.geocoders import ArcGIS
 from datetime import datetime
-import hashlib, time, os, json, pathlib, logging
+import hashlib, time, os, json, pathlib, logging, magic
 import configparser as conf
 
 
@@ -76,6 +76,11 @@ class utilities:
                 return False, 'Something went wrong, check the file output.'
             finally:
                 return True, data.strip()
+
+    def get_item_type(self, folder, item):
+        """Using libmagic return the file system object type
+        """
+        return magic.from_file(folder + '/' + item)
 
     def log_it(self, body='', function='MAIN', log_type='START'):
         """This is a very simple standin logger, ideally we will revert back to logging at some point
@@ -149,6 +154,7 @@ class utilities:
         return my_date, my_time
 
 
+    # TODO consider refactoring for clear separation of date and time
     def get_date_time (self):
         """Get the time presently and return in two formats
         """
