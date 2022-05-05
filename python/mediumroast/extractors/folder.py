@@ -89,36 +89,44 @@ class Extract:
 
     def _get_objects(self):
         my_objs = self._decode_folder(self.folder, os.listdir(self.folder))
+        [time, date] = self.util.get_date_time()
+        my_text = ""
         # Get dates and raw text from the objects if the type is supported
         for obj_idx in my_objs:
             my_obj = my_objs[obj_idx]
              # Extract essential metadata from PDFs
             if re.match(r'^PDF', my_obj['type'], re.IGNORECASE):
-                [my_meta, my_text] = self._get_pdf_meta(sub_folder + '/' + item)
-                doc = nlp(my_text)
+                [my_meta, my_text] = self.util.get_pdf_meta(my_obj['full_path'])
                 if 'xap' in my_meta:
                     raw_date = my_meta['xap']['CreateDate']
                     [date, time] = raw_date.split('T')
-                    date = date.replace('-', '')
-                    time = ''.join(time.split('-')[0].split(':')[0:2])
-                for my_ent in doc.ents:
-                    my_text = re.sub(r'\n+', ' ', my_ent.text)
-                    entities.append([my_text, my_ent.label_, spacy.explain(my_ent.label_)])
-
+                    my_obj['date'] = date.replace('-', '')
+                    my_obj['time'] = ''.join(time.split('-')[0].split(':')[0:2])
 
             # Extract essential metadata from PPTX
             elif re.match(r'^Microsoft PowerPoint', my_obj['type'], re.IGNORECASE): 
-                my_meta = self._get_pptx_meta(sub_folder + '/' + item)
-                date = my_meta['CreateDate'].strftime("%Y%m%d")
-                time = my_meta['CreateDate'].strftime("%H%M")
+                [my_meta, my_text] = self.util.get_pptx_meta(my_obj['full_path'])
+                my_obj['date'] = my_meta['CreateDate'].strftime("%Y%m%d")
+                my_obj['time'] = my_meta['CreateDate'].strftime("%H%M")
 
             # Extract essential metadata from DOCX
             elif re.match(r'^Microsoft Word', my_obj['type'], re.IGNORECASE):
-                my_meta = self._get_docx_meta(sub_folder + '/' + item)
-                date = my_meta['CreateDate'].strftime("%Y%m%d")
-                time = my_meta['CreateDate'].strftime("%H%M")
+                [my_meta, my_text] = self.util.get_docx_meta(my_obj['full_path'])
+                my_obj['date'] = my_meta['CreateDate'].strftime("%Y%m%d")
+                my_obj['time'] = my_meta['CreateDate'].strftime("%H%M")
 
+            else:
+                my_obj['date'] = date
+                my_obj['time'] = time
+
+            # Extract the NEs for the doc
             doc = self.nlp(my_text)
+            entities = []
+            for my_ent in doc.ents:
+                    my_text = re.sub(r'\n+', ' ', my_ent.text)
+                    entities.append([my_text, my_ent.label_, spacy.explain(my_ent.label_)])
+
+            # TODO create companies obj
 
 
         
