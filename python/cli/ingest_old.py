@@ -1,10 +1,6 @@
 #!/usr/bin/python3
-from ctypes import util
-import os, argparse, cmd, re, pyfiglet, pprint
-
-from soupsieve import select
-from mediumroast.extractors.folder import Extract
-from mediumroast.helpers import utilities
+import os, argparse, cmd, re, magic, pyfiglet, pdfx, pydocx, datetime, spacy, pprint
+from pptx import Presentation
 
 
 def parse_cli_args(program_name='ingest', desc='A mediumroast.io example utility to ingest data into the backend.'):
@@ -34,9 +30,7 @@ class IngestShell(cmd.Cmd):
             'folder': "",
             'max interactions': 5
         }
-
         self.printer = pprint.PrettyPrinter(indent=4)
-        self.util = utilities()
         super(IngestShell, self).__init__()
 
     #############################################################################
@@ -90,6 +84,19 @@ class IngestShell(cmd.Cmd):
         }
         self.print_help(help=my_help)
 
+    def item_type(self, item):
+        return magic.from_file(self.env['folder'] + '/' + item)
+    
+    def decode_folder(self):
+        folder_string = "\n" + self.env['folder'] + " [folder]\n"
+        idx = 1
+        for item in self.folder_data:
+            if os.path.isdir(self.env['folder'] + '/' + item):
+                folder_string+= "\t" + str(idx) +". " + item + " [dir]\n"
+            else:
+                folder_string+= "\t" + str(idx) +". " + item + " [" + self.item_type(item) + "]\n" 
+            idx+=1
+        return folder_string
 
     def do_list(self, folder):
         self.env['folder'] = folder if folder else self.env['folder'] 
@@ -239,6 +246,29 @@ class IngestShell(cmd.Cmd):
     #
     #############################################################################
 
+    def _get_pdf_meta(self, item):
+        pdf = pdfx.PDFx(self.env['folder'] + '/' + item)
+        doc_meta = pdf.get_metadata()
+        return doc_meta, pdf.get_text()
+
+    def _get_docx_meta(self, item):
+        doc_metadata = {}
+        doc = pydocx.Document(self.env['folder'] + '/' + item)
+        properties = doc.core_properties
+        doc_metadata['CreateDate'] = properties.created
+        doc_metadata['type'] = properties.category
+        fullText = []
+        for para in doc.paragraphs:
+            fullText.append(para.text)
+        return doc_metadata, '\n'.join(fullText)
+
+    def _get_pptx_meta(self, item):
+        doc_metadata = {}
+        preso = Presentation(self.env['folder'] + '/' + item)
+        properties = preso.core_properties
+        doc_metadata['CreateDate'] = properties.created
+        doc_metadata['type'] = properties.category
+        return doc_metadata
 
     def _setup_study(self, study_name):
         """Script to define several default attributes for the discovered study
@@ -259,70 +289,107 @@ class IngestShell(cmd.Cmd):
             if not answer: answer = default
             my_study[attribute] = answer
         my_study['substudies'] = {}
-        my_study['temp_id'] = self.util.hash_it(my_study['studyName'])
         return my_study
 
-    def _print_objs(self, objs):
-        for obj in sorted(objs):
-            print('\t\t', str(obj) + '. ', objs[obj])
-
-    def _retain_companies(self, index, companies, study_name):
-        for idx in index:
-            key = int(idx)
-            self.companies.append({
-                'companyName': companies[key],
-                'temp_id': self.util.hash_it(str(key) + companies[key]),
-                'linkedStudies': {study_name: self.util.hash_it(study_name)},
-                'linkedInteractions': {}
-            })
-
-    def _retain_interactions(self, index, interactions, study_name):
-        pass
+    def _print_entities(self, entities):
+        idx = 0
+        ENTITY_NAME = 0
+        ENTITY_TYPE = 1
+        ENTITY_DESC = 2
+        for entity in entities:
+            print('\t\t', str(idx) + '. ', 'Name: ' + entity[ENTITY_NAME], '[Type: ' + entity[ENTITY_TYPE], ' | Desc: ' + entity[ENTITY_DESC] + ']')
+            idx+=1
 
 
 
     def do_discover(self, sub_folder):
-        # Set up the extractor to do object level discovery
-        extractor = Extract(folder_name = sub_folder)
-
         # Setup the study
         my_study = self._setup_study(sub_folder)
-        
 
-        # Inspect the files to generate candidate interactions and companies
+        # Create empty interactions and companies
+        my_interactions = []
+        my_companies = []
+
+        # Create the nlp obj
+        nlp = spacy.load("en_core_web_lg")
+
+        # Capture the files which will be transformed into at least interactions
         print ('\nStep 2: Discover interactions and companies associated to the study.')
-
-        # Perform discovery
-        [my_interactions, my_companies] = extractor.get_data()
-        total_interactions = self.util.total_item(my_interactions)
-        total_companies = self.util.total_item(my_companies)
-        print('\tDiscovered [' + str(total_interactions) + '] candidate interactions and [' + 
-            str(total_companies) + '] candidate companies.')
-
-        # Process companies
-        print ('\nStep 3: Process candidate companies.')
-        print ('\tListing candidate companies for review:')
-        self._print_objs(my_companies)
-        selected_companies = input('\n\tSelect companies to retain using their index [Ex. - \'1,3,7\']: ').strip().split(',')
-        print('\tRetaining [' + str(self.util.total_item(selected_companies)) + '] companies.')
-        self._retain_companies(selected_companies, my_companies, my_study['studyName'])
-
-        # Process interactions
-        print ('\nStep 4: Process candidate interactions.')
-        print ('\tListing candidate interactions for review:')
-        idx = 1
-        for interaction in my_interactions:
-            print('\t\t', str(idx) + '. ', interaction['interaction_name'])
-            idx+=1
-        selected_interactions = input('\n\tSelect interactions to retain using their index [Ex. - \'1,3,7\']: ').strip().split(',')
-        print('\tRetaining [' + str(self.util.total_item(selected_interactions)) + '] interactions.')
+        self.folder_data = self.filter_raw(os.listdir(self.env['folder'] + '/' + sub_folder))
+        if len(self.folder_data) <= self.env['max interactions']:
+            print ('\tIt appears there\'s ' + str(self.env['max interactions']) + ' or less target interactions, so the ingest tools will explore them with you one-by-one.')
 
 
+        for item in self.folder_data:
+            # Set the time to now as a default in case we cannot get inputs from the content
+            the_time = datetime.datetime.now()
+            date = the_time.strftime("%Y%m%d") # Format YYYYMM
+            time = the_time.strftime("%H%M") # Format HHMM
 
-        # if len(self.folder_data) <= self.env['max interactions']:
-        #     print ('\tIt appears there\'s ' + str(self.env['max interactions']) + ' or less target interactions, so the ingest tools will explore them with you one-by-one.')
+            # Get the type of file system object to determine how to proceed
+
+            # We don't know the type until we check
+            doc_type = 'unknown' 
+
+            # Is this a directory?
+            if os.path.isdir(self.env['folder'] + '/' + sub_folder + '/' + item): doc_type = 'dir'
+
+            # Assumes the file type from the extension is unreliable uses libmagic instead
+            else: doc_type = self.item_type(sub_folder + '/' + item)
+
+            # Print the overall status and next steps
+            print('\n\t\tInspecting', '>' * 2, item)
+            print('\t\tDetecting common metadata and named entities.')
+
+            entities = []
+            # Extract essential metadata from PDFs
+            if re.match(r'^PDF', doc_type, re.IGNORECASE):
+                [my_meta, my_text] = self._get_pdf_meta(sub_folder + '/' + item)
+                doc = nlp(my_text)
+                if 'xap' in my_meta:
+                    raw_date = my_meta['xap']['CreateDate']
+                    [date, time] = raw_date.split('T')
+                    date = date.replace('-', '')
+                    time = ''.join(time.split('-')[0].split(':')[0:2])
+                for my_ent in doc.ents:
+                    my_text = re.sub(r'\n+', ' ', my_ent.text)
+                    entities.append([my_text, my_ent.label_, spacy.explain(my_ent.label_)])
 
 
+            # Extract essential metadata from PPTX
+            elif re.match(r'^Microsoft PowerPoint', doc_type, re.IGNORECASE): 
+                my_meta = self._get_pptx_meta(sub_folder + '/' + item)
+                date = my_meta['CreateDate'].strftime("%Y%m%d")
+                time = my_meta['CreateDate'].strftime("%H%M")
+
+            # Extract essential metadata from DOCX
+            elif re.match(r'^Microsoft Word', doc_type, re.IGNORECASE):
+                my_meta = self._get_docx_meta(sub_folder + '/' + item)
+                date = my_meta['CreateDate'].strftime("%Y%m%d")
+                time = my_meta['CreateDate'].strftime("%H%M")
+
+            elif doc_type == 'dir':
+                pass
+                # TODO think about how to create a function from the above and recurse into subdirs
+                # TODO Set a flag to recurse only one level
+
+            # Fallback to not doing anything
+            else:
+                pass
+
+            self._print_entities(entities)
+            my_company = input('\n\t\tDo any entities represent the company associated to this item? If so specify the number of the entity. ').strip()
+            my_noise = input('\t\tShould we add these entities to the substudy associated to this interaction? [Y/n] ').strip()
+
+            my_interaction = {
+                'interactionName': item.split('.')[0],
+                'time': time,
+                'date': date,
+            }
+            my_interactions.append(my_interaction)
+
+        self.interactions+=my_interactions
+        self.studies = [my_study]
 
         
 
