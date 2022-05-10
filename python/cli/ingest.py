@@ -253,6 +253,13 @@ class IngestShell(cmd.Cmd):
     #
     #############################################################################
 
+    def _merge_dicts(self, primary, to_merge):
+        last_key = int(primary.keys()[-1]) # TODO fix this error is TypeError: 'dict_keys' object is not subscriptable
+        for key in to_merge:
+            primary[last_key+1] = to_merge[key]
+            last_key += 1
+        return primary
+
     def _setup_study(self, study_name):
         """Script to define several default attributes for the discovered study
         """
@@ -292,12 +299,12 @@ class IngestShell(cmd.Cmd):
                 'linkedInteractions': {}
             })
 
-    def _choose_company(self, companies):
-        print('\tPlease choose which company is associated to the interaction.\n')
+    def _choose_company(self, interaction_name, companies):
+        print('\tPlease choose which company is associated to the interaction [' + interaction_name + '].\n')
         for company in sorted(companies):
-            print('\t' + str(company),'. ', companies)
-        selected_company = input(
-            '\n\tSelect the company using the index [Ex. - \'1,3,7\']: ').strip().split(',')
+            print('\t' + str(company) + '. ', companies[company])
+        selected_company = int(input(
+            '\n\tSelect the company using the index [Ex. - \'1,3,7\']: ').strip())
         return {companies[selected_company]: self.util.hash_it(companies[selected_company])}
 
     def _retain_interactions(self, index, interactions, study_name):
@@ -307,20 +314,23 @@ class IngestShell(cmd.Cmd):
             key = int(i) - 1
 
             # Choose the associated company
-            linked_company = self._choose_company(interactions[key]['candidate_companies'])
+            linked_company = self._choose_company(
+                interactions[key]['interaction_name'],
+                interactions[key]['candidate_companies'])
 
             # Add the interaction
             self.interactions.append(
                 {
-                    'interactionName': interactions[key]['interaction_name'], #TODO should we replace with name?
+                    'interactionName': interactions[key]['interaction_name'], # CONFIRM on the attribute name 'interactionName or 'name'?
                     'linkedStudies': {
-                        interactions[key]['study']: self.util.hash_it(study_name) # TODO replace with the real GUID
+                        interactions[key]['study']: self.util.hash_it(
+                            study_name)  # TODO replace with the real GUID
                     },
-                    'linkedCompanies': linked_company, # TOTO replace with the real GUID
+                    'linkedCompanies': linked_company,  # TODO replace with the real GUID
                     'date': interactions[key]['date'],
                     'time': interactions[key]['time'],
-                    'state': 'unsummarized', # CONFIRM this is not boolean
-                    'description': 'Unknown', # CONFIRM that this is the right attribute
+                    'state': 'unsummarized',  # CONFIRM this is not boolean
+                    'description': 'Unknown',  # CONFIRM that this is the right attribute
                     'contactAddress': 'Unknown',
                     'contactZipPostal': 'Unknown',
                     'contactPhone': 'Unknown',
@@ -334,9 +344,10 @@ class IngestShell(cmd.Cmd):
                     'status': 'completed',
                     'longitude': 'Unknown',
                     'latitude': 'Unknown',
-                    'notes': {}, # TODO create a note stating this was intgested by mr-ingest
+                    'notes': {},  # TODO create a note stating this was intgested by mr-ingest
                     'url': interactions[key]['url'],
-                    'temp_id': interactions[key]['temp_id'] # TODO reset to the actual GUID and delete
+                    # TODO reset to the actual GUID and delete
+                    'temp_id': interactions[key]['temp_id']
                 }
             )
 
@@ -347,7 +358,7 @@ class IngestShell(cmd.Cmd):
                     'name': 'default' if interactions[key]['substudy'] == 'default' else 'Unknown',
                     'interactions': {
                         interactions[key]['interaction_name']: {
-                            'temp_id': interactions[key]['temp_id'] # TODO 
+                            'temp_id': interactions[key]['temp_id']  # TODO
                         }
                     },
                     'themesState': False,
@@ -358,10 +369,10 @@ class IngestShell(cmd.Cmd):
             # If the key exists add to the object
             else:
                 my_substudies[interactions[key]['substudy']]['interactions'][interactions[key]
-                                                                              ['interaction_name']] = {'temp_id': interactions[key]['temp_id']}
-                # This is broken as it will merge the dicts and replace duplicate keys
-                # TODO create a new function that unrolls and rebuilds a dict that is reindexed
-                my_substudies[interactions[key]['substudy']]['noises'] |= interactions[key]['noises']
+                                                                             ['interaction_name']] = {'temp_id': interactions[key]['temp_id']}
+
+                my_substudies[interactions[key]['substudy']]['noises'] = self._merge_dicts(
+                    my_substudies[interactions[key]['substudy']]['noises'], interactions[key]['noises'])
 
             # print companies
             # select company
@@ -408,8 +419,9 @@ class IngestShell(cmd.Cmd):
             '\n\tSelect interactions to retain using their index [Ex. - \'1,3,7\']: ').strip().split(',')
         print(
             '\tRetaining [' + str(self.util.total_item(selected_interactions)) + '] interactions.')
-        self._retain_interactions(
+        my_study['substudies'] = self._retain_interactions(
             selected_interactions, my_interactions, my_study['studyName'])
+        self.studies.append(my_study)
 
         # if len(self.folder_data) <= self.env['max interactions']:
         #     print ('\tIt appears there\'s ' + str(self.env['max interactions']) + ' or less target interactions, so the ingest tools will explore them with you one-by-one.')

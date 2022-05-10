@@ -142,6 +142,9 @@ class Extract:
 
             obj['noises'] = noises
             obj['candidate_companies'] = orgs
+            if obj.get('date') == None or obj.get('time') == None:
+                obj['date'] = date
+                obj['time'] = time
             candidate_companies.update(orgs)
 
         # Return the prototype interactions and companies
