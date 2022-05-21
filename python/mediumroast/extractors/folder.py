@@ -92,8 +92,16 @@ class Extract:
 
         return raw_data
 
+    def _convert_list_to_dict(self, my_list):
+        idx = 1
+        my_dict = {}
+        for item in my_list:
+            my_dict[idx] = item
+            idx+=1
+        return my_dict
+
     def _get_objects(self):
-        candidate_companies = {}
+        candidate_companies = []
         my_objs = self._decode_folder(self.folder, os.listdir(self.folder))
         [time, date] = self.util.get_date_time()
         my_text = ""
@@ -130,25 +138,25 @@ class Extract:
 
             # Extract the NEs for the doc
             doc = self.nlp(my_text)
-            orgs = {}
+            orgs = []
             noises = {}
             idx = 1
             for my_ent in doc.ents:
                 my_text = re.sub(r'\n+', ' ', my_ent.text)
                 noises[idx] = my_text
                 if re.match(r'ORG', my_ent.label_, re.IGNORECASE):
-                    orgs[idx] = my_text
+                    orgs.append(my_text)
                 idx+=1
 
             obj['noises'] = noises
-            obj['candidate_companies'] = orgs
+            obj['candidate_companies'] = self._convert_list_to_dict(orgs)
             if obj.get('date') == None or obj.get('time') == None:
                 obj['date'] = date
                 obj['time'] = time
-            candidate_companies.update(orgs)
+            candidate_companies+=orgs
 
         # Return the prototype interactions and companies
-        return my_objs, candidate_companies
+        return my_objs, self._convert_list_to_dict(candidate_companies)
 
     # Main extraction method
 

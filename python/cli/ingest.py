@@ -1,11 +1,13 @@
 #!/usr/bin/python3
-from ctypes import util
 import os
 import argparse
 import cmd
 import re
+from matplotlib.font_manager import json_dump
 import pyfiglet
 import pprint
+import json
+import pathlib
 
 from soupsieve import select
 from mediumroast.extractors.folder import Extract
@@ -24,6 +26,8 @@ def parse_cli_args(program_name='ingest', desc='A mediumroast.io example utility
                         type=str, dest='user', default='foo')
     parser.add_argument('--secret', help="Secret or password",
                         type=str, dest='secret', default='bar')
+    parser.add_argument('--env_file', help="Fully qualified filename for storing the environment variables.",
+                        type=str, dest='env_file', default=str(pathlib.Path.home()) + '/.mediumroast/ingest.json')
     cli_args = parser.parse_args()
     return cli_args
 
@@ -33,12 +37,14 @@ class IngestShell(cmd.Cmd):
     intro = pyfiglet.figlet_format('Welcome to Mediumroast ingest tools.')
     ruler = '_'
 
-    def __init__(self, src_type):
+    def __init__(self, src_type, env_file, env = None):
         self.src_type = src_type
         self.companies = []
         self.studies = []
         self.interactions = []
-        self.env = {
+
+        self.env_file = env_file
+        self.env = env if env else {
             'copyright': "Copyright 2022 Mediumroast, Inc. All rights reserved.",
             'support email': 'help@mediumroast.io',
             'version': '1.0.0',
@@ -50,27 +56,39 @@ class IngestShell(cmd.Cmd):
         self.util = utilities()
         super(IngestShell, self).__init__()
 
+
+    ## TODO Create utilities for saving/caching and recovering work
+
+
     #############################################################################
     # Description: Basic reusable utility functions for the command shell
     #
-    #
+    # TODO consider moving out into helpers or consider a shell class to include
     #
     #############################################################################
 
-    def print_help(self, help):
+    def _print_raw_objs(self, objs):
+        """Print basic data suitable for driving discovery from a file/object store of some kind.
+        """
+        for obj in sorted(objs):
+            # printing format is two tabs <key>. <value>
+            print('\t\t', str(obj) + '.', objs[obj])
+
+    def _print_help(self, help):
+        """Consistently print help outputs for the shell. This internal method expects a dict of structure:
+            {
+                'Name': <command name>,
+                'Description': <description>,
+                'Argument': <arguments could be None>
+            }
+        Note: Each value in the dict is a string which can include formatting like newlines, tabs, etc.
+        """
         print("\n" + help['Name'] + ' ' +
               help['Argument'] + help['Description'])
 
-    def emptyline(self):
-        pass
-
-    def do_exit(self, line):
-        return True
-
-    def help_exit(self):
-        print("\nExit the shell")
-
-    def filter_raw(self, dir_list):
+    def _filter_raw(self, dir_list):
+        """Safely filter out file system objects that should not be interrogated
+        """
         final_list = []
         for item in dir_list:
             if re.match(r'^\.', item):
@@ -81,58 +99,23 @@ class IngestShell(cmd.Cmd):
                 final_list.append(item)
         return final_list
 
-    def do_print(self, obj_type):
-        obj_type = obj_type.strip().lower()
-        print('The following ' + obj_type + ' are prepared for ingestion.')
-        if obj_type == 'companies':
-            self.print_objects(self.companies)
-        elif obj_type == 'studies':
-            self.print_objects(self.studies)
-        elif obj_type == 'interactions':
-            self.print_objects(self.interactions)
-        else:
-            print("\n\tError: Unsupported object type [" + obj_type +
-                  ']. Supported types are: studies, companies or interactions.')
+    def _decode_folder(self):
+        """When passed a folder structure, print out contents of the folder including the object type.
+        """
+        folder_string = "\n" + self.env['folder'] + " [folder]\n"
+        idx = 1
+        for item in self.folder_data:
+            if os.path.isdir(self.env['folder'] + '/' + item):
+                folder_string+= "\t" + str(idx) +". " + item + " [dir]\n"
+            else:
+                folder_string+= "\t" + str(idx) +". " + item + " [" + self.util.get_item_type(item) + "]\n" 
+            idx+=1
+        return folder_string
 
-    def help_print(self):
-        my_help = {
-            'Name': 'print',
-            'Argument': '<object type>',
-            'Description': "\n\tPrint out the current set of objects ready for ingestion, where object types are companies, studies or interactions." +
-            "\n"
-        }
-        self.print_help(help=my_help)
-
-    def do_list(self, folder):
-        self.env['folder'] = folder if folder else self.env['folder']
-        self.folder_data = self.filter_raw(os.listdir(self.env['folder']))
-        print(self.decode_folder())
-
-    def help_list(self):
-        my_help = {
-            'Name': 'list',
-            'Argument': '<folder_name>',
-            'Description': "\n\tList contents of a folder to explore for an ingestion strategy." +
-            "\n"
-        }
-        self.print_help(help=my_help)
-
-    def do_set(self, env_var):
-        variable, value = env_var.split('=')
-        self.env[variable] = value
-        print(self.env)
-
-    def help_set(self):
-        my_help = {
-            'Name': 'set',
-            'Argument': '<variable>=<value>',
-            'Description': "\n\tSet an environment variable for the ingest shell to use while processing." +
-            "\n"
-        }
-        self.print_help(help=my_help)
-
-    def print_objects(self, obj):
-        index = 1
+    def _print_discovered_objects(self, obj):
+        """To the console print out the top level objects discovered from a file or object store.
+        """
+        index = 0
         for item in obj:
             print('Item index: ' + str(index))
             for attribute in item:
@@ -140,106 +123,146 @@ class IngestShell(cmd.Cmd):
             print('-' * 30)
             index += 1
 
+
     #############################################################################
+    # Description: Core functions for the command shell
     #
-    # NAME: Add Objects
-    # Description: Core logic and helpers to add objects one at a time using a prompt
-    # Syntax: add <object type>
-    # Argument: <object type> can be one of study, company or interaction
-    # Core methods:
-    #   add study - starts a prompt based interface to add a study
-    #   print studies - prints out all added studies
+    # TODO consider adding envsave to set and del functions
     #
     #############################################################################
-    def _add_object(self, obj_type, obj_script):
-        my_obj = {}
-        for obj_topic in obj_script:
-            default = 'Unknown'
-            answer = input('Enter the ' + obj_type + '\'s ' +
-                           obj_topic + ' [Default: Unknown]?  ').strip()
-            if not answer:
-                answer = default
-            # Set to the final structure for the API
-            my_obj[obj_script[obj_topic]] = answer
-        return my_obj
 
-    def add_study(self):
-        # TODO in the far future consider type checking for select attributes
-        my_script = {
-            'name': 'studyName',
-            'description': 'description',
-            'access privileges': 'public',
-            'accessible groups': 'groups',
-        }
-        return self._add_object('study', my_script)
+    def emptyline(self):
+        """Needed for the empytline processing in the shell. Do not remove or change the name.
+        """
+        pass
 
-    def add_interaction(self):
-        # TODO in the far future consider type checking for select attributes
-        my_script = {
-            'name': 'interactionName',
-            'time': 'time',
-            'date': 'date',
-            'state': 'state',
-            'description': 'description',
-            'contact name': 'contactName',
-            'contact address': 'contactAddress',
-            'contact city': 'contactCity',
-            'contact state/province': 'contactStateProvince',
-            'contact zip/postal code': 'contactZipPostal',
-            'contact country': 'contactCountry',
-            'contact region': 'contactRegion',
-            'contact phone number': 'contactPhone',
-            'contact LinkedIn profile': 'contactLinkedIn',
-            'contact Twitter profile': 'contactTwitter',
-            'contact email address': 'contactEmail',
-            'access privileges': 'public',
-            'interaction type': 'interactionType',
-            'status': 'status',
-            'url': 'url'
-        }
-        return self._add_object('interaction', my_script)
+    def do_exit(self, unused):
+        """Required for exiting the shell argument is unused. Do not remove or change the name.
+        """
+        return True
 
-    def add_company(self):
-        # TODO in the far future consider type checking for select attributes
-        my_script = {
-            'name': 'companyName',
-            'description': 'description',
-            'address': 'address',
-            'city': 'city',
-            'state/province': 'stateProvince',
-            'zip/postal code': 'zipPostal',
-            'country': 'country',
-            'region': 'region',
-            'phone number': 'phone',
-            'website': 'url',
-            'logo URL': 'logoURL',
-            'industry': 'industry',
-            'CIK': 'cik',
-            'stock symbol': 'stockSymbol'
-        }
-        return self._add_object('company', my_script)
-
-    def do_add(self, sub_command):
-        sub_command = sub_command.strip().lower()
-        if sub_command == 'company':
-            self.companies.append(self.add_company())
-        elif sub_command == 'study':
-            self.studies.append(self.add_study())
-        elif sub_command == 'interaction':
-            self.interactions.append(self.add_interaction())
-        else:
-            print("\n\tError: Unsupported subcommand [" + sub_command +
-                  ']. Supported subcommands are: study, company or interaction.')
-
-    def help_add(self):
+    def help_exit(self):
+        """Help for exit.
+        """
         my_help = {
-            'Name': 'add',
-            'Argument': '<subcommand>',
-            'Description': "\n\tAdd one or more company, interaction or study objects by hand through a series of prompts." +
-            "\n\tSubcommand can be one of study, company or interaction." +
+            'Name': 'exit',
+            'Argument': 'None',
+            'Description': "\n\tExit the mediumroast ingestion utility shell." +
             "\n"
         }
-        self.print_help(help=my_help)
+        self._print_help(help=my_help)
+
+
+    def do_print(self, obj_type):
+        """Print out objects which are discovered from the file system or object store. Only accepts objects including companies, interactions and studies.  If the object is unsupported it will provide an error.
+        """
+        obj_type = obj_type.strip().lower()
+        print('The following ' + obj_type + ' are prepared for ingestion.')
+        if obj_type == 'companies':
+            self._print_discovered_objects(self.companies)
+        elif obj_type == 'studies':
+            self._print_discovered_objects(self.studies)
+        elif obj_type == 'interactions':
+            self._print_discovered_objects(self.interactions)
+        else:
+            print("\n\tError: Unsupported object type [" + obj_type +
+                  ']. Supported types are: studies, companies or interactions.')
+
+    def help_print(self):
+        """Help for do_print
+        """
+        my_help = {
+            'Name': 'print',
+            'Argument': '<object type>',
+            'Description': "\n\tPrint out the current set of objects ready for ingestion, where object types are companies, studies or interactions." +
+            "\n"
+        }
+        self._print_help(help=my_help)
+
+    def do_list(self, folder):
+        """List a supplied folder and store the it as the current folder for later usage in discovery.
+        """
+        self.env['folder'] = folder if folder else self.env['folder']
+        self.folder_data = self._filter_raw(os.listdir(self.env['folder']))
+        print(self._decode_folder())
+
+    def help_list(self):
+        """Help for do_list
+        """
+        my_help = {
+            'Name': 'list',
+            'Argument': '<folder_name>',
+            'Description': "\n\tList contents of a folder to explore for an ingestion strategy." +
+            "\n"
+        }
+        self._print_help(help=my_help)
+
+    def do_set(self, env_var):
+        """Set environment variables to use in the ingestion shell. Note that unless envsave is performed the variables aren't saved over multiple runs of the tools.
+        """
+        variable, value = env_var.split('=')
+        self.env[variable.strip()] = value.strip()
+
+    def help_set(self):
+        """Help for do_set
+        """
+        my_help = {
+            'Name': 'set',
+            'Argument': '<variable>=<value>',
+            'Description': "\n\tSet an environment variable for the ingest shell to use while processing." +
+            "\n"
+        }
+        self._print_help(help=my_help)
+
+    def do_del(self, env_var):
+        """Remove an environment variable. Note that unless envsave is performed the variables aren't removed over multiple runs of the tools.
+        """
+        del self.env[env_var]
+
+    def help_del(self):
+        """Help for do_del
+        """
+        my_help = {
+            'Name': 'del',
+            'Argument': '<variable>',
+            'Description': "\n\Delete an environment variable." +
+            "\n"
+        }
+        self._print_help(help=my_help)
+
+    def do_envsave(self, unused):
+        """Save the environment variables to local storage as defined in the self.env_file attribute.
+        """
+        self.util.save(self.env_file, json.dumps(self.env))
+
+    def help_envsave(self):
+        """Help for do_envsave
+        """
+        my_help = {
+            'Name': 'envsave',
+            'Argument': 'None',
+            'Description': "\n\tSave the environmental settings to the ~/.mediumroast/ingest.json file." +
+            "\n"
+        }
+        self._print_help(help=my_help)
+
+    def do_envprint(self, unused):
+        """Print out the environment variables to the console.
+        """
+        for key in self.env:
+            print ('\t' + key + ':', self.env[key])
+
+    def help_envprint(self):
+        """Help for do_envprint
+        """
+        my_help = {
+            'Name': 'envprint',
+            'Argument': 'None',
+            'Description': "\n\tPrint the environmental settings." +
+            "\n"
+        }
+        self._print_help(help=my_help)
+
 
     #############################################################################
     #
@@ -251,12 +274,20 @@ class IngestShell(cmd.Cmd):
     #   discover Competition - creates a study called 'Competition', and
     #       tries to discover companies and interactions in 'Competition'
     #
+    # TODO Create document strings for each method
+    # TODO Add a second phase post initial ingestion that fixes the linked_companies, et al, guids
+    # TODO Consider how to create a discover option that will traverse into a top level folder, or 
+    #       enable a folder to be added to an existing study as a substudy.  The second one is likely
+    #       better as it will keep the tool simpler.
+    #
     #############################################################################
 
     def _merge_dicts(self, primary, to_merge):
-        last_key = int(primary.keys()[-1]) # TODO fix this error is TypeError: 'dict_keys' object is not subscriptable
+        my_keys = primary.keys()
+        # last_key = my_keys[-1] # TODO fix this error is TypeError: 'dict_keys' object is not subscriptable
+        last_key = self.util.total_item(primary)
         for key in to_merge:
-            primary[last_key+1] = to_merge[key]
+            primary[last_key] = to_merge[key]
             last_key += 1
         return primary
 
@@ -284,10 +315,6 @@ class IngestShell(cmd.Cmd):
         my_study['substudies'] = {}
         my_study['temp_id'] = self.util.hash_it(my_study['studyName'])
         return my_study
-
-    def _print_objs(self, objs):
-        for obj in sorted(objs):
-            print('\t\t', str(obj) + '. ', objs[obj])
 
     def _retain_companies(self, index, companies, study_name):
         for idx in index:
@@ -344,7 +371,7 @@ class IngestShell(cmd.Cmd):
                     'status': 'completed',
                     'longitude': 'Unknown',
                     'latitude': 'Unknown',
-                    'notes': {},  # TODO create a note stating this was intgested by mr-ingest
+                    'notes': {},  # TODO create a note stating this was ingested by mr-ingest
                     'url': interactions[key]['url'],
                     # TODO reset to the actual GUID and delete
                     'temp_id': interactions[key]['temp_id']
@@ -382,7 +409,7 @@ class IngestShell(cmd.Cmd):
 
     def do_discover(self, sub_folder):
         # Set up the extractor to do object level discovery
-        extractor = Extract(folder_name=sub_folder)
+        extractor = Extract(folder_name=self.env['folder'] + '/' + sub_folder) if self.env['folder'] else Extract(folder_name=sub_folder)
 
         # Setup the study
         my_study = self._setup_study(sub_folder)
@@ -400,7 +427,7 @@ class IngestShell(cmd.Cmd):
         # Process companies
         print('\nStep 3: Process candidate companies.')
         print('\tListing candidate companies for review:')
-        self._print_objs(my_companies)
+        self._print_raw_objs(my_companies)
         selected_companies = input(
             '\n\tSelect companies to retain using their index [Ex. - \'1,3,7\']: ').strip().split(',')
         print(
@@ -434,15 +461,24 @@ class IngestShell(cmd.Cmd):
             "\n\tSubcommand can be one of study, company or interaction." +
             "\n"
         }
-        self.print_help(help=my_help)
+        self._print_help(help=my_help)
 
 
 if __name__ == "__main__":
 
+    # Determine if we're running on the local file system or remote
     my_args = parse_cli_args()
-    if my_args.src_type == 'local':
+    if my_args.src_type == 'local': # TODO when other drives are supported add choices in parse_args for the switch
         pass
     else:
         exit()
+    # TODO investigate adding: GDrive and OneDrive
 
-    IngestShell('foo').cmdloop()
+    # Check to see if the env_file exists and if it does read it in and pass to the shell
+    u = utilities()
+    [exists, msg] = u.check_file_system_object(my_args.env_file)
+    if exists:
+        [status, my_env] = u.json_read(my_args.env_file)
+        IngestShell(my_args.src_type, my_args.env_file, env=my_env).cmdloop()
+    else:   
+        IngestShell(my_args.src_type, my_args.env_file).cmdloop()
