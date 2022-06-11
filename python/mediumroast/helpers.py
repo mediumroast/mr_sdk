@@ -176,11 +176,15 @@ class utilities:
 
 
     def get_pdf_meta(self, item):
+        """Obtain key metadata and raw text from PDFs. Text is suited for the purposes of named entity recognition.
+        """
         pdf = pdfx.PDFx(item)
         doc_meta = pdf.get_metadata()
         return doc_meta, pdf.get_text()
 
     def get_docx_meta(self, item):
+        """Obtain key metadata and raw text from DOCX. Text is suited for the purposes of named entity recognition.
+        """
         doc_metadata = {}
         doc = pydocx.Document(item)
         properties = doc.core_properties
@@ -192,14 +196,19 @@ class utilities:
         return doc_metadata, '\n'.join(fullText)
 
     def get_pptx_meta(self, item):
+        """Obtain key metadata and raw text from PPTX. Text is suited for the purposes of named entity recognition.
+        """
         doc_metadata = {}
         preso = pptx.Presentation(item)
         properties = preso.core_properties
         doc_metadata['CreateDate'] = properties.created
         doc_metadata['type'] = properties.category
         fullText = []
-        for para in doc.paragraphs:
-            fullText.append(para.text)
+        for slide in preso.slides:
+            for shape in slide.shapes:
+                if not shape.has_text_frame:
+                    continue
+                fullText.append(shape.text)
         return doc_metadata, '\n'.join(fullText)
 
 
@@ -208,52 +217,6 @@ class utilities:
         """
         (time_stamp, time_string) = self.get_date_time()
         return {"1": {time_stamp: "This is an example note created for the '" + obj_type + "' object on " + time_string + " by a " + creator}}
-
-    # This is deprecated and can be removed in a future version
-    # def get_iterations(self, interactions, interaction_xform, src_type):
-    #     """Internal method to create the iterations structure
-    #     """
-    #     itr_state = "unthemed_unsummarized"
-    #     int_state = "unsummarized"
-    #     final_iterations = {}
-    #     for interaction in interactions:
-    #         id_type = str()
-    #         itr_study_id, itr_company_id = interaction_xform.get_iteration_id(
-    #             interaction)  # Provide the interaction name
-    #         if src_type == "study":
-    #             id_type = str(itr_study_id)
-    #         else:
-    #             id_type = str(itr_company_id)
-
-    #         if final_iterations.get(id_type) == None:
-    #             final_iterations[id_type] = {
-    #                 "state": itr_state,
-    #                 "totalInteractions": 0,
-    #                 "interactions": {
-    #                     interaction: {
-    #                         "guid": interactions[interaction],
-    #                         "state": int_state
-    #                     }
-    #                 }
-    #             }
-    #         else:
-    #             final_iterations[id_type]["interactions"][interaction] = {
-    #                 "guid": interactions[interaction], "state": int_state}
-
-    #     interactions_sum = 0
-    #     iterations_sum = 0
-    #     for iteration in final_iterations:
-    #         total_interactions = self.total_item(
-    #             final_iterations[iteration]["interactions"])
-    #         final_iterations[iteration]["totalInteractions"] = total_interactions
-    #         interactions_sum += total_interactions
-    #         iterations_sum += 1
-
-    #     final_iterations["state"] = itr_state
-    #     final_iterations["totalInteractions"] = interactions_sum
-    #     final_iterations["totalIterations"] = iterations_sum
-
-    #     return final_iterations
 
 
 class companies:

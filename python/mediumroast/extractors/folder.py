@@ -53,11 +53,12 @@ class Extract:
 
     # Internal helper methods
 
-    def _decode_folder(self, folder, folder_data, can_traverse=1):
+    def _decode_folder(self, folder, folder_data, study_name, can_traverse=1):
         # Assume if we're at the topmost folder then that's the study name otherwise it is a substudy name
+        # TODO teach this method how to properly traverse 
         self.substudy_name = 'default'
         if can_traverse > 0:
-            self.study_name = folder.split('/')[-1]
+            self.study_name = study_name
         else:
             self.substudy_name = folder.split('/')[-1]
             self.substudies[folder.split('/')[-1]] = {'index': self.idx}
@@ -72,9 +73,9 @@ class Extract:
 
             if item_type == 'directory' and can_traverse > 0:
                 my_items = self._decode_folder(
-                    folder + '/' + item, os.listdir(folder + '/' + item), can_traverse=0)
+                    folder + '/' + item, os.listdir(folder + '/' + item), study_name, can_traverse=0)
                 raw_data += my_items
-                can_traverse = can_traverse - self.TRAVERSE_LIMIT
+                # can_traverse = can_traverse - self.TRAVERSE_LIMIT
             elif item_type != 'directory':
                 raw_data.append({
                     'raw_name': item,
@@ -87,12 +88,14 @@ class Extract:
                     'study': self.study_name,
                     'url': self.base_url + folder + '/' + item
                 })
-            else:
-                continue
+            # else:
+            #     continue
 
         return raw_data
 
     def _convert_list_to_dict(self, my_list):
+        """Transform a list into a simple dictionary with an increasing integer being the key.
+        """
         idx = 1
         my_dict = {}
         for item in my_list:
@@ -100,9 +103,10 @@ class Extract:
             idx+=1
         return my_dict
 
-    def _get_objects(self):
+    def _get_objects(self, study_name):
+        # TODO teach _get_objects to traverse directories
         candidate_companies = []
-        my_objs = self._decode_folder(self.folder, os.listdir(self.folder))
+        my_objs = self._decode_folder(self.folder, os.listdir(self.folder), study_name)
         [time, date] = self.util.get_date_time()
         my_text = ""
         # Get dates and raw text from the objects if the type is supported
@@ -160,7 +164,8 @@ class Extract:
 
     # Main extraction method
 
-    def get_data(self):
-        """Read content from a folder to extract key metadata from file names
+    def get_data(self, study_name):
+        """Read content from a folder to extract key metadata from file names.
         """
-        return self._get_objects()
+        print(study_name)
+        return self._get_objects(study_name)

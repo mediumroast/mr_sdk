@@ -3,13 +3,13 @@ import os
 import argparse
 import cmd
 import re
-from matplotlib.font_manager import json_dump
 import pyfiglet
 import pprint
 import json
 import pathlib
+import itertools
+import math
 
-from soupsieve import select
 from mediumroast.extractors.folder import Extract
 from mediumroast.helpers import utilities
 
@@ -21,7 +21,7 @@ def parse_cli_args(program_name='ingest', desc='A mediumroast.io example utility
     parser.add_argument(
         '--folder', help="The full path to the folder to inspect for ingestion", type=str, dest='folder')
     parser.add_argument('--src_type', help="The source type for ingestion",
-                        type=str, dest='src_type', default='local', choices=['local', 'sharepoint'])
+                        type=str, dest='src_type', default='local', choices=['local', 'sharepoint', 'gdrive', 'onedrive'])
     parser.add_argument('--user', help="User name",
                         type=str, dest='user', default='foo')
     parser.add_argument('--secret', help="Secret or password",
@@ -67,12 +67,69 @@ class IngestShell(cmd.Cmd):
     #
     #############################################################################
 
+    def _slice_dict(self, my_dict, my_limit):
+        # housekeeping variables
+        idx = []
+        ptr = 1
+        final_dict = {}
+
+        # compute the number of slices needed
+        no_objs = self.util.total_item(my_dict)
+        no_slices = math.ceil(no_objs / my_limit) 
+        slice_size = math.floor(no_objs/no_slices)
+
+        # locate the actual slices
+        for step_idx in range(0, no_objs, slice_size):
+            idx.append(step_idx)
+
+        # slice the dict into no_slices of slice_size height
+        start = 0
+        for step in idx:
+            final_dict[ptr] = dict(itertools.islice(my_dict.items(), start, step))
+            start = step + 1
+            ptr += 1
+
+        # Return the fully paginagted dictionary
+        return final_dict, no_objs
+
+
+
     def _print_raw_objs(self, objs):
         """Print basic data suitable for driving discovery from a file/object store of some kind.
         """
-        for obj in sorted(objs):
-            # printing format is two tabs <key>. <value>
-            print('\t\t', str(obj) + '.', objs[obj])
+        term_rows = os.get_terminal_size()[1] - 6 # At least 5 rows are needed for housekeeping messages and one for good luck
+        no_objs = self.util.total_item(objs)
+        idx = []
+        if no_objs > term_rows:
+            [paginated, no_objs] = self._slice_dict(objs)
+            limit = 1
+            #print("\033c") # should clear the screen, but we need to include the instructions and step name
+            no_pages = self.util.total_item(paginated)
+            page_idx = paginated.keys()
+            page_1 = paginated[page_idx[0]] # get page 1
+
+            # Get the keys for the paginated set from the 'paginated' to print out the total pages
+            # print out the first page
+            # print out the input request to move from page to page
+            # the input need to account for page navigation and item selection
+            for obj in sorted(paginated):
+                if limit < term_rows:
+                    print('\t\t', str(obj) + '. ', '\'' + objs[obj] + '\'')
+                    limit+=1
+                else:
+                    idx.append(obj)
+                    ans = input('[RETURN] Next page | [B] Previous page').strip().lower()
+                    
+                    if ans == 'b':
+                        # call _print_raw_objs but add an offset
+                        # offset is the difference between where we are minus term_cols
+                        pass
+                    else:
+                        continue
+        else:
+            # print("\033c") # this should clear the screen
+            for obj in sorted(objs):
+                print('\t\t', str(obj) + '. ', '\'' + objs[obj] + '\'')
 
     def _print_help(self, help):
         """Consistently print help outputs for the shell. This internal method expects a dict of structure:
@@ -127,7 +184,6 @@ class IngestShell(cmd.Cmd):
     #############################################################################
     # Description: Core functions for the command shell
     #
-    # TODO consider adding envsave to set and del functions
     #
     #############################################################################
 
@@ -202,6 +258,7 @@ class IngestShell(cmd.Cmd):
         """
         variable, value = env_var.split('=')
         self.env[variable.strip()] = value.strip()
+        self.do_envsave(None)
 
     def help_set(self):
         """Help for do_set
@@ -218,6 +275,7 @@ class IngestShell(cmd.Cmd):
         """Remove an environment variable. Note that unless envsave is performed the variables aren't removed over multiple runs of the tools.
         """
         del self.env[env_var]
+        self.do_envsave(None)
 
     def help_del(self):
         """Help for do_del
@@ -294,7 +352,7 @@ class IngestShell(cmd.Cmd):
     def _setup_study(self, study_name):
         """Script to define several default attributes for the discovered study
         """
-        study_name = study_name.split('/')[-1]
+        study_name = study_name.split('/')[-1] if study_name else 'Unknown'
         default = 'Unknown'
         my_study = {}
         my_script = {
@@ -320,13 +378,32 @@ class IngestShell(cmd.Cmd):
         for idx in index:
             key = int(idx)
             self.companies.append({
-                'companyName': companies[key],
-                'temp_id': self.util.hash_it(companies[key]),
+                'companyName': companies[key], # CONFIRM on the attribute name 'interactionName or 'name'?
+                'temp_id': self.util.hash_it(companies[key]), # TODO reset to the actual GUID and delete
                 'linkedStudies': {study_name: self.util.hash_it(study_name)},
-                'linkedInteractions': {}
+                'linkedInteractions': {},
+                'industry': 'Unknown',
+                'role': 'Unknown',
+                'url': 'Unknown',
+                'streetAddress': 'Unknown',
+                'city': 'Unknown',
+                'stateProvince': 'Unknown',
+                'country': 'Unknown',
+                'region': 'Unknown',
+                'phone': 'Unknown',
+                'simpleDesc': 'Unknown',
+                'cik': 'Unknown',
+                'stockSymbol': 'Unknown',
+                'Recent10kURL': 'Unknown',
+                'Recent10qURL': 'Unknown',
+                'zipPostal': 'Unknown',
+                'notes': self.util.make_note(obj_type='Company: [' + companies[key] + ']'),
+                'longitude': 'Unknown',
+                'latitude': 'Unknown',
             })
 
     def _choose_company(self, interaction_name, companies):
+        
         print('\tPlease choose which company is associated to the interaction [' + interaction_name + '].\n')
         for company in sorted(companies):
             print('\t' + str(company) + '. ', companies[company])
@@ -336,7 +413,6 @@ class IngestShell(cmd.Cmd):
 
     def _retain_interactions(self, index, interactions, study_name):
         my_substudies = {}
-        idx = 0
         for i in index:
             key = int(i) - 1
 
@@ -371,10 +447,11 @@ class IngestShell(cmd.Cmd):
                     'status': 'completed',
                     'longitude': 'Unknown',
                     'latitude': 'Unknown',
-                    'notes': {},  # TODO create a note stating this was ingested by mr-ingest
+                    'notes': self.util.make_note(obj_type='Interaction: [' + interactions[key]['interaction_name'] + ']'),
                     'url': interactions[key]['url'],
-                    # TODO reset to the actual GUID and delete
-                    'temp_id': interactions[key]['temp_id']
+                    'temp_id': interactions[key]['temp_id'], # TODO reset to the actual GUID and delete
+                    'longitude': 'Unknown',
+                    'latitude': 'Unknown',
                 }
             )
 
@@ -407,9 +484,9 @@ class IngestShell(cmd.Cmd):
 
         return my_substudies
 
-    def do_discover(self, sub_folder):
+    def do_discover(self, sub_folder=None):
         # Set up the extractor to do object level discovery
-        extractor = Extract(folder_name=self.env['folder'] + '/' + sub_folder) if self.env['folder'] else Extract(folder_name=sub_folder)
+        extractor = Extract(folder_name=self.env['folder'] + '/' + sub_folder) if sub_folder else Extract(folder_name=self.env['folder'])
 
         # Setup the study
         my_study = self._setup_study(sub_folder)
@@ -418,7 +495,7 @@ class IngestShell(cmd.Cmd):
         print('\nStep 2: Discover interactions and companies associated to the study.')
 
         # Perform discovery
-        [my_interactions, my_companies] = extractor.get_data()
+        [my_interactions, my_companies] = extractor.get_data(my_study['studyName'])
         total_interactions = self.util.total_item(my_interactions)
         total_companies = self.util.total_item(my_companies)
         print('\tDiscovered [' + str(total_interactions) + '] candidate interactions and [' +
@@ -466,18 +543,26 @@ class IngestShell(cmd.Cmd):
 
 if __name__ == "__main__":
 
-    # Determine if we're running on the local file system or remote
+    # Determine the source location of the content and proceed accordingly, only local is implemented.
+    # TODO Investigate other options for access starting with Sharepoint.
     my_args = parse_cli_args()
-    if my_args.src_type == 'local': # TODO when other drives are supported add choices in parse_args for the switch
+    if my_args.src_type == 'local':
         pass
+    elif my_args.src_type == 'sharepoint':
+        pass
+    elif my_args.src_type == 'onedrive':
+        pass
+    elif my_args.src_type == 'gdrive':
+        pass
+    # Source type is not supported, but we should not get here anyway.
     else:
-        exit()
-    # TODO investigate adding: GDrive and OneDrive
+        print('Cannot start the shell as the source type is not recognized, exiting.')
+        exit(-1)
 
     # Check to see if the env_file exists and if it does read it in and pass to the shell
     u = utilities()
-    [exists, msg] = u.check_file_system_object(my_args.env_file)
-    if exists:
+    [prev_env, msg] = u.check_file_system_object(my_args.env_file)
+    if prev_env:
         [status, my_env] = u.json_read(my_args.env_file)
         IngestShell(my_args.src_type, my_args.env_file, env=my_env).cmdloop()
     else:   
